@@ -15,16 +15,12 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
-      },
-      "ios": {
-        "bundleIdentifier": "com.dangrow.mashtab"
       }
     },
     "production": {
       "autoIncrement": true,
       "ios": {
-        "simulator": false,
-        "bundleIdentifier": "com.dangrow.mashtab"
+        "simulator": false
       }
     }
   },
