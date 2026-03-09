@@ -15,21 +15,25 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "ios": {
+        "bundleIdentifier": "com.dangrow.mashtab"
       }
     },
     "production": {
       "autoIncrement": true,
       "ios": {
-        "simulator": false
+        "simulator": false,
+        "bundleIdentifier": "com.dangrow.mashtab"
       }
     }
   },
   "submit": {
     "production": {
       "ios": {
-        "appleId": "APPLE_ID_HERE",
-        "ascAppId": "ASC_APP_ID_HERE",
-        "appleTeamId": "APPLE_TEAM_ID_HERE"
+        "appleId": "gloss.odessa@gmail.com",
+        "ascAppId": "6760303215",
+        "appleTeamId": "B2Z953P785"
       },
       "android": {
         "serviceAccountKeyPath": "./google-services-key.json",
