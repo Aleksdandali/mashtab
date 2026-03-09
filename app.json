@@ -33,6 +33,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a5e95f8e-937b-40d1-a8fe-69d3f86dd5fe"
+      }
+    },
+    "owner": "shineshopb2b"
   }
 }
