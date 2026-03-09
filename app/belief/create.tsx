@@ -73,8 +73,8 @@ const stepStyles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing[5],
-    marginBottom: Spacing[6],
+    paddingHorizontal: 5,
+    marginBottom: 6,
   },
   item: {
     flex: 1,
@@ -171,12 +171,12 @@ function StyledInput({
 }
 
 const inputStyles = StyleSheet.create({
-  wrap: { marginBottom: Spacing[4] },
+  wrap: { marginBottom: 4 },
   labelRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing[2],
+    marginBottom: 2,
   },
   label: {
     fontFamily: FontFamily.sans,
@@ -191,7 +191,7 @@ const inputStyles = StyleSheet.create({
   input: {
     borderRadius: Radius.sm,
     borderWidth: 1.5,
-    padding: Spacing[3],
+    padding: 3,
     fontFamily: FontFamily.sans,
     fontSize: 14,
     lineHeight: 20,
@@ -248,12 +248,12 @@ function ImpactScore({
 }
 
 const scoreStyles = StyleSheet.create({
-  wrap: { marginBottom: Spacing[5] },
+  wrap: { marginBottom: 5 },
   title: {
     fontFamily: FontFamily.sans,
     fontSize: 13,
     fontWeight: '600',
-    marginBottom: Spacing[3],
+    marginBottom: 3,
   },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   btn: {
@@ -271,7 +271,7 @@ const scoreStyles = StyleSheet.create({
   hints: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: Spacing[2],
+    marginTop: 2,
   },
   hint: {
     fontFamily: FontFamily.sans,
@@ -505,7 +505,7 @@ export default function CreateBeliefScreen() {
             )}
           </Animated.View>
 
-          <View style={{ height: Spacing[12] }} />
+          <View style={{ height: 12 }} />
         </ScrollView>
 
         {/* Bottom buttons */}
@@ -556,8 +556,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing[5],
-    paddingVertical: Spacing[4],
+    paddingHorizontal: 5,
+    paddingVertical: 4,
     borderBottomWidth: 1,
   },
   headerBack: {
@@ -574,11 +574,11 @@ const styles = StyleSheet.create({
   },
 
   stepIndicatorWrap: {
-    paddingTop: Spacing[5],
+    paddingTop: 5,
   },
 
   content: {
-    paddingHorizontal: Spacing[5],
+    paddingHorizontal: 5,
   },
 
   stepTitle: {
@@ -586,19 +586,19 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     lineHeight: 30,
-    marginBottom: Spacing[2],
+    marginBottom: 2,
   },
   stepHint: {
     fontFamily: FontFamily.sans,
     fontSize: 14,
     lineHeight: 20,
-    marginBottom: Spacing[5],
+    marginBottom: 5,
   },
 
   tipCard: {
     borderRadius: Radius.sm,
-    padding: Spacing[4],
-    marginTop: Spacing[2],
+    padding: 4,
+    marginTop: 2,
   },
   tipText: {
     fontFamily: FontFamily.sans,
@@ -609,8 +609,8 @@ const styles = StyleSheet.create({
   beliefPreview: {
     borderRadius: Radius.sm,
     borderWidth: 1,
-    padding: Spacing[4],
-    marginBottom: Spacing[4],
+    padding: 4,
+    marginBottom: 4,
   },
   beliefPreviewLabel: {
     fontFamily: FontFamily.sans,
@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
-    marginBottom: Spacing[1],
+    marginBottom: 1,
   },
   beliefPreviewText: {
     fontFamily: FontFamily.serif,
@@ -635,7 +635,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderRadius: Radius.sm,
     paddingVertical: 12,
-    marginBottom: Spacing[5],
+    marginBottom: 5,
   },
   aiBtnText: {
     fontFamily: FontFamily.sans,
@@ -644,8 +644,8 @@ const styles = StyleSheet.create({
   },
 
   footer: {
-    paddingHorizontal: Spacing[5],
-    paddingVertical: Spacing[4],
+    paddingHorizontal: 5,
+    paddingVertical: 4,
     borderTopWidth: 1,
   },
   nextBtn: {

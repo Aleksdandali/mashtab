@@ -86,8 +86,6 @@ export async function syncOnboardingData(
 // ─── Clear ───────────────────────────────────────────────────────────────────
 
 export async function clearOnboardingData(): Promise<void> {
-  await AsyncStorage.multiRemove([
-    KEYS.SELECTED_FOCUS,
-    KEYS.DIAGNOSTIC_ANSWERS,
-  ]);
+  await AsyncStorage.removeItem(KEYS.SELECTED_FOCUS);
+  await AsyncStorage.removeItem(KEYS.DIAGNOSTIC_ANSWERS);
 }

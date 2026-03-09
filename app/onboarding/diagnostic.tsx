@@ -12,7 +12,7 @@ import { router } from 'expo-router';
 import { DarkColors as C } from '@/constants/colors';
 import { FontFamily } from '@/constants/typography';
 import { Spacing, Radius } from '@/constants/spacing';
-import { CATEGORY_MAP } from '@/constants/categories';
+import { CATEGORY_MAP, BeliefCategory } from '@/constants/categories';
 import { SAMPLE_BELIEFS, CATEGORY_COLORS } from '@/constants/sample-beliefs';
 import { addAnswer, saveAnswers } from '@/lib/onboarding-storage';
 
@@ -69,7 +69,7 @@ function ScaleLabels() {
 export default function DiagnosticScreen() {
   const [index, setIndex] = useState(0);
   const [selectedScore, setSelectedScore] = useState<number | null>(null);
-  const [answers, setAnswers] = useState<{ beliefId: number; category: string; score: number }[]>([]);
+  const [answers, setAnswers] = useState<{ beliefId: number; category: BeliefCategory; score: number }[]>([]);
 
   const cardOpacity   = useRef(new Animated.Value(1)).current;
   const cardTranslate = useRef(new Animated.Value(0)).current;
@@ -88,10 +88,10 @@ export default function DiagnosticScreen() {
     async (score: number) => {
       const newAnswers = [
         ...answers,
-        { beliefId: belief.id, category: belief.category, score },
+        { beliefId: belief.id, category: belief.category as BeliefCategory, score },
       ];
       setAnswers(newAnswers);
-      await addAnswer({ beliefId: belief.id, category: belief.category, score });
+      await addAnswer({ beliefId: belief.id, category: belief.category as BeliefCategory, score });
 
       if (index + 1 >= total) {
         await saveAnswers(newAnswers);

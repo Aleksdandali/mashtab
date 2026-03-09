@@ -62,7 +62,7 @@ export function Button({
     styles.base,
     sizes[size],
     variants(colors)[variant],
-    disabled && styles.disabled,
+    ...(disabled ? [styles.disabled] : []),
     style as ViewStyle,
   ];
 

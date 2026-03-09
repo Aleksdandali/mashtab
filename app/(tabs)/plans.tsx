@@ -32,7 +32,7 @@ import {
   getWeekDates,
   DAY_LABELS_SHORT,
 } from '@/utils/dates';
-import { Task, Goal } from '@/types';
+import { Task, Goal, UserBelief } from '@/types';
 
 // ─── Tab Switcher ─────────────────────────────────────────────────────────────
 
@@ -376,7 +376,7 @@ function EditTaskModal({
   onClose: () => void;
   onSave: (id: string, data: { title: string; notes: string; is_focus: boolean; goal_id: string | null; user_belief_id: string | null }) => void;
   goals: Goal[];
-  beliefs: ReturnType<typeof useBeliefs>['beliefs'];
+  beliefs: UserBelief[];
 }) {
   const C = useTheme();
   const [title, setTitle] = useState('');
@@ -927,7 +927,7 @@ function GoalCard({ goal }: { goal: Goal }) {
     <Pressable
       style={({ pressed }) => [
         goalCardStyles.card,
-        { backgroundColor: C.surface2, shadowColor: C.shadow },
+        { backgroundColor: C.surface2 },
         pressed && { opacity: 0.87, transform: [{ scale: 0.99 }] },
       ]}
       onPress={() => router.push(`/goal/${goal.id}`)}

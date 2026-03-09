@@ -33,7 +33,7 @@ import { UserBelief } from '@/types';
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getStageContent(ub: UserBelief, key: StageKey): string | null {
-  const fieldMap: Record<StageKey, keyof typeof ub.belief & string> = {
+  const fieldMap: Record<StageKey, string> = {
     identify: 'conviction_uk',
     explore: 'source_hypothesis_uk',
     reality: 'source_hypothesis_uk',
@@ -42,7 +42,7 @@ function getStageContent(ub: UserBelief, key: StageKey): string | null {
     identity: 'identity_template_uk',
   };
   if (ub.belief_id && ub.belief) {
-    return (ub.belief as Record<string, string>)[fieldMap[key]] ?? null;
+    return (ub.belief as unknown as Record<string, string>)[fieldMap[key]] ?? null;
   }
   const customMap: Record<StageKey, string | null> = {
     identify: ub.custom_conviction,
@@ -198,7 +198,7 @@ function StageRow({
 
   // Current — expanded
   return (
-    <View style={[stageStyles.currentCard, { backgroundColor: C.surface2, shadowColor: C.shadow }]}>
+    <View style={[stageStyles.currentCard, { backgroundColor: C.surface2 }]}>
       {/* Glow */}
       <Animated.View
         style={[
@@ -323,11 +323,11 @@ const stageStyles = StyleSheet.create({
   completedRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing[4],
-    paddingVertical: Spacing[3],
-    marginBottom: Spacing[2],
+    paddingHorizontal: 4,
+    paddingVertical: 3,
+    marginBottom: 2,
     borderLeftWidth: 3,
-    gap: Spacing[3],
+    gap: 3,
   },
   iconBadge: {
     width: 34,
@@ -360,10 +360,10 @@ const stageStyles = StyleSheet.create({
   lockedRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing[4],
-    paddingVertical: Spacing[3],
-    marginBottom: Spacing[2],
-    gap: Spacing[3],
+    paddingHorizontal: 4,
+    paddingVertical: 3,
+    marginBottom: 2,
+    gap: 3,
   },
   lockedName: {
     flex: 1,
@@ -376,16 +376,16 @@ const stageStyles = StyleSheet.create({
   // Current
   currentCard: {
     borderRadius: Radius.lg,
-    padding: Spacing[4],
-    marginBottom: Spacing[2],
+    padding: 4,
+    marginBottom: 2,
     overflow: 'hidden',
     ...Shadow.md,
   },
   currentHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: Spacing[3],
-    marginBottom: Spacing[3],
+    gap: 3,
+    marginBottom: 3,
   },
   iconBadgeLarge: {
     width: 42,
@@ -418,8 +418,8 @@ const stageStyles = StyleSheet.create({
   },
   contentBlock: {
     borderRadius: Radius.sm,
-    padding: Spacing[3],
-    marginBottom: Spacing[3],
+    padding: 3,
+    marginBottom: 3,
   },
   contentLabel: {
     fontFamily: FontFamily.sans,
@@ -435,7 +435,7 @@ const stageStyles = StyleSheet.create({
     lineHeight: 19,
     fontStyle: 'italic',
   },
-  questionWrap: { marginBottom: Spacing[3] },
+  questionWrap: { marginBottom: 3 },
   questionText: {
     fontFamily: FontFamily.serif,
     fontSize: 16,
@@ -445,16 +445,16 @@ const stageStyles = StyleSheet.create({
   textarea: {
     borderRadius: Radius.sm,
     borderWidth: 1,
-    padding: Spacing[3],
+    padding: 3,
     fontFamily: FontFamily.sans,
     fontSize: 14,
     lineHeight: 20,
     minHeight: 100,
-    marginBottom: Spacing[3],
+    marginBottom: 3,
   },
   btnRow: {
     flexDirection: 'row',
-    gap: Spacing[2],
+    gap: 2,
     alignItems: 'center',
   },
   coachBtn: {
@@ -484,7 +484,7 @@ const stageStyles = StyleSheet.create({
     fontWeight: '700',
   },
   taskBtn: {
-    marginTop: Spacing[3],
+    marginTop: 3,
     paddingVertical: 12,
     borderRadius: Radius.sm,
     borderWidth: 1.5,
@@ -593,10 +593,10 @@ const butterflyStyles = StyleSheet.create({
     zIndex: 100,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: Spacing[6],
+    paddingHorizontal: 6,
   },
   content: {
-    marginBottom: Spacing[6],
+    marginBottom: 6,
   },
   emoji: { fontSize: 80 },
   stats: { width: '100%', alignItems: 'center' },
@@ -605,20 +605,20 @@ const butterflyStyles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '700',
     textAlign: 'center',
-    marginBottom: Spacing[5],
+    marginBottom: 5,
   },
   scoreCard: {
     width: '100%',
     borderRadius: Radius.lg,
-    padding: Spacing[5],
-    marginBottom: Spacing[4],
+    padding: 5,
+    marginBottom: 4,
     alignItems: 'center',
   },
   scoreRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing[5],
-    marginBottom: Spacing[2],
+    gap: 5,
+    marginBottom: 2,
   },
   scoreItem: { alignItems: 'center' },
   scoreLabel: {
@@ -640,14 +640,14 @@ const butterflyStyles = StyleSheet.create({
   diffText: {
     fontFamily: FontFamily.sans,
     fontSize: 13,
-    marginTop: Spacing[2],
+    marginTop: 2,
   },
   identityCard: {
     width: '100%',
     borderRadius: Radius.lg,
     borderWidth: 1,
-    padding: Spacing[4],
-    marginBottom: Spacing[5],
+    padding: 4,
+    marginBottom: 5,
   },
   identityLabel: {
     fontFamily: FontFamily.sans,
@@ -655,7 +655,7 @@ const butterflyStyles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 0.6,
     textTransform: 'uppercase',
-    marginBottom: Spacing[2],
+    marginBottom: 2,
   },
   identityText: {
     fontFamily: FontFamily.serif,
@@ -666,7 +666,7 @@ const butterflyStyles = StyleSheet.create({
   },
   doneBtn: {
     paddingVertical: 14,
-    paddingHorizontal: Spacing[10],
+    paddingHorizontal: 10,
     borderRadius: Radius.md,
   },
   doneBtnText: {
@@ -734,9 +734,9 @@ const modalStyles = StyleSheet.create({
   card: {
     borderTopLeftRadius: Radius.xl,
     borderTopRightRadius: Radius.xl,
-    padding: Spacing[6],
-    paddingBottom: Spacing[8],
-    gap: Spacing[4],
+    padding: 6,
+    paddingBottom: 8,
+    gap: 4,
   },
   title: {
     fontFamily: FontFamily.serif,
@@ -752,7 +752,7 @@ const modalStyles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: Radius.md,
     alignItems: 'center',
-    marginTop: Spacing[2],
+    marginTop: 2,
   },
   submitText: {
     fontFamily: FontFamily.sans,
@@ -973,7 +973,7 @@ export default function BeliefDetailScreen() {
             })}
           </View>
 
-          <View style={{ height: Spacing[8] }} />
+          <View style={{ height: 8 }} />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -985,16 +985,16 @@ export default function BeliefDetailScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
 
-  scroll: { paddingHorizontal: Spacing[5], paddingTop: Spacing[4] },
+  scroll: { paddingHorizontal: 5, paddingTop: 4 },
 
-  backBtn: { marginBottom: Spacing[4] },
+  backBtn: { marginBottom: 4 },
   backText: {
     fontFamily: FontFamily.sans,
     fontSize: 14,
     fontWeight: '500',
   },
 
-  header: { alignItems: 'center', paddingBottom: Spacing[5] },
+  header: { alignItems: 'center', paddingBottom: 5 },
 
   catBadge: {
     flexDirection: 'row',
@@ -1003,8 +1003,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: Radius.full,
     gap: 5,
-    marginTop: Spacing[3],
-    marginBottom: Spacing[2],
+    marginTop: 3,
+    marginBottom: 2,
   },
   catIcon: { fontSize: 14 },
   catName: {
@@ -1021,16 +1021,16 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     lineHeight: 28,
     textAlign: 'center',
-    paddingHorizontal: Spacing[4],
-    marginBottom: Spacing[2],
+    paddingHorizontal: 4,
+    marginBottom: 2,
   },
   conviction: {
     fontFamily: FontFamily.sans,
     fontSize: 13,
     lineHeight: 19,
     textAlign: 'center',
-    paddingHorizontal: Spacing[4],
-    marginBottom: Spacing[3],
+    paddingHorizontal: 4,
+    marginBottom: 3,
   },
   progressPill: {
     paddingHorizontal: 14,
@@ -1043,7 +1043,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  divider: { height: 1, marginBottom: Spacing[5] },
+  divider: { height: 1, marginBottom: 5 },
 
   stages: {},
 });

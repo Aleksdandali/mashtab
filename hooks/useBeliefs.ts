@@ -8,7 +8,7 @@ import { StageKey } from '@/constants/stages';
 
 export function getBeliefTitle(ub: UserBelief, lang: 'uk' | 'ru' | 'en' = 'uk'): string {
   if (ub.belief_id && ub.belief) {
-    return (ub.belief as Record<string, string>)[`belief_${lang}`] ?? ub.belief.belief_uk;
+    return (ub.belief as unknown as Record<string, string>)[`belief_${lang}`] ?? ub.belief.belief_uk;
   }
   return ub.custom_belief ?? 'Кастомна установка';
 }

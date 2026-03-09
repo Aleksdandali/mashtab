@@ -41,7 +41,7 @@ function BeliefCard({ ub }: { ub: UserBelief }) {
     <Pressable
       style={({ pressed }) => [
         styles.card,
-        { backgroundColor: C.surface2, shadowColor: C.shadow },
+        { backgroundColor: C.surface2 },
         pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
       ]}
       onPress={() => router.push(`/belief/${ub.id}`)}
@@ -198,7 +198,7 @@ export default function MindsetScreen() {
             </Pressable>
           )}
 
-          <View style={{ height: Spacing[8] }} />
+          <View style={{ height: 8 }} />
         </ScrollView>
       )}
     </SafeAreaView>
@@ -214,9 +214,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing[5],
-    paddingTop: Spacing[4],
-    paddingBottom: Spacing[4],
+    paddingHorizontal: 5,
+    paddingTop: 4,
+    paddingBottom: 4,
     borderBottomWidth: 1,
   },
   headerTitle: {
@@ -231,8 +231,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   headerBtn: {
-    paddingHorizontal: Spacing[4],
-    paddingVertical: Spacing[2],
+    paddingHorizontal: 4,
+    paddingVertical: 2,
     borderRadius: Radius.full,
   },
   headerBtnText: {
@@ -244,22 +244,22 @@ const styles = StyleSheet.create({
   loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
   scroll: {
-    paddingHorizontal: Spacing[5],
-    paddingTop: Spacing[5],
+    paddingHorizontal: 5,
+    paddingTop: 5,
   },
 
   // Belief card
   card: {
     flexDirection: 'row',
     borderRadius: Radius.lg,
-    padding: Spacing[4],
-    marginBottom: Spacing[3],
+    padding: 4,
+    marginBottom: 3,
     ...Shadow.sm,
   },
   cardRing: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: Spacing[4],
+    marginRight: 4,
   },
   ringLabel: {
     fontFamily: FontFamily.sans,
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing[2],
+    marginBottom: 2,
   },
   catBadge: {
     flexDirection: 'row',
@@ -306,13 +306,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontStyle: 'italic',
     lineHeight: 22,
-    marginBottom: Spacing[1],
+    marginBottom: 1,
   },
   conviction: {
     fontFamily: FontFamily.sans,
     fontSize: 12,
     lineHeight: 17,
-    marginBottom: Spacing[2],
+    marginBottom: 2,
   },
   stageRow: {
     flexDirection: 'row',
@@ -338,9 +338,9 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
     borderWidth: 1.5,
     borderStyle: 'dashed',
-    paddingVertical: Spacing[5],
-    marginBottom: Spacing[3],
-    gap: Spacing[2],
+    paddingVertical: 5,
+    marginBottom: 3,
+    gap: 2,
   },
   addPlus: {
     fontFamily: FontFamily.serif,
@@ -355,27 +355,27 @@ const styles = StyleSheet.create({
   // Empty state
   emptyWrap: {
     alignItems: 'center',
-    paddingTop: Spacing[12],
-    paddingHorizontal: Spacing[8],
+    paddingTop: 12,
+    paddingHorizontal: 8,
   },
-  emptyEmoji: { fontSize: 56, marginBottom: Spacing[4] },
+  emptyEmoji: { fontSize: 56, marginBottom: 4 },
   emptyTitle: {
     fontFamily: FontFamily.serif,
     fontSize: 22,
     fontWeight: '700',
     textAlign: 'center',
-    marginBottom: Spacing[3],
+    marginBottom: 3,
   },
   emptyBody: {
     fontFamily: FontFamily.sans,
     fontSize: 15,
     lineHeight: 22,
     textAlign: 'center',
-    marginBottom: Spacing[6],
+    marginBottom: 6,
   },
   diagnosticBtn: {
-    paddingHorizontal: Spacing[8],
-    paddingVertical: Spacing[4],
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: Radius.md,
   },
   diagnosticBtnText: {
