@@ -6,7 +6,7 @@ import {
   Pressable,
   SafeAreaView,
 } from 'react-native';
-import { DarkColors } from '@/constants/colors';
+import { Colors } from '@/constants/colors';
 import { FontFamily } from '@/constants/typography';
 import { Spacing, Radius } from '@/constants/spacing';
 
@@ -70,7 +70,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
   }
 }
 
-const C = DarkColors;
+const C = Colors;
 
 const styles = StyleSheet.create({
   root: {

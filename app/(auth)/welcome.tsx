@@ -9,13 +9,13 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { router } from 'expo-router';
-import { DarkColors } from '@/constants/colors';
+import { Colors } from '@/constants/colors';
 import { Typography, FontFamily } from '@/constants/typography';
 import { Spacing } from '@/constants/spacing';
 import { Button } from '@/components/ui/Button';
 
 const { width, height } = Dimensions.get('window');
-const C = DarkColors;
+const C = Colors;
 
 // Staggered animation helper
 function useEntrance(delay: number) {

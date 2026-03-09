@@ -1,40 +1,96 @@
 import { Tabs } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
-import { useColorScheme } from 'react-native';
-import { DarkColors, LightColors, ColorTheme } from '@/constants/colors';
-import { Spacing } from '@/constants/spacing';
+import { StyleSheet, View, Platform } from 'react-native';
+import { Colors, ColorTheme } from '@/constants/colors';
+
+// ─── Stroke-only tab icons (Lucide-style, 1.5px stroke) ──────────────────────
 
 function TabIcon({ focused, children }: { focused: boolean; children: React.ReactNode }) {
-  const scheme = useColorScheme();
-  const colors = scheme === 'dark' ? DarkColors : LightColors;
-
   return (
     <View style={styles.iconWrapper}>
       {children}
-      {focused && <View style={[styles.dot, { backgroundColor: colors.primary }]} />}
+      {focused && <View style={[styles.dot, { backgroundColor: Colors.primary }]} />}
     </View>
   );
 }
 
-export default function TabsLayout() {
-  const scheme = useColorScheme();
-  const colors: ColorTheme = scheme === 'dark' ? DarkColors : LightColors;
+// Home — house outline
+function HomeIcon({ focused }: { focused: boolean }) {
+  const color = focused ? Colors.primary : Colors.tabInactive;
+  return (
+    <View style={styles.icon}>
+      <View style={[styles.roof, { borderBottomColor: color }]} />
+      <View style={[styles.houseBody, { borderColor: color }]}>
+        <View style={[styles.houseDoor, { borderColor: color }]} />
+      </View>
+    </View>
+  );
+}
 
+// Mindset — brain outline (simplified: circle + two bumps)
+function MindsetIcon({ focused }: { focused: boolean }) {
+  const color = focused ? Colors.primary : Colors.tabInactive;
+  return (
+    <View style={styles.icon}>
+      <View style={[styles.brainOuter, { borderColor: color }]}>
+        <View style={[styles.brainLine, { backgroundColor: color }]} />
+      </View>
+    </View>
+  );
+}
+
+// Plans — checklist lines
+function PlansIcon({ focused }: { focused: boolean }) {
+  const color = focused ? Colors.primary : Colors.tabInactive;
+  return (
+    <View style={styles.icon}>
+      {([0, 7, 14] as const).map((top, i) => (
+        <View
+          key={top}
+          style={[
+            styles.listLine,
+            {
+              backgroundColor: color,
+              top,
+              width: i === 1 ? 14 : i === 2 ? 17 : 20,
+            },
+          ]}
+        />
+      ))}
+    </View>
+  );
+}
+
+// Habits — circle with lightning bolt inside
+function HabitsIcon({ focused }: { focused: boolean }) {
+  const color = focused ? Colors.primary : Colors.tabInactive;
+  return (
+    <View style={styles.icon}>
+      <View style={[styles.circle, { borderColor: color }]}>
+        <View style={[styles.bolt, { backgroundColor: color }]} />
+      </View>
+    </View>
+  );
+}
+
+// ─── Layout ──────────────────────────────────────────────────────────────────
+
+export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: colors.surface1,
-          borderTopColor: colors.border,
-          borderTopWidth: 1,
-          height: 64,
-          paddingBottom: 8,
+          backgroundColor: 'rgba(5, 6, 8, 0.92)',
+          borderTopColor: Colors.border,
+          borderTopWidth: StyleSheet.hairlineWidth,
+          height: Platform.OS === 'ios' ? 80 : 64,
+          paddingBottom: Platform.OS === 'ios' ? 24 : 8,
           paddingTop: 8,
+          position: 'absolute',
         },
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.tabInactive,
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: Colors.tabInactive,
       }}
     >
       <Tabs.Screen
@@ -42,7 +98,7 @@ export default function TabsLayout() {
         options={{
           tabBarIcon: ({ focused }) => (
             <TabIcon focused={focused}>
-              <HomeIcon focused={focused} colors={colors} />
+              <HomeIcon focused={focused} />
             </TabIcon>
           ),
         }}
@@ -52,7 +108,7 @@ export default function TabsLayout() {
         options={{
           tabBarIcon: ({ focused }) => (
             <TabIcon focused={focused}>
-              <MindsetIcon focused={focused} colors={colors} />
+              <MindsetIcon focused={focused} />
             </TabIcon>
           ),
         }}
@@ -62,7 +118,7 @@ export default function TabsLayout() {
         options={{
           tabBarIcon: ({ focused }) => (
             <TabIcon focused={focused}>
-              <PlansIcon focused={focused} colors={colors} />
+              <PlansIcon focused={focused} />
             </TabIcon>
           ),
         }}
@@ -72,69 +128,18 @@ export default function TabsLayout() {
         options={{
           tabBarIcon: ({ focused }) => (
             <TabIcon focused={focused}>
-              <HabitsIcon focused={focused} colors={colors} />
+              <HabitsIcon focused={focused} />
             </TabIcon>
           ),
         }}
       />
-      {/* Profile is navigated to via header avatar — not shown in tab bar */}
+      {/* Profile accessed via avatar in Home header */}
       <Tabs.Screen name="profile" options={{ tabBarButton: () => null }} />
     </Tabs>
   );
 }
 
-// ─── Tab Icons (SVG-like via Text, замінимо на векторні пізніше) ──────────────
-
-function HomeIcon({ focused, colors }: { focused: boolean; colors: ColorTheme }) {
-  return (
-    <View style={[styles.icon, focused && { opacity: 1 }]}>
-      <View style={[styles.iconBase, { opacity: focused ? 1 : 0.4 }]}>
-        {/* House shape */}
-        <View style={[styles.roof, { borderBottomColor: focused ? colors.primary : colors.text }]} />
-        <View style={[styles.house, { backgroundColor: focused ? colors.primary : colors.text, opacity: focused ? 1 : 0.5 }]} />
-      </View>
-    </View>
-  );
-}
-
-function MindsetIcon({ focused, colors }: { focused: boolean; colors: ColorTheme }) {
-  return (
-    <View style={[styles.icon, { opacity: focused ? 1 : 0.4 }]}>
-      <View style={[styles.circle, {
-        borderColor: focused ? colors.primary : colors.text,
-        borderWidth: 2,
-        width: 20,
-        height: 20,
-        borderRadius: 10,
-      }]} />
-      <View style={[styles.lineSmall, { backgroundColor: focused ? colors.primary : colors.text }]} />
-    </View>
-  );
-}
-
-function PlansIcon({ focused, colors }: { focused: boolean; colors: ColorTheme }) {
-  return (
-    <View style={[styles.icon, { opacity: focused ? 1 : 0.4 }]}>
-      {[0, 6, 12].map((top) => (
-        <View key={top} style={[styles.listLine, {
-          backgroundColor: focused ? colors.primary : colors.text,
-          width: top === 0 ? 20 : top === 6 ? 14 : 17,
-          top,
-        }]} />
-      ))}
-    </View>
-  );
-}
-
-function HabitsIcon({ focused, colors }: { focused: boolean; colors: ColorTheme }) {
-  return (
-    <View style={[styles.icon, { opacity: focused ? 1 : 0.4 }]}>
-      <View style={[styles.bolt, { borderColor: focused ? colors.primary : colors.text }]}>
-        <View style={[styles.boltInner, { backgroundColor: focused ? colors.primary : colors.text }]} />
-      </View>
-    </View>
-  );
-}
+// ─── Styles ──────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   iconWrapper: {
@@ -144,11 +149,11 @@ const styles = StyleSheet.create({
     height: 40,
   },
   dot: {
-    width: 4,
-    height: 4,
+    width: 3,
+    height: 3,
     borderRadius: 2,
     position: 'absolute',
-    bottom: 0,
+    bottom: 1,
   },
   icon: {
     width: 24,
@@ -156,49 +161,70 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconBase: {
-    alignItems: 'center',
-  },
+
+  // Home icon
   roof: {
     width: 0,
     height: 0,
-    borderLeftWidth: 10,
-    borderRightWidth: 10,
-    borderBottomWidth: 8,
+    borderLeftWidth: 11,
+    borderRightWidth: 11,
+    borderBottomWidth: 9,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    marginBottom: 1,
+    marginBottom: 0,
   },
-  house: {
+  houseBody: {
     width: 14,
-    height: 10,
+    height: 9,
+    borderWidth: 1.5,
     borderRadius: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
-  circle: {
-    marginBottom: 3,
-  },
-  lineSmall: {
-    width: 8,
-    height: 2,
+  houseDoor: {
+    width: 4,
+    height: 5,
+    borderWidth: 1.5,
+    borderBottomWidth: 0,
     borderRadius: 1,
+    marginBottom: 0,
   },
-  listLine: {
-    height: 2,
-    borderRadius: 1,
-    position: 'absolute',
-    left: 0,
-  },
-  bolt: {
-    width: 18,
-    height: 22,
-    borderWidth: 2,
-    borderRadius: 3,
+
+  // Mindset icon
+  brainOuter: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  boltInner: {
-    width: 6,
-    height: 10,
+  brainLine: {
+    width: 8,
+    height: 1.5,
+    borderRadius: 1,
+  },
+
+  // Plans icon
+  listLine: {
+    height: 1.5,
+    borderRadius: 1,
+    position: 'absolute',
+    left: 2,
+  },
+
+  // Habits icon
+  circle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bolt: {
+    width: 3,
+    height: 8,
     borderRadius: 1,
   },
 });

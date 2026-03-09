@@ -8,7 +8,7 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { DarkColors } from '@/constants/colors';
+import { Colors } from '@/constants/colors';
 import { Typography } from '@/constants/typography';
 import { Radius, Spacing } from '@/constants/spacing';
 
@@ -24,7 +24,7 @@ interface ButtonProps {
   disabled?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
-  colors?: typeof DarkColors;
+  colors?: typeof Colors;
 }
 
 export function Button({
@@ -36,7 +36,7 @@ export function Button({
   disabled = false,
   style,
   textStyle,
-  colors = DarkColors,
+  colors = Colors,
 }: ButtonProps) {
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -113,7 +113,7 @@ const sizes: Record<Size, ViewStyle> = {
   lg: { height: 52, paddingHorizontal: Spacing.xl },
 };
 
-const variants = (c: typeof DarkColors): Record<Variant, ViewStyle> => ({
+const variants = (c: typeof Colors): Record<Variant, ViewStyle> => ({
   primary: {
     backgroundColor: c.primary,
   },
@@ -127,7 +127,7 @@ const variants = (c: typeof DarkColors): Record<Variant, ViewStyle> => ({
   },
 });
 
-const labelColors = (c: typeof DarkColors): Record<Variant, TextStyle> => ({
+const labelColors = (c: typeof Colors): Record<Variant, TextStyle> => ({
   primary: { color: '#1A1208' },
   secondary: { color: c.primary },
   ghost: { color: c.textSecondary },

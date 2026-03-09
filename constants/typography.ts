@@ -1,76 +1,111 @@
 import { TextStyle } from 'react-native';
 
+// ─── Font families ────────────────────────────────────────────────────────────
+// Display (H1–H3, numbers, quotes): Cormorant Garamond serif
+// UI (everything else): Inter
+
 export const FontFamily = {
-  serif: 'CormorantGaramond_600SemiBold',
-  serifBold: 'CormorantGaramond_700Bold',
+  // Serif — display only
+  serif:       'CormorantGaramond_600SemiBold',
+  serifBold:   'CormorantGaramond_700Bold',
   serifItalic: 'CormorantGaramond_600SemiBold_Italic',
-  sans: 'Inter_400Regular',
-  sansMedium: 'Inter_500Medium',
-  sansSemiBold: 'Inter_600SemiBold',
-  sansBold: 'Inter_700Bold',
+
+  // Inter — all UI
+  sans:        'Inter_400Regular',
+  sansMedium:  'Inter_500Medium',
+  sansSemiBold:'Inter_600SemiBold',
+  sansBold:    'Inter_700Bold',
 } as const;
 
-export const Typography: Record<string, TextStyle> = {
-  heading1: {
+// ─── Scale tokens ─────────────────────────────────────────────────────────────
+
+export const Typography = {
+  // Display — Cormorant Garamond
+  h1: {
     fontFamily: FontFamily.serifBold,
-    fontSize: 30,
+    fontSize: 32,
     lineHeight: 38,
-    letterSpacing: -0.3,
-  },
-  heading2: {
+    fontWeight: '600',
+  } as TextStyle,
+
+  h2: {
     fontFamily: FontFamily.serif,
     fontSize: 24,
     lineHeight: 30,
-    letterSpacing: -0.2,
-  },
-  heading3: {
+    fontWeight: '600',
+  } as TextStyle,
+
+  h3: {
     fontFamily: FontFamily.serif,
-    fontSize: 18,
-    lineHeight: 24,
-    letterSpacing: -0.1,
-  },
-  number: {
-    fontFamily: FontFamily.serifBold,
-    fontSize: 28,
-    lineHeight: 34,
-    letterSpacing: -0.5,
-  },
-  quote: {
-    fontFamily: FontFamily.serifItalic,
-    fontSize: 18,
+    fontSize: 20,
     lineHeight: 26,
-    letterSpacing: 0.1,
-  },
+    fontWeight: '600',
+  } as TextStyle,
+
+  // UI — Inter
   body: {
     fontFamily: FontFamily.sans,
-    fontSize: 16,
-    lineHeight: 24,
-  },
+    fontSize: 15,
+    lineHeight: 22,
+    fontWeight: '400',
+  } as TextStyle,
+
   bodyMedium: {
     fontFamily: FontFamily.sansMedium,
     fontSize: 15,
     lineHeight: 22,
-  },
-  bodyBold: {
+    fontWeight: '500',
+  } as TextStyle,
+
+  bodySemiBold: {
     fontFamily: FontFamily.sansSemiBold,
     fontSize: 15,
     lineHeight: 22,
-  },
-  button: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 15,
-    lineHeight: 20,
-    letterSpacing: 0.1,
-  },
+    fontWeight: '600',
+  } as TextStyle,
+
   caption: {
     fontFamily: FontFamily.sansMedium,
     fontSize: 13,
     lineHeight: 18,
-  },
+    fontWeight: '500',
+  } as TextStyle,
+
   label: {
     fontFamily: FontFamily.sansSemiBold,
     fontSize: 11,
-    lineHeight: 16,
-    letterSpacing: 0.5,
-  },
-};
+    lineHeight: 14,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  } as TextStyle,
+
+  button: {
+    fontFamily: FontFamily.sansSemiBold,
+    fontSize: 15,
+    lineHeight: 20,
+    fontWeight: '600',
+  } as TextStyle,
+
+  // Legacy aliases — kept for backwards compat
+  heading1: {
+    fontFamily: FontFamily.serifBold,
+    fontSize: 32,
+    lineHeight: 38,
+    fontWeight: '600',
+  } as TextStyle,
+
+  heading2: {
+    fontFamily: FontFamily.serif,
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: '600',
+  } as TextStyle,
+
+  heading3: {
+    fontFamily: FontFamily.serif,
+    fontSize: 20,
+    lineHeight: 26,
+    fontWeight: '600',
+  } as TextStyle,
+} as const;

@@ -1,7 +1,6 @@
-import { useColorScheme } from 'react-native';
-import { DarkColors, LightColors, ColorTheme } from '@/constants/colors';
+import { Colors, ColorTheme } from '@/constants/colors';
 
+// Dark-only design system — always returns the single Colors object.
 export function useTheme(): ColorTheme {
-  const scheme = useColorScheme();
-  return scheme === 'dark' ? DarkColors : LightColors;
+  return Colors;
 }

@@ -1,77 +1,43 @@
-export const DarkColors = {
+// ─── МАСШТАБ Design System — Dark Only ───────────────────────────────────────
+
+export const Colors = {
   // Backgrounds
-  bg: '#0F0D0B',
-  surface1: '#1A1714',
-  surface2: '#1E1B17',
-  surface3: '#252220',
+  bg:       '#050608',
+  surface1: '#0C0E12',
+  surface2: '#121418',
+  surface3: '#1A1C22',
+
+  // Accent — Lime
+  primary:      '#C8E64A',
+  primaryMuted: 'rgba(200, 230, 74, 0.12)',
+  primaryDim:   'rgba(200, 230, 74, 0.06)',
 
   // Text
-  text: '#F5E6D3',
-  textSecondary: 'rgba(245, 230, 211, 0.60)',
-  textTertiary: 'rgba(245, 230, 211, 0.38)',
-
-  // Primary (gold)
-  primary: '#D4A574',
-  primaryDark: '#C49564',
-  primaryLight: 'rgba(212, 165, 116, 0.15)',
-
-  // Semantic
-  success: '#7CB392',
-  successDark: '#5A9E72',
-  info: '#7BB8C9',
-  infoDark: '#5089A0',
-  warning: '#E8976B',
-  warningDark: '#C47A4A',
-  error: '#E07B6B',
+  text:          '#F2F0EB',
+  textSecondary: 'rgba(242, 240, 235, 0.55)',
+  textTertiary:  'rgba(242, 240, 235, 0.30)',
+  textDisabled:  'rgba(242, 240, 235, 0.15)',
 
   // Borders
-  border: 'rgba(245, 230, 211, 0.08)',
-  borderMedium: 'rgba(245, 230, 211, 0.15)',
+  border:        'rgba(242, 240, 235, 0.06)',
+  borderActive:  'rgba(242, 240, 235, 0.12)',
+  borderMedium:  'rgba(242, 240, 235, 0.12)', // alias for borderActive
 
-  // Overlay
-  overlay: 'rgba(15, 13, 11, 0.85)',
-
-  // Tab bar
-  tabActive: '#D4A574',
-  tabInactive: 'rgba(245, 230, 211, 0.38)',
-} as const;
-
-export const LightColors = {
-  // Backgrounds
-  bg: '#FAF7F2',
-  surface1: '#F3EFE8',
-  surface2: '#FFFFFF',
-  surface3: '#F8F5EF',
-
-  // Text
-  text: '#2C2520',
-  textSecondary: 'rgba(44, 37, 32, 0.55)',
-  textTertiary: 'rgba(44, 37, 32, 0.35)',
-
-  // Primary (gold)
-  primary: '#B8895E',
-  primaryDark: '#A07848',
-  primaryLight: 'rgba(184, 137, 94, 0.12)',
+  // Accent variants (legacy aliases)
+  primaryLight: 'rgba(200, 230, 74, 0.12)',   // alias for primaryMuted
+  primaryDark:  '#A8C230',                     // slightly darker lime
 
   // Semantic
-  success: '#5A9E72',
-  successDark: '#4A8A60',
-  info: '#5089A0',
-  infoDark: '#3D7088',
-  warning: '#C47A4A',
-  warningDark: '#A86038',
-  error: '#C45A4A',
-
-  // Borders
-  border: 'rgba(44, 37, 32, 0.08)',
-  borderMedium: 'rgba(44, 37, 32, 0.15)',
-
-  // Overlay
-  overlay: 'rgba(250, 247, 242, 0.85)',
+  success: '#4AE68C',
+  error:   '#E64A5E',
+  warning: '#E6B44A',
 
   // Tab bar
-  tabActive: '#B8895E',
-  tabInactive: 'rgba(44, 37, 32, 0.35)',
+  tabInactive: 'rgba(242, 240, 235, 0.30)',
 } as const;
 
-export type ColorTheme = typeof DarkColors | typeof LightColors;
+// Keep legacy aliases so existing useTheme() calls keep working
+export const DarkColors = Colors;
+export const LightColors = Colors;
+
+export type ColorTheme = typeof Colors;

@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
 import { router } from 'expo-router';
-import { DarkColors as C } from '@/constants/colors';
+import { Colors as C } from '@/constants/colors';
 import { FontFamily } from '@/constants/typography';
 import { Spacing } from '@/constants/spacing';
 import { Button } from '@/components/ui/Button';

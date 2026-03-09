@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
-import { DarkColors as C } from '@/constants/colors';
+import { Colors as C } from '@/constants/colors';
 import { Typography, FontFamily } from '@/constants/typography';
 import { Spacing, Radius } from '@/constants/spacing';
 import { BeliefCategory } from '@/constants/categories';

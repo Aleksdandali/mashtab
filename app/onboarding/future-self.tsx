@@ -9,7 +9,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { router } from 'expo-router';
-import { DarkColors as C } from '@/constants/colors';
+import { Colors as C } from '@/constants/colors';
 import { FontFamily } from '@/constants/typography';
 import { Spacing, Radius, Shadow } from '@/constants/spacing';
 import { BeliefCategory, CATEGORY_MAP } from '@/constants/categories';
