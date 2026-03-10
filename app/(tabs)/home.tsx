@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,43 +6,18 @@ import {
   ScrollView,
   SafeAreaView,
   Pressable,
-  Animated,
 } from 'react-native';
-import { Svg, Circle } from 'react-native-svg';
 import { router, useFocusEffect } from 'expo-router';
-import * as Haptics from 'expo-haptics';
 
 import { useTheme } from '@/hooks/useTheme';
 import { useProfile } from '@/hooks/useProfile';
-import { useBeliefs, getBeliefTitle, getBeliefCategory, getCompletedStages } from '@/hooks/useBeliefs';
+import { useBeliefs, getBeliefTitle, getCompletedStages } from '@/hooks/useBeliefs';
 import { useTasks } from '@/hooks/useTasks';
 import { useJournal } from '@/hooks/useJournal';
 import { Icon } from '@/components/ui/Icon';
 import { FontFamily } from '@/constants/typography';
 import { Spacing } from '@/constants/spacing';
 import { getDayPeriod, getGreeting, formatDisplayDate, formatDayName, todayISO } from '@/utils/dates';
-import type { UserBelief } from '@/types';
-
-// ─── Ring SVG ─────────────────────────────────────────────────────────────────
-
-function RingSvg({ progress, size = 64 }: { progress: number; size?: number }) {
-  const R = size / 2 - 5;
-  const circumference = 2 * Math.PI * R;
-  const offset = circumference - (progress / 6) * circumference;
-  const cx = size / 2;
-  return (
-    <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
-      <Circle cx={cx} cy={cx} r={R} fill="none" stroke="rgba(163,174,196,0.08)" strokeWidth={4} />
-      <Circle
-        cx={cx} cy={cx} r={R} fill="none"
-        stroke="#C8FF00" strokeWidth={4}
-        strokeDasharray={circumference}
-        strokeDashoffset={offset}
-        strokeLinecap="round"
-      />
-    </Svg>
-  );
-}
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
@@ -205,7 +180,7 @@ export default function HomeScreen() {
               pressed && { opacity: 0.8 },
             ]}
           >
-            <View style={S.coachDot} />
+            <View style={[S.coachDot, { backgroundColor: C.primary }]} />
             <Text style={[S.coachChipText, { color: C.text }]}>Твій коуч онлайн</Text>
           </Pressable>
 
@@ -312,7 +287,6 @@ const S = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#C8FF00',
   },
   coachChipText: { fontFamily: FontFamily.sansSemiBold, fontSize: 15 },
 });

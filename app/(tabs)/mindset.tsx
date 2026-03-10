@@ -13,7 +13,6 @@ import { useTheme } from '@/hooks/useTheme';
 import {
   useBeliefs,
   getBeliefTitle,
-  getBeliefCategory,
   getCompletedStages,
 } from '@/hooks/useBeliefs';
 import { Icon } from '@/components/ui/Icon';
