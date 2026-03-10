@@ -474,8 +474,6 @@ export default function HomeScreen() {
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-import { StyleSheet } from 'react-native';
-
 const S = StyleSheet.create({
   root: { flex: 1 },
   scroll: { paddingHorizontal: Spacing.screen, paddingTop: Spacing.base, gap: 16, paddingBottom: 32 },
