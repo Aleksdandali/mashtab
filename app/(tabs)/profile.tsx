@@ -409,6 +409,51 @@ export default function ProfileScreen() {
     );
   };
 
+  const [deletingAccount, setDeletingAccount] = useState(false);
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Видалити акаунт',
+      'Це дія незворотна. Всі ваші дані будуть видалені назавжди. Ви впевнені?',
+      [
+        { text: 'Скасувати', style: 'cancel' },
+        {
+          text: 'Видалити назавжди',
+          style: 'destructive',
+          onPress: async () => {
+            setDeletingAccount(true);
+            try {
+              const { data: { session } } = await supabase.auth.getSession();
+              if (!session) return;
+
+              const res = await fetch(
+                `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/delete-account`,
+                {
+                  method: 'POST',
+                  headers: {
+                    Authorization: `Bearer ${session.access_token}`,
+                    'Content-Type': 'application/json',
+                  },
+                },
+              );
+
+              if (res.ok) {
+                await supabase.auth.signOut();
+                router.replace('/(auth)/welcome');
+              } else {
+                const data = await res.json();
+                Alert.alert('Помилка', data.error ?? 'Не вдалося видалити акаунт');
+              }
+            } catch {
+              Alert.alert('Помилка', 'Не вдалося видалити акаунт');
+            }
+            setDeletingAccount(false);
+          },
+        },
+      ],
+    );
+  };
+
   const initials = profile?.name
     ? profile.name.trim().split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()
     : '?';
@@ -557,6 +602,22 @@ export default function ProfileScreen() {
           </Pressable>
         </View>
 
+        {/* ─── Delete account (Apple requirement) ─── */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.deleteBtn,
+            pressed && { opacity: 0.7 },
+          ]}
+          onPress={handleDeleteAccount}
+          disabled={deletingAccount}
+        >
+          {deletingAccount ? (
+            <ActivityIndicator color={C.error} size="small" />
+          ) : (
+            <Text style={[styles.deleteText, { color: C.error }]}>Видалити акаунт</Text>
+          )}
+        </Pressable>
+
         <View style={{ height: Spacing.xl }} />
       </ScrollView>
 
@@ -677,6 +738,15 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.sansSemiBold,
     fontSize: 15,
     color: '#C47B8A',
+  },
+  deleteBtn: {
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginTop: Spacing.sm,
+  },
+  deleteText: {
+    fontFamily: FontFamily.sans,
+    fontSize: 13,
   },
 });
 

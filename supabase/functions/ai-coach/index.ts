@@ -152,6 +152,27 @@ serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
 
+    // ─── Rate limiting: check subscription & daily limit ──────────────────
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('subscription_tier, ai_messages_today, ai_messages_date')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile) return json({ error: 'Profile not found' }, 404);
+
+    if (profile.subscription_tier === 'free') {
+      return json({ error: 'AI-коуч доступний з Standard підписки' }, 403);
+    }
+
+    // Reset daily counter if new day
+    const today = new Date().toISOString().split('T')[0];
+    const messagesUsed = profile.ai_messages_date === today ? profile.ai_messages_today : 0;
+
+    if (profile.subscription_tier === 'standard' && messagesUsed >= 20) {
+      return json({ error: 'Ліміт 20 повідомлень на день вичерпано. Оновіть до Premium для безлімітного доступу.' }, 429);
+    }
+
     const body = await req.json();
     const { messages = [], context = {} } = body as {
       messages: Array<{ role: string; content: string }>;
@@ -238,6 +259,15 @@ serve(async (req: Request) => {
 
     const claudeData = await claudeRes.json();
     const content: string = claudeData.content?.[0]?.text ?? '';
+
+    // Increment daily message counter
+    await supabaseAdmin
+      .from('profiles')
+      .update({
+        ai_messages_today: messagesUsed + 1,
+        ai_messages_date: today,
+      })
+      .eq('id', user.id);
 
     return json({ content });
 

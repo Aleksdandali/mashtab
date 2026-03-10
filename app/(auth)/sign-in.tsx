@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { router } from 'expo-router';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/hooks/useTheme';
 import { FontFamily } from '@/constants/typography';
@@ -23,7 +24,9 @@ export default function SignInScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingApple, setLoadingApple] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resetSent, setResetSent] = useState(false);
 
   const handleSignIn = async () => {
     setError(null);
@@ -39,6 +42,49 @@ export default function SignInScreen() {
       return;
     }
     router.replace('/(tabs)/home');
+  };
+
+  const handleApple = async () => {
+    setLoadingApple(true);
+    setError(null);
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      if (credential.identityToken) {
+        const { data, error: authError } = await supabase.auth.signInWithIdToken({
+          provider: 'apple',
+          token: credential.identityToken,
+        });
+        if (authError) {
+          setError(authError.message);
+        } else if (data?.user) {
+          router.replace('/(tabs)/home');
+        }
+      }
+    } catch (e: any) {
+      if (e.code !== 'ERR_REQUEST_CANCELED') {
+        setError('Apple Sign In не вдався');
+      }
+    }
+    setLoadingApple(false);
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email.trim() || !email.includes('@')) {
+      setError('Введіть email, щоб скинути пароль');
+      return;
+    }
+    setError(null);
+    const { error: resetErr } = await supabase.auth.resetPasswordForEmail(email.trim());
+    if (resetErr) {
+      setError(resetErr.message);
+    } else {
+      setResetSent(true);
+    }
   };
 
   return (
@@ -67,8 +113,17 @@ export default function SignInScreen() {
 
           {/* Error */}
           {error && (
-            <View style={[styles.errorBox, { backgroundColor: '#C47B8A22' }]}>
-              <Text style={[styles.errorText, { color: '#C47B8A' }]}>{error}</Text>
+            <View style={[styles.errorBox, { backgroundColor: C.error + '15' }]}>
+              <Text style={[styles.errorText, { color: C.error }]}>{error}</Text>
+            </View>
+          )}
+
+          {/* Reset sent confirmation */}
+          {resetSent && (
+            <View style={[styles.successBox, { backgroundColor: C.primaryMuted }]}>
+              <Text style={[styles.successText, { color: C.primary }]}>
+                Лист для скидання пароля надіслано на {email}
+              </Text>
             </View>
           )}
 
@@ -89,7 +144,12 @@ export default function SignInScreen() {
 
           {/* Password */}
           <View style={styles.fieldGroup}>
-            <Text style={[styles.label, { color: C.textSecondary }]}>Пароль</Text>
+            <View style={styles.labelRow}>
+              <Text style={[styles.label, { color: C.textSecondary }]}>Пароль</Text>
+              <Pressable onPress={handleForgotPassword}>
+                <Text style={[styles.forgotLink, { color: C.primary }]}>Забув пароль?</Text>
+              </Pressable>
+            </View>
             <TextInput
               style={[styles.input, { backgroundColor: C.surface2, color: C.text, borderColor: C.border }]}
               placeholder="Ваш пароль"
@@ -111,33 +171,36 @@ export default function SignInScreen() {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color={C.surface1} />
+              <ActivityIndicator color={C.bg} />
             ) : (
-              <Text style={[styles.btnText, { color: C.surface1 }]}>Увійти</Text>
+              <Text style={[styles.btnText, { color: C.bg }]}>Увійти</Text>
             )}
           </Pressable>
 
-          {/* Divider */}
-          <View style={styles.divider}>
-            <View style={[styles.dividerLine, { backgroundColor: C.border }]} />
-            <Text style={[styles.dividerText, { color: C.textTertiary }]}>або</Text>
-            <View style={[styles.dividerLine, { backgroundColor: C.border }]} />
-          </View>
+          {/* Apple Sign In */}
+          {Platform.OS === 'ios' && (
+            <>
+              <View style={styles.divider}>
+                <View style={[styles.dividerLine, { backgroundColor: C.border }]} />
+                <Text style={[styles.dividerText, { color: C.textTertiary }]}>або</Text>
+                <View style={[styles.dividerLine, { backgroundColor: C.border }]} />
+              </View>
 
-          {/* Google */}
-          <Pressable
-            style={({ pressed }) => [
-              styles.socialBtn,
-              { backgroundColor: C.surface2, borderColor: C.borderMedium, opacity: pressed ? 0.8 : 1 },
-            ]}
-            onPress={async () => {
-              const { error: err } = await supabase.auth.signInWithOAuth({ provider: 'google' });
-              if (!err) router.replace('/(tabs)/home');
-            }}
-          >
-            <Icon name="Globe" size={20} color={C.textSecondary} />
-            <Text style={[styles.socialText, { color: C.text }]}>Продовжити з Google</Text>
-          </Pressable>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.socialBtn,
+                  { backgroundColor: C.surface2, borderColor: C.borderMedium, opacity: pressed ? 0.8 : 1 },
+                ]}
+                onPress={handleApple}
+                disabled={loadingApple}
+              >
+                <Icon name="Monitor" size={20} color={C.textSecondary} />
+                <Text style={[styles.socialText, { color: C.text }]}>
+                  {loadingApple ? 'Зачекайте...' : 'Продовжити з Apple'}
+                </Text>
+              </Pressable>
+            </>
+          )}
 
           <View style={styles.footerRow}>
             <Text style={[styles.footerText, { color: C.textTertiary }]}>
@@ -158,12 +221,16 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: Spacing.screen, paddingBottom: Spacing.xxxl },
   back: { paddingTop: Spacing.base, paddingBottom: Spacing.xl },
   backText: { fontFamily: FontFamily.sansMedium, fontSize: 15 },
-  title: { fontFamily: FontFamily.serifBold, fontSize: 28, lineHeight: 34, marginBottom: Spacing.sm },
+  title: { fontFamily: FontFamily.sansExtraBold, fontSize: 28, lineHeight: 34, marginBottom: Spacing.sm },
   subtitle: { fontFamily: FontFamily.sansMedium, fontSize: 15, lineHeight: 22, marginBottom: Spacing.xl },
   errorBox: { borderRadius: Radius.md, padding: Spacing.md, marginBottom: Spacing.base },
   errorText: { fontFamily: FontFamily.sansMedium, fontSize: 14, lineHeight: 20 },
+  successBox: { borderRadius: Radius.md, padding: Spacing.md, marginBottom: Spacing.base },
+  successText: { fontFamily: FontFamily.sansMedium, fontSize: 14, lineHeight: 20, textAlign: 'center' },
   fieldGroup: { marginBottom: Spacing.base },
+  labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   label: { fontFamily: FontFamily.sansSemiBold, fontSize: 12, letterSpacing: 0.5, marginBottom: 6, textTransform: 'uppercase' },
+  forgotLink: { fontFamily: FontFamily.sansMedium, fontSize: 12, marginBottom: 6 },
   input: {
     borderRadius: Radius.md, borderWidth: 1.5,
     paddingHorizontal: Spacing.base, paddingVertical: 13,
@@ -182,7 +249,6 @@ const styles = StyleSheet.create({
     gap: Spacing.md, borderWidth: 1.5, borderRadius: Radius.md,
     paddingVertical: 14, marginBottom: Spacing.xl,
   },
-  socialIcon: { width: 20 },
   socialText: { fontFamily: FontFamily.sansSemiBold, fontSize: 15 },
   footerRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
   footerText: { fontFamily: FontFamily.sans, fontSize: 14 },

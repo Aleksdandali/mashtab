@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
+import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { supabase } from '@/lib/supabase';
 import {
   useFonts,
   Inter_400Regular,
@@ -28,6 +30,16 @@ export default function RootLayout() {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded]);
+
+  // Auth state listener: redirect on sign out
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        router.replace('/(auth)/welcome');
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   if (!fontsLoaded) return null;
 

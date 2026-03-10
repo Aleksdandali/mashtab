@@ -12,6 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { router } from 'expo-router';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { Colors as C } from '@/constants/colors';
 import { FontFamily } from '@/constants/typography';
 import { Spacing, Radius } from '@/constants/spacing';
@@ -19,40 +20,6 @@ import { supabase } from '@/lib/supabase';
 import { syncOnboardingData } from '@/lib/onboarding-storage';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
-
-// ─── Social auth button ───────────────────────────────────────────────────────
-
-function SocialButton({
-  icon,
-  label,
-  onPress,
-  loading,
-}: {
-  icon: import('@/components/ui/Icon').IconName;
-  label: string;
-  onPress: () => void;
-  loading?: boolean;
-}) {
-  const scale = useRef(new Animated.Value(1)).current;
-  return (
-    <Animated.View style={{ transform: [{ scale }] }}>
-      <Pressable
-        onPress={onPress}
-        disabled={loading}
-        onPressIn={() =>
-          Animated.spring(scale, { toValue: 0.97, useNativeDriver: true, speed: 50, bounciness: 0 }).start()
-        }
-        onPressOut={() =>
-          Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 4 }).start()
-        }
-        style={({ pressed }) => [styles.socialBtn, pressed && { opacity: 0.85 }]}
-      >
-        <Icon name={icon} size={20} color={C.textSecondary} />
-        <Text style={styles.socialLabel}>{label}</Text>
-      </Pressable>
-    </Animated.View>
-  );
-}
 
 // ─── Styled input ─────────────────────────────────────────────────────────────
 
@@ -89,13 +56,13 @@ function StyledInput({
 
   const borderColor = borderAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [C.border, error ? '#E07B6B' : C.primary],
+    outputRange: [C.border, error ? C.error : C.primary],
   });
 
   return (
     <View style={styles.inputGroup}>
       <Text style={styles.inputLabel}>{label}</Text>
-      <Animated.View style={[styles.inputWrap, { borderColor: error ? '#E07B6B' : borderColor }]}>
+      <Animated.View style={[styles.inputWrap, { borderColor: error ? C.error : borderColor }]}>
         <TextInput
           value={value}
           onChangeText={onChangeText}
@@ -122,10 +89,9 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState('');
   const [errors, setErrors]     = useState<{ email?: string; password?: string; general?: string }>({});
   const [loadingEmail, setLoadingEmail]   = useState(false);
-  const [loadingGoogle, setLoadingGoogle] = useState(false);
   const [loadingApple, setLoadingApple]   = useState(false);
+  const [showEmailConfirm, setShowEmailConfirm] = useState(false);
 
-  // Validation
   const validate = (): boolean => {
     const next: typeof errors = {};
     if (!email.includes('@') || !email.includes('.')) next.email = 'Введіть правильну email адресу';
@@ -134,13 +100,12 @@ export default function SignUpScreen() {
     return Object.keys(next).length === 0;
   };
 
-  // Post-auth: sync onboarding data + navigate to tabs
   const afterAuth = async (userId: string) => {
     await syncOnboardingData(userId, supabase);
     router.replace('/(tabs)/home');
   };
 
-  // Email sign-up
+  // Email sign-up with email confirm handling
   const handleEmailSignUp = async () => {
     if (!validate()) return;
     setLoadingEmail(true);
@@ -152,34 +117,72 @@ export default function SignUpScreen() {
       setLoadingEmail(false);
       return;
     }
-    if (data.user) await afterAuth(data.user.id);
+
+    if (data.session) {
+      await afterAuth(data.user!.id);
+    } else if (data.user) {
+      setShowEmailConfirm(true);
+    }
     setLoadingEmail(false);
   };
 
-  // Google OAuth
-  // Requires expo-auth-session setup + Supabase Google provider
-  const handleGoogle = async () => {
-    setLoadingGoogle(true);
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: 'mashtab://auth/callback' },
-    });
-    if (error) setErrors({ general: error.message });
-    // Navigation handled via deep link listener in _layout.tsx
-    setLoadingGoogle(false);
-  };
-
-  // Apple OAuth
-  // Requires expo-apple-authentication + Supabase Apple provider
+  // Apple Sign In via native module + Supabase ID token
   const handleApple = async () => {
     setLoadingApple(true);
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'apple',
-      options: { redirectTo: 'mashtab://auth/callback' },
-    });
-    if (error) setErrors({ general: error.message });
+    setErrors({});
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+      if (credential.identityToken) {
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: 'apple',
+          token: credential.identityToken,
+        });
+        if (error) {
+          setErrors({ general: error.message });
+        } else if (data?.user) {
+          await afterAuth(data.user.id);
+        }
+      }
+    } catch (e: any) {
+      if (e.code !== 'ERR_REQUEST_CANCELED') {
+        setErrors({ general: 'Apple Sign In не вдався' });
+      }
+    }
     setLoadingApple(false);
   };
+
+  // Email confirm screen
+  if (showEmailConfirm) {
+    return (
+      <SafeAreaView style={styles.root}>
+        <View style={styles.confirmContainer}>
+          <View style={styles.confirmIconWrap}>
+            <Icon name="Mail" size={40} color={C.primary} />
+          </View>
+          <Text style={styles.confirmTitle}>Перевірте пошту</Text>
+          <Text style={styles.confirmDesc}>
+            Ми надіслали лист підтвердження на{'\n'}
+            <Text style={{ color: C.primary, fontFamily: FontFamily.sansSemiBold }}>{email}</Text>
+          </Text>
+          <Text style={styles.confirmHint}>
+            Натисніть посилання в листі, а потім поверніться і увійдіть
+          </Text>
+          <Button
+            label="Увійти"
+            onPress={() => router.replace('/(auth)/sign-in')}
+            variant="primary"
+            size="lg"
+            style={{ width: '100%', marginTop: Spacing.xl }}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -200,21 +203,19 @@ export default function SignUpScreen() {
             </Text>
           </View>
 
-          {/* Social auth */}
-          <View style={styles.socialBlock}>
-            <SocialButton
-              icon="Globe"
-              label="Продовжити з Google"
-              onPress={handleGoogle}
-              loading={loadingGoogle}
-            />
-            <SocialButton
-              icon="Monitor"
-              label="Продовжити з Apple"
+          {/* Apple Sign In */}
+          {Platform.OS === 'ios' && (
+            <Pressable
               onPress={handleApple}
-              loading={loadingApple}
-            />
-          </View>
+              disabled={loadingApple}
+              style={({ pressed }) => [styles.socialBtn, pressed && { opacity: 0.85 }]}
+            >
+              <Icon name="Monitor" size={20} color={C.textSecondary} />
+              <Text style={styles.socialLabel}>
+                {loadingApple ? 'Зачекайте...' : 'Продовжити з Apple'}
+              </Text>
+            </Pressable>
+          )}
 
           {/* Divider */}
           <View style={styles.divider}>
@@ -293,12 +294,9 @@ const styles = StyleSheet.create({
     gap: Spacing.xl,
   },
 
-  // Header
-  header: {
-    gap: Spacing.sm,
-  },
+  header: { gap: Spacing.sm },
   title: {
-    fontFamily: FontFamily.serifBold,
+    fontFamily: FontFamily.sansExtraBold,
     fontSize: 32,
     lineHeight: 40,
     color: C.text,
@@ -311,9 +309,6 @@ const styles = StyleSheet.create({
   },
 
   // Social
-  socialBlock: {
-    gap: Spacing.sm,
-  },
   socialBtn: {
     height: 52,
     backgroundColor: C.surface1,
@@ -324,11 +319,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,
-  },
-  socialIcon: {
-    width: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   socialLabel: {
     fontFamily: FontFamily.sansSemiBold,
@@ -354,12 +344,8 @@ const styles = StyleSheet.create({
   },
 
   // Form
-  form: {
-    gap: Spacing.base,
-  },
-  inputGroup: {
-    gap: Spacing.xs,
-  },
+  form: { gap: Spacing.base },
+  inputGroup: { gap: Spacing.xs },
   inputLabel: {
     fontFamily: FontFamily.sansMedium,
     fontSize: 13,
@@ -431,5 +417,43 @@ const styles = StyleSheet.create({
   legalLink: {
     color: C.primary,
     fontFamily: FontFamily.sansMedium,
+  },
+
+  // Email confirm
+  confirmContainer: {
+    flex: 1,
+    paddingHorizontal: Spacing.screen,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  confirmIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: C.primaryMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.xl,
+  },
+  confirmTitle: {
+    fontFamily: FontFamily.sansExtraBold,
+    fontSize: 28,
+    color: C.text,
+    marginBottom: Spacing.sm,
+  },
+  confirmDesc: {
+    fontFamily: FontFamily.sansMedium,
+    fontSize: 15,
+    lineHeight: 23,
+    color: C.textSecondary,
+    textAlign: 'center',
+    marginBottom: Spacing.base,
+  },
+  confirmHint: {
+    fontFamily: FontFamily.sans,
+    fontSize: 13,
+    lineHeight: 20,
+    color: C.textTertiary,
+    textAlign: 'center',
   },
 });

@@ -70,6 +70,9 @@ export async function syncOnboardingData(
   userId: string,
   supabase: import('@supabase/supabase-js').SupabaseClient,
 ): Promise<void> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return;
+
   const { answers } = await getOnboardingData();
   if (answers.length === 0) return;
 

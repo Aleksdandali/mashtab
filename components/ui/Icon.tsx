@@ -11,7 +11,7 @@ import {
   Check, BarChart2, Star, Flame, Award, Briefcase, DollarSign, Smile,
   Home, Lightbulb, LucideProps, X, Settings, Globe, Sun, SunMoon, Bell,
   Calendar, CircleDot, Minus, MoreHorizontal, Edit2, Trash2, ArrowUpCircle,
-  CircleCheck, TrendingDown, Wallet, HandHelping, ShieldAlert, Send,
+  CircleCheck, TrendingDown, Wallet, HandHelping, ShieldAlert, Send, Mail,
 } from 'lucide-react-native';
 
 const ICON_MAP = {
@@ -82,6 +82,7 @@ const ICON_MAP = {
   ArrowUpCircle,
   CircleCheck,
   Send,
+  Mail,
 } as const;
 
 export type IconName = keyof typeof ICON_MAP;
