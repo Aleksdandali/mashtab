@@ -8,6 +8,7 @@ import {
   Pressable,
   Animated,
 } from 'react-native';
+import { Svg, Circle } from 'react-native-svg';
 import { router, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 
@@ -16,28 +17,55 @@ import { useProfile } from '@/hooks/useProfile';
 import { useBeliefs, getBeliefTitle, getBeliefCategory, getCompletedStages } from '@/hooks/useBeliefs';
 import { useTasks } from '@/hooks/useTasks';
 import { useJournal } from '@/hooks/useJournal';
-import { RingProgress } from '@/components/charts/RingProgress';
 import { Icon } from '@/components/ui/Icon';
 import { FontFamily } from '@/constants/typography';
-import { Spacing, Radius, Shadow } from '@/constants/spacing';
+import { Spacing, Radius } from '@/constants/spacing';
 import { CATEGORY_MAP } from '@/constants/categories';
-import { CATEGORY_COLORS } from '@/constants/sample-beliefs';
-import { STAGE_COLORS } from '@/constants/stages';
 import { getDayPeriod, getGreeting, formatDisplayDate, formatDayName, todayISO } from '@/utils/dates';
-import type { Task } from '@/types';
+import type { Task, UserBelief } from '@/types';
 
-// ─── Sub-components ───────────────────────────────────────────────────────────
+// ─── Ring SVG ─────────────────────────────────────────────────────────────────
 
-/** Ritual CTA card with pulsing glow */
+function RingSvg({ progress, size = 64 }: { progress: number; size?: number }) {
+  const R = size / 2 - 5;
+  const circumference = 2 * Math.PI * R;
+  const offset = circumference - (progress / 6) * circumference;
+  const cx = size / 2;
+  return (
+    <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
+      <Circle cx={cx} cy={cx} r={R} fill="none" stroke="rgba(242,240,235,0.08)" strokeWidth={4} />
+      <Circle
+        cx={cx} cy={cx} r={R} fill="none"
+        stroke="#C8E64A" strokeWidth={4}
+        strokeDasharray={circumference}
+        strokeDashoffset={offset}
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
+// ─── Section label ────────────────────────────────────────────────────────────
+
+function SectionLabel({ text }: { text: string }) {
+  const C = useTheme();
+  return (
+    <Text style={[S.sectionLabel, { color: C.textSecondary }]}>{text}</Text>
+  );
+}
+
+// ─── Ritual Card ──────────────────────────────────────────────────────────────
+
 function RitualCard({
   period,
   done,
-  colors,
+  streak,
 }: {
   period: 'morning' | 'evening';
   done: boolean;
-  colors: ReturnType<typeof useTheme>;
+  streak: number;
 }) {
+  const C = useTheme();
   const glowAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -52,21 +80,20 @@ function RitualCard({
     return () => loop.stop();
   }, [done]);
 
-  const glowOpacity = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.12, 0.32] });
-
   const isMorning = period === 'morning';
   const title = isMorning ? 'Ранковий ритуал' : 'Вечірній ритуал';
   const subtitle = isMorning ? 'Намір · Вдячність · Фокус' : 'Перемоги · Інсайти · Завтра';
   const route = isMorning ? '/ritual/morning' : '/ritual/evening';
-  const accentColor = isMorning ? colors.primary : '#7BB8C9';
 
   if (done) {
     return (
-      <View style={[styles.ritualDone, { backgroundColor: colors.surface2 }]}>
-        <Icon name="CheckCircle2" size={18} color={colors.success} />
-        <Text style={[styles.ritualDoneText, { color: colors.textSecondary }]}>
-          {isMorning ? 'Ранковий ритуал завершено' : 'Вечірній ритуал завершено'}
-        </Text>
+      <View style={[S.ritualCard, { backgroundColor: C.surface2 }]}>
+        <View style={S.ritualInner}>
+          <Icon name="CheckCircle2" size={18} color={C.success} />
+          <Text style={[S.ritualDoneText, { color: C.textSecondary }]}>
+            {isMorning ? 'Ранковий ритуал завершено' : 'Вечірній ритуал завершено'}
+          </Text>
+        </View>
       </View>
     );
   }
@@ -75,122 +102,147 @@ function RitualCard({
     <Pressable
       onPress={() => router.push(route as any)}
       style={({ pressed }) => [
-        styles.ritualCard,
-        { backgroundColor: colors.surface2 },
-        pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 },
+        S.ritualCard,
+        { backgroundColor: C.surface2 },
+        pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] },
       ]}
     >
-      {/* Glow pulse */}
-      <Animated.View
-        style={[styles.ritualGlow, { backgroundColor: accentColor, opacity: glowOpacity }]}
-      />
-
-      <View style={styles.ritualRow}>
-        <View style={styles.ritualLeft}>
-          <View style={[styles.ritualIconWrap, { backgroundColor: accentColor + '20' }]}>
-            <Icon name={isMorning ? 'Sunrise' : 'Moon'} size={22} color={accentColor} />
-          </View>
-          <View style={styles.ritualText}>
-            <Text style={[styles.ritualTitle, { color: colors.text }]}>{title}</Text>
-            <Text style={[styles.ritualSubtitle, { color: colors.textTertiary }]}>{subtitle}</Text>
-          </View>
+      <View style={S.ritualInner}>
+        <View style={S.ritualTextCol}>
+          <Text style={[S.ritualTitle, { color: C.text }]}>{title}</Text>
+          <Text style={[S.ritualSubtitle, { color: C.textSecondary }]}>{subtitle}</Text>
         </View>
-        <View style={[styles.ritualCTA, { backgroundColor: accentColor }]}>
-          <Text style={styles.ritualCTAText}>Почати</Text>
-        </View>
+        {streak > 0 && (
+          <View style={[S.streakBadge, { backgroundColor: C.surface3 }]}>
+            <Icon name="Flame" size={14} color={C.primary} />
+            <Text style={[S.streakText, { color: C.textSecondary }]}>{streak} днів</Text>
+          </View>
+        )}
       </View>
+      <Pressable
+        onPress={() => router.push(route as any)}
+        style={[S.ritualBtn, { backgroundColor: C.primary }]}
+      >
+        <Text style={S.ritualBtnText}>Почати</Text>
+        <Text style={[S.ritualBtnSub, { color: 'rgba(5,6,8,0.55)' }]}>3 хв</Text>
+      </Pressable>
     </Pressable>
   );
 }
 
-/** Weekly check-in CTA */
-function WeeklyCard({ colors }: { colors: ReturnType<typeof useTheme> }) {
+// ─── Belief card (home) ───────────────────────────────────────────────────────
+
+function BeliefHomeCard({ belief }: { belief: UserBelief }) {
+  const C = useTheme();
+  const completed = getCompletedStages(belief);
+  const category = getBeliefCategory(belief);
+  const cat = category ? CATEGORY_MAP[category] : null;
+  const title = getBeliefTitle(belief);
+  const conviction = (belief as any).score ?? 5;
+  const convictionPct = Math.round((conviction / 10) * 100);
+
   return (
     <Pressable
-      onPress={() => router.push('/ritual/weekly' as any)}
+      onPress={() => router.push(`/belief/${belief.id}` as any)}
       style={({ pressed }) => [
-        styles.weeklyCard,
-        { backgroundColor: colors.surface2 },
-        pressed && { opacity: 0.85 },
+        S.beliefCard,
+        { backgroundColor: C.surface2 },
+        pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
       ]}
     >
-      <Icon name="BarChart2" size={20} color={colors.primary} />
-      <View style={{ flex: 1 }}>
-        <Text style={[styles.weeklyTitle, { color: colors.text }]}>Тижневий підсумок</Text>
-        <Text style={[styles.weeklySub, { color: colors.textTertiary }]}>
-          Підбийте підсумки тижня
-        </Text>
+      <View style={S.beliefTop}>
+        {/* Ring */}
+        <View style={S.beliefRingWrap}>
+          <RingSvg progress={completed} size={64} />
+          <View style={S.beliefRingCenter}>
+            <Text style={[S.beliefRingText, { color: C.textSecondary }]}>{completed}/6</Text>
+          </View>
+        </View>
+
+        {/* Quote */}
+        <View style={{ flex: 1, paddingTop: 6 }}>
+          <Text style={[S.beliefQuote, { color: C.text }]} numberOfLines={3}>
+            "{title}"
+          </Text>
+        </View>
       </View>
-      <Icon name="ChevronRight" size={18} color={colors.textTertiary} />
+
+      {/* Conviction progress bar */}
+      <View style={S.beliefBar}>
+        <View style={S.beliefBarLabels}>
+          <Text style={[S.beliefBarLabel, { color: C.textSecondary }]}>−100</Text>
+          <Text style={[S.beliefBarCenter, { color: C.primary }]}>
+            +{convictionPct}
+          </Text>
+          <Text style={[S.beliefBarLabel, { color: C.textSecondary }]}>+100</Text>
+        </View>
+        <View style={[S.beliefBarTrack, { backgroundColor: C.surface3 }]}>
+          <View
+            style={[
+              S.beliefBarFill,
+              { backgroundColor: C.primary, width: `${convictionPct}%` as `${number}%` },
+            ]}
+          />
+        </View>
+      </View>
+
+      {cat && (
+        <View style={S.beliefCatRow}>
+          <Icon name={cat.icon} size={11} color={C.primary} />
+          <Text style={[S.beliefCatText, { color: C.primary }]}>{cat.nameUk.toUpperCase()}</Text>
+        </View>
+      )}
     </Pressable>
   );
 }
 
-/** Single task row with checkbox */
-function TaskRow({
-  task,
-  onToggle,
-  colors,
-}: {
-  task: Task;
-  onToggle: (id: string) => void;
-  colors: ReturnType<typeof useTheme>;
-}) {
+// ─── Task row ─────────────────────────────────────────────────────────────────
+
+function TaskRow({ task, onToggle }: { task: Task; onToggle: (id: string) => void }) {
+  const C = useTheme();
   const checkAnim = useRef(new Animated.Value(task.is_completed ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.timing(checkAnim, {
-      toValue: task.is_completed ? 1 : 0,
-      duration: 200,
-      useNativeDriver: false,
-    }).start();
+    Animated.timing(checkAnim, { toValue: task.is_completed ? 1 : 0, duration: 180, useNativeDriver: false }).start();
   }, [task.is_completed]);
+
+  const checkBg = checkAnim.interpolate({ inputRange: [0, 1], outputRange: [C.surface3, C.primary] });
 
   const handlePress = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onToggle(task.id);
   };
 
-  const checkBg = checkAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [colors.surface3, colors.primary],
-  });
-
-  const hasBelief = !!task.user_belief_id;
-
   return (
     <Pressable
       onPress={handlePress}
       style={({ pressed }) => [
-        styles.taskRow,
-        { borderBottomColor: colors.border },
+        S.taskRow,
+        { backgroundColor: C.surface2 },
         pressed && { opacity: 0.75 },
       ]}
     >
-      {/* Checkbox */}
-      <Animated.View style={[styles.checkbox, { backgroundColor: checkBg, borderColor: task.is_completed ? colors.primary : colors.borderMedium }]}>
+      <Animated.View
+        style={[S.checkbox, { backgroundColor: checkBg, borderColor: task.is_completed ? C.primary : C.borderMedium }]}
+      >
         {task.is_completed && <Icon name="Check" size={11} color="#050608" strokeWidth={2.5} />}
       </Animated.View>
-
-      {/* Title */}
-      <View style={styles.taskContent}>
-        <View style={styles.taskTitleRow}>
-          {task.is_focus && <Icon name="Zap" size={12} color={colors.primary} style={{ marginRight: 4 }} />}
-          <Text
-            style={[
-              styles.taskTitle,
-              { color: colors.text },
-              task.is_completed && { textDecorationLine: 'line-through', color: colors.textTertiary },
-            ]}
-            numberOfLines={1}
-          >
-            {task.title}
-          </Text>
-        </View>
-        {hasBelief && (
-          <View style={styles.beliefBadgeRow}>
-            <Icon name="Brain" size={10} color={colors.primary} />
-            <Text style={[styles.beliefBadge, { color: colors.primary }]}>Пов'язана установка</Text>
+      <View style={{ flex: 1 }}>
+        <Text
+          style={[
+            S.taskText,
+            { color: task.is_completed ? C.textTertiary : C.text },
+            task.is_completed && { textDecorationLine: 'line-through' },
+          ]}
+          numberOfLines={2}
+        >
+          {task.is_focus && <Text style={{ color: C.primary }}>★ </Text>}
+          {task.title}
+        </Text>
+        {!!task.user_belief_id && (
+          <View style={S.taskBeliefBadge}>
+            <Icon name="Brain" size={10} color={C.primary} />
+            <Text style={[S.taskBeliefText, { color: C.primary }]}>Пов'язана установка</Text>
           </View>
         )}
       </View>
@@ -198,95 +250,64 @@ function TaskRow({
   );
 }
 
-/** Compact belief card for home screen */
-function BeliefHomeCard({
-  belief,
-  colors,
-}: {
-  belief: import('@/types').UserBelief;
-  colors: ReturnType<typeof useTheme>;
-}) {
-  const completed = getCompletedStages(belief);
-  const category = getBeliefCategory(belief);
-  const cat = category ? CATEGORY_MAP[category] : null;
-  const color = category ? CATEGORY_COLORS[category] : colors.primary;
-  const title = getBeliefTitle(belief);
+// ─── Quick stats ──────────────────────────────────────────────────────────────
 
-  return (
-    <Pressable
-      onPress={() => router.push(`/belief/${belief.id}` as any)}
-      style={({ pressed }) => [
-        styles.beliefCard,
-        { backgroundColor: colors.surface2 },
-        pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
-      ]}
-    >
-      <View style={styles.beliefRing}>
-        <RingProgress progress={completed} color={color} size={52} strokeWidth={4} />
-        <View style={styles.beliefRingCenter}>
-          {cat ? <Icon name={cat.icon} size={16} color={color} /> : <Icon name="Brain" size={16} color={colors.primary} />}
-        </View>
-      </View>
-
-      <View style={styles.beliefInfo}>
-        <Text style={[styles.beliefCatName, { color }]} numberOfLines={1}>
-          {cat?.nameUk?.toUpperCase() ?? 'УСТАНОВКА'}
-        </Text>
-        <Text style={[styles.beliefTitle, { color: colors.text }]} numberOfLines={2}>
-          {title}
-        </Text>
-        <Text style={[styles.beliefStage, { color: colors.textTertiary }]}>
-          Етап {belief.current_stage} з 6
-        </Text>
-      </View>
-
-      <Icon name="ChevronRight" size={18} color={colors.textTertiary} />
-    </Pressable>
-  );
-}
-
-/** Quick stats row */
 function QuickStats({
   beliefsProgress,
   streak,
   focusDone,
   focusTotal,
-  colors,
 }: {
   beliefsProgress: number;
   streak: number;
   focusDone: number;
   focusTotal: number;
-  colors: ReturnType<typeof useTheme>;
 }) {
+  const C = useTheme();
   const stats = [
-    { label: 'Установки', value: `${beliefsProgress}%`, iconName: 'Brain' as const },
-    { label: 'Ритуалів', value: `${streak}`, iconName: 'Flame' as const },
-    { label: 'Фокус', value: `${focusDone}/${focusTotal}`, iconName: 'Target' as const },
+    { label: 'Установки', value: `${beliefsProgress}%`, icon: 'Brain' as const },
+    { label: 'Ритуалів', value: `${streak}`, icon: 'Flame' as const },
+    { label: 'Фокус', value: `${focusDone}/${focusTotal}`, icon: 'Target' as const },
   ];
-
   return (
-    <View style={[styles.statsRow, { backgroundColor: colors.surface2 }]}>
+    <View style={[S.statsRow, { backgroundColor: C.surface2, borderRadius: Radius.lg }]}>
       {stats.map((s, i) => (
-        <View key={s.label} style={[styles.statItem, i < 2 && { borderRightWidth: 1, borderRightColor: colors.border }]}>
-          <Icon name={s.iconName} size={16} color={colors.primary} />
-          <Text style={[styles.statValue, { color: colors.text }]}>{s.value}</Text>
-          <Text style={[styles.statLabel, { color: colors.textTertiary }]}>{s.label}</Text>
+        <View
+          key={s.label}
+          style={[S.statItem, i < 2 && { borderRightWidth: StyleSheet.hairlineWidth, borderRightColor: C.border }]}
+        >
+          <Icon name={s.icon} size={16} color={C.primary} />
+          <Text style={[S.statValue, { color: C.text }]}>{s.value}</Text>
+          <Text style={[S.statLabel, { color: C.textTertiary }]}>{s.label}</Text>
         </View>
       ))}
     </View>
   );
 }
 
-/** Section header */
-function SectionHeader({ title, colors }: { title: string; colors: ReturnType<typeof useTheme> }) {
-  return <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>{title}</Text>;
+// ─── FAB ──────────────────────────────────────────────────────────────────────
+
+function FABButton() {
+  const C = useTheme();
+  const scale = useRef(new Animated.Value(1)).current;
+  return (
+    <Animated.View style={[S.fabWrap, { transform: [{ scale }] }]}>
+      <Pressable
+        onPress={() => router.push('/ai-coach' as any)}
+        onPressIn={() => Animated.spring(scale, { toValue: 0.9, useNativeDriver: true, speed: 50, bounciness: 0 }).start()}
+        onPressOut={() => Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 6 }).start()}
+        style={[S.fab, { backgroundColor: C.primary }]}
+      >
+        <Icon name="MessageCircle" size={24} color="#050608" />
+      </Pressable>
+    </Animated.View>
+  );
 }
 
-// ─── Main screen ──────────────────────────────────────────────────────────────
+// ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function HomeScreen() {
-  const colors = useTheme();
+  const C = useTheme();
 
   const { profile, streak, fetchProfile, fetchStreak } = useProfile();
   const { beliefs, fetchBeliefs } = useBeliefs();
@@ -299,11 +320,8 @@ export default function HomeScreen() {
   const dayName = formatDayName();
 
   const today = new Date();
-  const isWeeklyDay = profile
-    ? today.getDay() === profile.weekly_checkin_day
-    : today.getDay() === 0;
+  const isWeeklyDay = profile ? today.getDay() === profile.weekly_checkin_day : today.getDay() === 0;
 
-  // Load all data on screen focus
   useFocusEffect(
     useCallback(() => {
       fetchProfile();
@@ -314,400 +332,227 @@ export default function HomeScreen() {
     }, []),
   );
 
-  // Stats computations
   const activeFocus = focusTasks();
   const focusDone = activeFocus.filter((t) => t.is_completed).length;
   const focusTotal = activeFocus.length;
   const allRegular = regularTasks();
+  const visibleBeliefs = beliefs.slice(0, 2);
 
   const beliefsProgress =
     beliefs.length > 0
       ? Math.round((beliefs.reduce((sum, b) => sum + getCompletedStages(b), 0) / (beliefs.length * 6)) * 100)
       : 0;
 
-  // Show max 2 beliefs on home
-  const visibleBeliefs = beliefs.slice(0, 2);
-
   return (
-    <View style={[styles.root, { backgroundColor: colors.bg }]}>
+    <View style={[S.root, { backgroundColor: C.bg }]}>
       <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          showsVerticalScrollIndicator={false}
-        >
+        <ScrollView contentContainerStyle={S.scroll} showsVerticalScrollIndicator={false}>
+
           {/* ── Header ── */}
-          <View style={styles.header}>
-            <View style={styles.headerLeft}>
-              <Text style={[styles.greeting, { color: colors.text }]}>{greeting}</Text>
-              <Text style={[styles.dateLabel, { color: colors.textTertiary }]}>
-                {dayName}, {displayDate}
-              </Text>
+          <View style={S.header}>
+            <View style={{ flex: 1 }}>
+              <Text style={[S.greeting, { color: C.text }]}>{greeting}</Text>
+              <View style={S.dateRow}>
+                <Text style={[S.dateText, { color: C.textSecondary }]}>
+                  {dayName}, {displayDate}
+                </Text>
+                {beliefs.length > 0 && (
+                  <View style={[S.focusChip, { backgroundColor: C.primaryMuted }]}>
+                    <Text style={[S.focusChipText, { color: C.primary }]}>Фокус тижня</Text>
+                  </View>
+                )}
+              </View>
             </View>
-            {/* Avatar → Profile */}
             <Pressable
               onPress={() => router.push('/(tabs)/profile' as any)}
-              style={[styles.avatar, { backgroundColor: colors.primaryLight }]}
+              style={[S.avatar, { backgroundColor: C.primaryMuted }]}
             >
-              <Text style={[styles.avatarText, { color: colors.primary }]}>
+              <Text style={[S.avatarText, { color: C.primary }]}>
                 {profile?.name ? profile.name.charAt(0).toUpperCase() : '?'}
               </Text>
             </Pressable>
           </View>
 
-          {/* ── Weekly check-in CTA (Sunday) ── */}
-          {isWeeklyDay && <WeeklyCard colors={colors} />}
+          {/* ── Weekly check-in (Sunday) ── */}
+          {isWeeklyDay && (
+            <Pressable
+              onPress={() => router.push('/ritual/weekly' as any)}
+              style={({ pressed }) => [S.weeklyCard, { backgroundColor: C.surface2 }, pressed && { opacity: 0.85 }]}
+            >
+              <Icon name="BarChart2" size={20} color={C.primary} />
+              <View style={{ flex: 1 }}>
+                <Text style={[S.weeklyTitle, { color: C.text }]}>Тижневий підсумок</Text>
+                <Text style={[S.weeklySub, { color: C.textTertiary }]}>Підбийте підсумки тижня</Text>
+              </View>
+              <Icon name="ChevronRight" size={18} color={C.textTertiary} />
+            </Pressable>
+          )}
 
-          {/* ── Ritual CTA ── */}
+          {/* ── Ritual card ── */}
           {(period === 'morning' || period === 'evening') && (
             <RitualCard
               period={period}
               done={period === 'morning' ? todayMorningDone : todayEveningDone}
-              colors={colors}
+              streak={streak}
             />
+          )}
+
+          {/* ── Active beliefs ── */}
+          {visibleBeliefs.length > 0 && (
+            <View style={S.section}>
+              <SectionLabel text="Установка в роботі" />
+              {visibleBeliefs.map((b) => (
+                <BeliefHomeCard key={b.id} belief={b} />
+              ))}
+            </View>
           )}
 
           {/* ── Focus tasks ── */}
           {activeFocus.length > 0 && (
-            <View style={styles.section}>
-              <SectionHeader title="Фокус на сьогодні" colors={colors} />
-              <View style={[styles.taskCard, { backgroundColor: colors.surface1, borderColor: colors.border }]}>
+            <View style={S.section}>
+              <SectionLabel text="Фокус на сьогодні" />
+              <View style={S.tasksList}>
                 {activeFocus.map((task) => (
-                  <TaskRow key={task.id} task={task} onToggle={toggleTask} colors={colors} />
+                  <TaskRow key={task.id} task={task} onToggle={toggleTask} />
                 ))}
               </View>
             </View>
           )}
 
-          {/* ── Other tasks ── */}
+          {/* ── Regular tasks ── */}
           {allRegular.length > 0 && (
-            <View style={styles.section}>
-              <SectionHeader title="Задачі" colors={colors} />
-              <View style={[styles.taskCard, { backgroundColor: colors.surface1, borderColor: colors.border }]}>
+            <View style={S.section}>
+              <SectionLabel text="Задачі" />
+              <View style={S.tasksList}>
                 {allRegular.slice(0, 4).map((task) => (
-                  <TaskRow key={task.id} task={task} onToggle={toggleTask} colors={colors} />
+                  <TaskRow key={task.id} task={task} onToggle={toggleTask} />
                 ))}
                 {allRegular.length > 4 && (
                   <Pressable
                     onPress={() => router.push('/(tabs)/plans' as any)}
-                    style={styles.showMoreBtn}
+                    style={S.showMore}
                   >
-                    <Text style={[styles.showMoreText, { color: colors.primary }]}>
-                      Ще {allRegular.length - 4} задач →
+                    <Text style={[S.showMoreText, { color: C.primary }]}>
+                      Ще {allRegular.length - 4} задач
                     </Text>
+                    <Icon name="ChevronRight" size={16} color={C.primary} />
                   </Pressable>
                 )}
               </View>
             </View>
           )}
 
-          {/* ── Active beliefs ── */}
-          {visibleBeliefs.length > 0 && (
-            <View style={styles.section}>
-              <SectionHeader title="Активні установки" colors={colors} />
-              <View style={styles.beliefsColumn}>
-                {visibleBeliefs.map((b) => (
-                  <BeliefHomeCard key={b.id} belief={b} colors={colors} />
-                ))}
-              </View>
-            </View>
-          )}
-
-          {/* ── Quick stats ── */}
+          {/* ── Stats ── */}
           <QuickStats
             beliefsProgress={beliefsProgress}
             streak={streak}
             focusDone={focusDone}
             focusTotal={Math.max(focusTotal, 1)}
-            colors={colors}
           />
 
-          {/* Bottom pad for FAB */}
+          {/* ── Coach chip ── */}
+          <Pressable
+            onPress={() => router.push('/ai-coach' as any)}
+            style={({ pressed }) => [
+              S.coachChip,
+              { borderColor: C.border },
+              pressed && { borderColor: 'rgba(200,230,74,0.3)' },
+            ]}
+          >
+            <Text style={[S.coachChipText, { color: C.textSecondary }]}>Запитати коуча</Text>
+            <Icon name="ChevronRight" size={20} color={C.textSecondary} />
+          </Pressable>
+
           <View style={{ height: 80 }} />
         </ScrollView>
       </SafeAreaView>
 
-      {/* ── FAB: AI coach ── */}
-      <FABButton colors={colors} />
+      <FABButton />
     </View>
-  );
-}
-
-function FABButton({ colors }: { colors: ReturnType<typeof useTheme> }) {
-  const scale = useRef(new Animated.Value(1)).current;
-
-  return (
-    <Animated.View style={[styles.fabWrap, { transform: [{ scale }] }]}>
-      <Pressable
-        onPress={() => router.push('/ai-coach' as any)}
-        onPressIn={() =>
-          Animated.spring(scale, { toValue: 0.9, useNativeDriver: true, speed: 50, bounciness: 0 }).start()
-        }
-        onPressOut={() =>
-          Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 6 }).start()
-        }
-        style={[styles.fab, { backgroundColor: colors.primary, ...Shadow.lg }]}
-      >
-        <Icon name="MessageCircle" size={24} color="#050608" />
-      </Pressable>
-    </Animated.View>
   );
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+import { StyleSheet } from 'react-native';
+
+const S = StyleSheet.create({
   root: { flex: 1 },
-  scroll: {
-    paddingHorizontal: Spacing.screen,
-    paddingTop: Spacing.base,
-    gap: Spacing.base,
-    paddingBottom: Spacing.xl,
-  },
+  scroll: { paddingHorizontal: Spacing.screen, paddingTop: Spacing.base, gap: 16, paddingBottom: 32 },
 
   // Header
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: Spacing.sm,
-    marginBottom: Spacing.xs,
-  },
-  headerLeft: { flex: 1 },
-  greeting: {
-    fontFamily: FontFamily.serifBold,
-    fontSize: 26,
-    lineHeight: 32,
-    letterSpacing: -0.2,
-  },
-  dateLabel: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 3,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 16,
-    lineHeight: 20,
-  },
+  header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingTop: 8, marginBottom: 4 },
+  greeting: { fontFamily: FontFamily.serifBold, fontSize: 28, lineHeight: 34, letterSpacing: -0.3 },
+  dateRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
+  dateText: { fontFamily: FontFamily.sans, fontSize: 14 },
+  focusChip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  focusChipText: { fontFamily: FontFamily.sansMedium, fontSize: 12 },
+  avatar: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { fontFamily: FontFamily.sansBold, fontSize: 16 },
 
-  // Weekly CTA
-  weeklyCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    borderRadius: Radius.lg,
-    padding: Spacing.base,
-  },
-  weeklyTitle: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 14,
-    lineHeight: 19,
-  },
-  weeklySub: {
-    fontFamily: FontFamily.sans,
-    fontSize: 12,
-    lineHeight: 17,
-  },
+  // Weekly card
+  weeklyCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: Radius.lg, padding: 16 },
+  weeklyTitle: { fontFamily: FontFamily.sansSemiBold, fontSize: 14 },
+  weeklySub: { fontFamily: FontFamily.sans, fontSize: 12, marginTop: 2 },
+
   // Ritual card
-  ritualCard: {
-    borderRadius: Radius.lg,
-    overflow: 'hidden',
+  ritualCard: { borderRadius: Radius.lg, overflow: 'hidden', gap: 16, padding: 20 },
+  ritualInner: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  ritualTextCol: { flex: 1 },
+  ritualTitle: { fontFamily: FontFamily.serif, fontSize: 20, fontWeight: '600', lineHeight: 26 },
+  ritualSubtitle: { fontFamily: FontFamily.sans, fontSize: 13, marginTop: 2 },
+  streakBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8 },
+  streakText: { fontFamily: FontFamily.sansMedium, fontSize: 13 },
+  ritualDoneText: { fontFamily: FontFamily.sansMedium, fontSize: 14 },
+  ritualBtn: {
+    borderRadius: 12, paddingVertical: 12, paddingHorizontal: 16,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
-  ritualGlow: {
-    position: 'absolute',
-    inset: 0,
-  },
-  ritualRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: Spacing.base,
-    gap: Spacing.sm,
-  },
-  ritualLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    flex: 1,
-  },
-  ritualIconWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: Radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ritualText: { flex: 1 },
-  ritualTitle: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 15,
-    lineHeight: 20,
-  },
-  ritualSubtitle: {
-    fontFamily: FontFamily.sans,
-    fontSize: 12,
-    lineHeight: 17,
-    marginTop: 2,
-  },
-  ritualCTA: {
-    borderRadius: Radius.sm,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-  },
-  ritualCTAText: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 13,
-    color: '#1A1208',
-  },
-  ritualDone: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    borderRadius: Radius.lg,
-    padding: Spacing.base,
-  },
-  ritualDoneText: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 14,
-  },
+  ritualBtnText: { fontFamily: FontFamily.sansSemiBold, fontSize: 15, color: '#050608' },
+  ritualBtnSub: { fontFamily: FontFamily.sans, fontSize: 13 },
 
   // Section
-  section: { gap: Spacing.xs },
-  sectionHeader: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 11,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginLeft: 2,
-    marginBottom: 2,
-  },
+  section: { gap: 10 },
+  sectionLabel: { fontFamily: FontFamily.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.2, marginLeft: 2 },
+
+  // Belief card
+  beliefCard: { borderRadius: Radius.lg, padding: 20, gap: 12 },
+  beliefTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 14 },
+  beliefRingWrap: { position: 'relative', width: 64, height: 64, flexShrink: 0 },
+  beliefRingCenter: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
+  beliefRingText: { fontFamily: FontFamily.sansMedium, fontSize: 11 },
+  beliefQuote: { fontFamily: FontFamily.serifItalic, fontSize: 17, lineHeight: 24, fontStyle: 'italic' },
+  beliefBar: { gap: 6 },
+  beliefBarLabels: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  beliefBarLabel: { fontFamily: FontFamily.sansMedium, fontSize: 11 },
+  beliefBarCenter: { fontFamily: FontFamily.sansSemiBold, fontSize: 12 },
+  beliefBarTrack: { height: 5, borderRadius: 3, overflow: 'hidden' },
+  beliefBarFill: { height: '100%', borderRadius: 3 },
+  beliefCatRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  beliefCatText: { fontFamily: FontFamily.sansSemiBold, fontSize: 11, letterSpacing: 0.8 },
 
   // Tasks
-  taskCard: {
-    borderRadius: Radius.lg,
-    overflow: 'hidden',
-    backgroundColor: 'transparent',
-  },
-  taskRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    paddingHorizontal: Spacing.base,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  beliefBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  taskContent: { flex: 1, gap: 2 },
-  taskTitleRow: { flexDirection: 'row', alignItems: 'center' },
-  taskTitle: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 14,
-    lineHeight: 19,
-    flex: 1,
-  },
-  beliefBadge: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 11,
-  },
-  showMoreBtn: {
-    padding: Spacing.base,
-    alignItems: 'center',
-  },
-  showMoreText: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 13,
-  },
+  tasksList: { gap: 6 },
+  taskRow: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: Radius.lg, padding: 16 },
+  checkbox: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  taskText: { fontFamily: FontFamily.sansMedium, fontSize: 14, lineHeight: 20 },
+  taskBeliefBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
+  taskBeliefText: { fontFamily: FontFamily.sansMedium, fontSize: 11 },
 
-  // Beliefs
-  beliefsColumn: { gap: Spacing.sm },
-  beliefCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    borderRadius: Radius.lg,
-    padding: Spacing.base,
-  },
-  beliefRing: {
-    position: 'relative',
-    width: 52,
-    height: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  beliefRingCenter: {
-    position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  beliefCatIcon: { width: 18, height: 18, alignItems: 'center', justifyContent: 'center' },
-  beliefInfo: { flex: 1, gap: 2 },
-  beliefCatName: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 10,
-    letterSpacing: 1.2,
-  },
-  beliefTitle: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  beliefStage: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 11,
-  },
+  showMore: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, padding: 12 },
+  showMoreText: { fontFamily: FontFamily.sansMedium, fontSize: 13 },
+
   // Stats
-  statsRow: {
-    flexDirection: 'row',
-    borderRadius: Radius.lg,
-    overflow: 'hidden',
-    marginTop: Spacing.xs,
-  },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: Spacing.base,
-    gap: 3,
-  },
-  statValue: {
-    fontFamily: FontFamily.serifBold,
-    fontSize: 20,
-    lineHeight: 24,
-  },
-  statLabel: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 11,
-  },
+  statsRow: { flexDirection: 'row', overflow: 'hidden' },
+  statItem: { flex: 1, alignItems: 'center', paddingVertical: 16, gap: 3 },
+  statValue: { fontFamily: FontFamily.serifBold, fontSize: 20, lineHeight: 24 },
+  statLabel: { fontFamily: FontFamily.sansMedium, fontSize: 11 },
+
+  // Coach chip
+  coachChip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 16, paddingHorizontal: 20, borderWidth: 1, borderRadius: Radius.lg },
+  coachChipText: { fontFamily: FontFamily.sans, fontSize: 15 },
 
   // FAB
-  fabWrap: {
-    position: 'absolute',
-    bottom: 90,
-    right: Spacing.screen,
-    zIndex: 20,
-  },
-  fab: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  fabWrap: { position: 'absolute', bottom: 90, right: Spacing.screen, zIndex: 20 },
+  fab: { width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center' },
 });

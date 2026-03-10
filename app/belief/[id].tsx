@@ -169,15 +169,13 @@ function StageRow({
 
   if (status === 'completed') {
     return (
-      <View style={[stageStyles.completedRow, { borderLeftColor: color }]}>
-        <View style={[stageStyles.iconBadge, { backgroundColor: color + '28' }]}>
-          <Icon name={stage.icon} size={16} color={color} />
+      <View style={[stageStyles.stageRow, { backgroundColor: C.surface2 }]}>
+        <View style={[stageStyles.circle, { backgroundColor: C.primary }]}>
+          <Icon name="Check" size={14} strokeWidth={2.5} color="#050608" />
         </View>
-        <Text style={[stageStyles.completedName, { color: color }]}>
-          {stage.nameUk}
-        </Text>
-        <View style={[stageStyles.checkBadge, { backgroundColor: color }]}>
-          <Icon name="Check" size={11} color="#050608" strokeWidth={2.5} />
+        <View style={{ flex: 1 }}>
+          <Text style={[stageStyles.stageName, { color: C.text }]}>{stage.nameUk}</Text>
+          <Text style={[stageStyles.stageDesc, { color: C.textSecondary }]}>{stage.descriptionUk}</Text>
         </View>
       </View>
     );
@@ -185,21 +183,21 @@ function StageRow({
 
   if (status === 'locked') {
     return (
-      <View style={[stageStyles.lockedRow, { opacity: 0.28 }]}>
-        <View style={[stageStyles.iconBadge, { backgroundColor: C.surface3 }]}>
-          <Icon name={stage.icon} size={16} color={C.textTertiary} />
+      <View style={[stageStyles.stageRow, { backgroundColor: C.surface2, opacity: 0.5 }]}>
+        <View style={[stageStyles.circle, { backgroundColor: C.surface3 }]}>
+          <Icon name="Lock" size={14} color={C.textSecondary} strokeWidth={1.5} />
         </View>
-        <Text style={[stageStyles.lockedName, { color: C.textSecondary }]}>
-          {stage.nameUk}
-        </Text>
-        <Icon name="Lock" size={14} color={C.textTertiary} />
+        <View style={{ flex: 1 }}>
+          <Text style={[stageStyles.stageName, { color: C.text }]}>{stage.nameUk}</Text>
+          <Text style={[stageStyles.stageDesc, { color: C.textSecondary }]}>{stage.descriptionUk}</Text>
+        </View>
       </View>
     );
   }
 
   // Current — expanded
   return (
-    <View style={[stageStyles.currentCard, { backgroundColor: C.surface2 }]}>
+    <View style={[stageStyles.currentCard, { backgroundColor: C.surface2, borderColor: 'rgba(200,230,74,0.5)' }]}>
       {/* Glow */}
       <Animated.View
         style={[
@@ -211,20 +209,15 @@ function StageRow({
 
       {/* Stage header */}
       <View style={stageStyles.currentHeader}>
-        <View style={[stageStyles.iconBadgeLarge, { backgroundColor: color + '28' }]}>
-          <Icon name={stage.icon} size={20} color={color} />
+        <View style={[stageStyles.circle, { backgroundColor: C.primary }]}>
+          <Text style={stageStyles.circleNum}>{stage.index}</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={[stageStyles.currentName, { color: color }]}>
+          <Text style={[stageStyles.currentName, { color: C.text }]}>
             {stage.nameUk}
           </Text>
           <Text style={[stageStyles.currentDesc, { color: C.textSecondary }]}>
             {stage.descriptionUk}
-          </Text>
-        </View>
-        <View style={[stageStyles.currentBadge, { backgroundColor: color + '28' }]}>
-          <Text style={[stageStyles.currentBadgeText, { color: color }]}>
-            Зараз
           </Text>
         </View>
       </View>
@@ -243,7 +236,7 @@ function StageRow({
 
       {/* Question */}
       <View style={stageStyles.questionWrap}>
-        <Text style={[stageStyles.questionText, { color: C.text }]}>
+        <Text style={[stageStyles.questionText, { color: C.textSecondary, fontStyle: 'italic' }]}>
           {stage.questionUk}
         </Text>
       </View>
@@ -255,10 +248,9 @@ function StageRow({
           {
             backgroundColor: C.surface3,
             color: C.text,
-            borderColor: C.border,
           },
         ]}
-        placeholder="Ваша рефлексія..."
+        placeholder="Напишіть вашу відповідь..."
         placeholderTextColor={C.textTertiary}
         multiline
         numberOfLines={4}
@@ -277,16 +269,14 @@ function StageRow({
           ]}
           onPress={onCoach}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Icon name="MessageCircle" size={14} color={C.textSecondary} />
-            <Text style={[stageStyles.coachBtnText, { color: C.textSecondary }]}>Запитати коуча</Text>
-          </View>
+          <Icon name="MessageCircle" size={18} color={C.textSecondary} strokeWidth={1.5} />
+          <Text style={[stageStyles.coachBtnText, { color: C.textSecondary }]}>Запитати коуча</Text>
         </Pressable>
 
         <Pressable
           style={({ pressed }) => [
             stageStyles.continueBtn,
-            { backgroundColor: color },
+            { backgroundColor: C.primary },
             (!reflection.trim() || saving) && { opacity: 0.5 },
             pressed && { transform: [{ scale: 0.97 }] },
           ]}
@@ -294,7 +284,7 @@ function StageRow({
           disabled={!reflection.trim() || saving}
         >
           {saving ? (
-            <ActivityIndicator color="#fff" size="small" />
+            <ActivityIndicator color="#050608" size="small" />
           ) : (
             <Text style={stageStyles.continueBtnText}>Продовжити шлях</Text>
           )}
@@ -322,113 +312,90 @@ function StageRow({
 }
 
 const stageStyles = StyleSheet.create({
-  // Completed
-  completedRow: {
+  // Shared row (completed / locked)
+  stageRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 4,
-    paddingVertical: 3,
-    marginBottom: 2,
-    borderLeftWidth: 3,
-    gap: 3,
+    alignItems: 'flex-start',
+    gap: 12,
+    borderRadius: Radius.lg,
+    padding: 16,
+    marginBottom: 8,
   },
-  iconBadge: {
-    width: 34,
-    height: 34,
-    borderRadius: Radius.sm,
+  circle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
+    marginTop: 1,
   },
-  icon: { width: 16, height: 16 },
-  completedName: {
-    flex: 1,
-    fontFamily: FontFamily.sans,
+  circleNum: {
+    fontFamily: FontFamily.sansBold,
+    fontSize: 12,
+    color: '#050608',
+  },
+  stageName: {
+    fontFamily: FontFamily.sansSemiBold,
     fontSize: 14,
-    fontWeight: '600',
-  },
-  checkBadge: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-
-  // Locked
-  lockedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 4,
-    paddingVertical: 3,
+    lineHeight: 20,
     marginBottom: 2,
-    gap: 3,
   },
-  lockedName: {
-    flex: 1,
+  stageDesc: {
     fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 13,
+    lineHeight: 18,
   },
-  lockIcon: { width: 14, height: 14 },
 
-  // Current
+  // Locked — same as stageRow but with opacity applied inline
+  lockedName: { fontFamily: FontFamily.sansMedium, fontSize: 14 },
+  lockIcon: {},
+  completedName: { fontFamily: FontFamily.sansSemiBold, fontSize: 14 },
+  checkBadge: {},
+  checkText: {},
+  completedRow: {},
+  lockedRow: {},
+  iconBadge: {},
+  icon: {},
+
+  // Current — expanded
   currentCard: {
     borderRadius: Radius.lg,
-    padding: 4,
-    marginBottom: 2,
+    padding: 20,
+    marginBottom: 8,
     overflow: 'hidden',
-    ...Shadow.md,
+    borderWidth: 1,
   },
   currentHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 3,
-    marginBottom: 3,
+    gap: 12,
+    marginBottom: 16,
   },
-  iconBadgeLarge: {
-    width: 42,
-    height: 42,
-    borderRadius: Radius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconLarge: { width: 20, height: 20 },
+  iconBadgeLarge: {},
+  iconLarge: {},
   currentName: {
-    fontFamily: FontFamily.sans,
+    fontFamily: FontFamily.sansSemiBold,
     fontSize: 15,
-    fontWeight: '700',
+    lineHeight: 21,
     marginBottom: 2,
   },
   currentDesc: {
     fontFamily: FontFamily.sans,
-    fontSize: 12,
-    lineHeight: 17,
+    fontSize: 13,
+    lineHeight: 18,
   },
-  currentBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: Radius.full,
-  },
-  currentBadgeText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 11,
-    fontWeight: '600',
-  },
+  currentBadge: {},
+  currentBadgeText: {},
   contentBlock: {
-    borderRadius: Radius.sm,
-    padding: 3,
-    marginBottom: 3,
+    borderRadius: Radius.md,
+    padding: 12,
+    marginBottom: 12,
   },
   contentLabel: {
-    fontFamily: FontFamily.sans,
+    fontFamily: FontFamily.sansSemiBold,
     fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.8,
+    letterSpacing: 1,
     textTransform: 'uppercase',
     marginBottom: 4,
   },
@@ -438,65 +405,66 @@ const stageStyles = StyleSheet.create({
     lineHeight: 19,
     fontStyle: 'italic',
   },
-  questionWrap: { marginBottom: 3 },
+  questionWrap: { marginBottom: 12 },
   questionText: {
-    fontFamily: FontFamily.serif,
-    fontSize: 16,
-    fontWeight: '600',
-    lineHeight: 22,
+    fontFamily: FontFamily.sans,
+    fontSize: 13,
+    lineHeight: 20,
   },
   textarea: {
-    borderRadius: Radius.sm,
-    borderWidth: 1,
-    padding: 3,
+    borderRadius: Radius.md,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     fontFamily: FontFamily.sans,
     fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 21,
     minHeight: 100,
-    marginBottom: 3,
+    marginBottom: 12,
   },
   btnRow: {
     flexDirection: 'row',
-    gap: 2,
+    gap: 10,
     alignItems: 'center',
   },
   coachBtn: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: Radius.sm,
-    borderWidth: 1,
-    alignItems: 'center',
-  },
-  coachBtnText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  continueBtn: {
-    flex: 2,
-    paddingVertical: 12,
-    borderRadius: Radius.sm,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 44,
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+  },
+  coachBtnText: {
+    fontFamily: FontFamily.sansMedium,
+    fontSize: 13,
+  },
+  continueBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: Radius.md,
+    minHeight: 46,
   },
   continueBtnText: {
-    color: '#fff',
-    fontFamily: FontFamily.sans,
+    color: '#050608',
+    fontFamily: FontFamily.sansSemiBold,
     fontSize: 14,
-    fontWeight: '700',
   },
   taskBtn: {
-    marginTop: 3,
-    paddingVertical: 12,
-    borderRadius: Radius.sm,
+    marginTop: 8,
+    paddingVertical: 14,
+    borderRadius: Radius.md,
     borderWidth: 1.5,
     alignItems: 'center',
   },
   taskBtnText: {
-    fontFamily: FontFamily.sans,
+    fontFamily: FontFamily.sansSemiBold,
     fontSize: 14,
-    fontWeight: '600',
   },
 });
 
@@ -909,37 +877,34 @@ export default function BeliefDetailScreen() {
             style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.6 }]}
             onPress={() => router.back()}
           >
-            <Text style={[styles.backText, { color: C.textSecondary }]}>← Назад</Text>
+            <Icon name="ChevronLeft" size={22} color={C.textSecondary} />
           </Pressable>
 
           {/* Header */}
           <View style={styles.header}>
-            <RingProgress
-              progress={completed}
-              color={catColor}
-              size={68}
-              strokeWidth={5}
-              animated
-            />
-            {cat && (
-              <View style={[styles.catBadge, { backgroundColor: catColor + '20' }]}>
-                <Text style={styles.catIcon}>{cat.icon}</Text>
-                <Text style={[styles.catName, { color: catColor }]}>{cat.nameUk}</Text>
+            <View style={styles.headerRow}>
+              <View style={styles.headerRing}>
+                <RingProgress
+                  progress={completed}
+                  color={catColor}
+                  size={68}
+                  strokeWidth={4}
+                  animated
+                />
+                <View style={styles.headerRingCenter}>
+                  <Text style={[styles.headerRingText, { color: C.textSecondary }]}>{completed}/6</Text>
+                </View>
               </View>
-            )}
-            <Text style={[styles.beliefTitle, { color: C.text }]}>
-              «{title}»
-            </Text>
-            {ub.belief_id && ub.belief && (
-              <Text style={[styles.conviction, { color: C.textSecondary }]}>
-                {ub.belief.conviction_uk}
-              </Text>
-            )}
-            {/* Progress pill */}
-            <View style={[styles.progressPill, { backgroundColor: C.surface3 }]}>
-              <Text style={[styles.progressText, { color: catColor }]}>
-                Вплив {ub.score}/10 · {completed}/6 етапів
-              </Text>
+              <View style={{ flex: 1, paddingTop: 6 }}>
+                {cat && (
+                  <Text style={[styles.catLabel, { color: C.primary }]}>
+                    {cat.nameUk.toUpperCase()}
+                  </Text>
+                )}
+                <Text style={[styles.beliefTitle, { color: C.text }]} numberOfLines={4}>
+                  "{title}"
+                </Text>
+              </View>
             </View>
           </View>
 
@@ -990,65 +955,37 @@ export default function BeliefDetailScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
 
-  scroll: { paddingHorizontal: 5, paddingTop: 4 },
+  scroll: { paddingHorizontal: Spacing.screen, paddingTop: Spacing.base },
 
-  backBtn: { marginBottom: 4 },
-  backText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
-  },
+  backBtn: { marginBottom: 16, alignSelf: 'flex-start' },
 
-  header: { alignItems: 'center', paddingBottom: 5 },
+  header: { marginBottom: 20 },
+  headerRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
+  headerRing: { position: 'relative', width: 68, height: 68, flexShrink: 0 },
+  headerRingCenter: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
+  headerRingText: { fontFamily: FontFamily.sansMedium, fontSize: 12 },
 
-  catBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: Radius.full,
-    gap: 5,
-    marginTop: 3,
-    marginBottom: 2,
+  catLabel: {
+    fontFamily: FontFamily.sansSemiBold,
+    fontSize: 11,
+    letterSpacing: 1.5,
+    marginBottom: 4,
   },
-  catIcon: { fontSize: 14 },
-  catName: {
-    fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-  },
+  catBadge: {},
+  catIcon: {},
+  catName: {},
 
   beliefTitle: {
-    fontFamily: FontFamily.serif,
-    fontSize: 20,
-    fontWeight: '700',
+    fontFamily: FontFamily.serifItalic,
     fontStyle: 'italic',
-    lineHeight: 28,
-    textAlign: 'center',
-    paddingHorizontal: 4,
-    marginBottom: 2,
+    fontSize: 18,
+    lineHeight: 26,
   },
-  conviction: {
-    fontFamily: FontFamily.sans,
-    fontSize: 13,
-    lineHeight: 19,
-    textAlign: 'center',
-    paddingHorizontal: 4,
-    marginBottom: 3,
-  },
-  progressPill: {
-    paddingHorizontal: 14,
-    paddingVertical: 5,
-    borderRadius: Radius.full,
-  },
-  progressText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 12,
-    fontWeight: '600',
-  },
+  conviction: {},
+  progressPill: {},
+  progressText: {},
 
-  divider: { height: 1, marginBottom: 5 },
+  divider: { height: StyleSheet.hairlineWidth, marginBottom: 16 },
 
-  stages: {},
+  stages: { gap: 0 },
 });

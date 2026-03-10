@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { Colors as C } from '@/constants/colors';
+import { useTheme } from '@/hooks/useTheme';
 import { FontFamily } from '@/constants/typography';
 import { Spacing, Radius, Shadow } from '@/constants/spacing';
 import { BeliefCategory, CATEGORY_MAP } from '@/constants/categories';
@@ -75,6 +76,7 @@ interface CardData {
 }
 
 function TransformCard({ card, delay }: { card: CardData; delay: number }) {
+  const C = useTheme();
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(28)).current;
 
@@ -100,39 +102,26 @@ function TransformCard({ card, delay }: { card: CardData; delay: number }) {
 
   return (
     <Animated.View
-      style={[
-        styles.card,
-        { opacity, transform: [{ translateY }] },
-      ]}
+      style={[styles.card, { backgroundColor: C.surface2, opacity, transform: [{ translateY }] }]}
     >
-      {/* Gold gradient simulation: top glow */}
-      <View style={[styles.cardGlow, { backgroundColor: outcome.color + '12' }]} />
+      {/* БУЛО */}
+      <View style={styles.sectionBlock}>
+        <Text style={[styles.wasLabel, { color: 'rgba(242,240,235,0.30)' }]}>БУЛО</Text>
+        <Text style={[styles.beliefText, { color: C.textSecondary }]}>"{card.beliefUk}"</Text>
+      </View>
 
-      {/* Top row */}
-      <View style={styles.cardHeader}>
-        <View style={[styles.iconCircle, { backgroundColor: outcome.color + '20' }]}>
-          <Icon name={outcome.icon} size={22} color={outcome.color} />
-        </View>
-        <View style={[styles.categoryTag, { backgroundColor: outcome.color + '18', borderColor: outcome.color + '40' }]}>
-          <Icon name={cat.icon} size={10} color={outcome.color} />
-          <Text style={[styles.categoryTagText, { color: outcome.color }]}>{cat.nameUk}</Text>
+      {/* Arrow */}
+      <View style={styles.arrowRow}>
+        <View style={[styles.arrowCircle, { backgroundColor: C.surface3 }]}>
+          <Icon name="ArrowRight" size={18} color={C.textSecondary} strokeWidth={1.5} />
         </View>
       </View>
 
-      {/* Belief removed */}
-      <Text style={styles.withoutLabel}>Без установки</Text>
-      <Text style={styles.beliefText}>«{card.beliefUk}»</Text>
-
-      {/* Divider */}
-      <View style={[styles.arrowRow]}>
-        <View style={[styles.arrowLine, { backgroundColor: outcome.color + '40' }]} />
-        <Text style={[styles.arrowIcon, { color: outcome.color }]}>↓</Text>
-        <View style={[styles.arrowLine, { backgroundColor: outcome.color + '40' }]} />
+      {/* СТАНЕ МОЖЛИВИМ */}
+      <View style={styles.sectionBlock}>
+        <Text style={[styles.outcomeLabel, { color: C.primary }]}>СТАНЕ МОЖЛИВИМ</Text>
+        <Text style={[styles.outcomeText, { color: C.text }]}>{outcome.outcome}</Text>
       </View>
-
-      {/* Outcome */}
-      <Text style={styles.outcomeLabel}>Ви зможете</Text>
-      <Text style={styles.outcomeText}>{outcome.outcome}</Text>
     </Animated.View>
   );
 }
@@ -280,98 +269,54 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
   },
   card: {
-    backgroundColor: C.surface1,
     borderRadius: Radius.lg,
     padding: Spacing.xl,
-    borderWidth: 1,
-    borderColor: C.border,
-    overflow: 'hidden',
-    gap: Spacing.sm,
-    ...Shadow.sm,
+    gap: 16,
   },
-  cardGlow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 80,
-    borderTopLeftRadius: Radius.lg,
-    borderTopRightRadius: Radius.lg,
-  },
+  cardGlow: {},
+  cardHeader: {},
+  iconCircle: {},
+  cardIcon: {},
+  categoryTag: {},
+  categoryTagText: {},
 
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.xs,
-  },
-  iconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardIcon: {
-    width: 22,
-    height: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  categoryTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    borderRadius: Radius.full,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
-    borderWidth: 1,
-  },
-  categoryTagText: {
-    fontFamily: FontFamily.sansMedium,
+  sectionBlock: { gap: 8 },
+  wasLabel: {
+    fontFamily: FontFamily.sansSemiBold,
     fontSize: 11,
+    letterSpacing: 1.5,
   },
-
-  withoutLabel: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 12,
-    color: C.textTertiary,
-    letterSpacing: 0.3,
-  },
+  withoutLabel: {},
   beliefText: {
     fontFamily: FontFamily.serifItalic,
-    fontSize: 17,
-    lineHeight: 24,
-    color: C.textSecondary,
+    fontStyle: 'italic',
+    fontSize: 16,
+    lineHeight: 23,
   },
 
   arrowRow: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
-    marginVertical: Spacing.xs,
   },
-  arrowLine: {
-    flex: 1,
-    height: 1,
+  arrowCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  arrowIcon: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 16,
-  },
+  arrowLine: {},
+  arrowIcon: {},
 
   outcomeLabel: {
     fontFamily: FontFamily.sansSemiBold,
     fontSize: 11,
-    letterSpacing: 1,
-    color: C.primary,
+    letterSpacing: 1.5,
     textTransform: 'uppercase',
   },
   outcomeText: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 15,
-    lineHeight: 22,
-    color: C.text,
+    fontFamily: FontFamily.serif,
+    fontSize: 17,
+    lineHeight: 24,
   },
 
   // Insight

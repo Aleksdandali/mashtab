@@ -78,67 +78,43 @@ function BeliefSelectCard({
       onPress={onSelect}
       style={({ pressed }) => [
         beliefCardStyles.card,
-        {
-          backgroundColor: selected ? color + '18' : C.surface2,
-          borderColor: selected ? color : C.border,
-        },
+        selected
+          ? { backgroundColor: C.primary }
+          : { backgroundColor: C.surface2 },
         pressed && { opacity: 0.85 },
       ]}
     >
-      <View style={beliefCardStyles.top}>
-        <RingProgress progress={completed} color={color} size={36} strokeWidth={3} animated={false} />
-        {cat && <Icon name={cat.icon} size={14} color={color} />}
-      </View>
-      <Text style={[beliefCardStyles.title, { color: C.text }]} numberOfLines={3}>
-        «{title}»
+      <Text
+        style={[
+          beliefCardStyles.title,
+          { color: selected ? '#050608' : C.text },
+        ]}
+        numberOfLines={2}
+      >
+        {title}
       </Text>
-      <View style={[beliefCardStyles.stage, { backgroundColor: color + '20' }]}>
-        <Text style={[beliefCardStyles.stageText, { color }]}>Етап {ub.current_stage}/6</Text>
-      </View>
-      {selected && (
-        <View style={[beliefCardStyles.check, { backgroundColor: color }]}>
-          <Icon name="Check" size={10} color="#050608" strokeWidth={2.5} />
-        </View>
-      )}
     </Pressable>
   );
 }
 
 const beliefCardStyles = StyleSheet.create({
   card: {
-    width: 152,
-    borderRadius: Radius.lg,
-    borderWidth: 1.5,
-    padding: Spacing.md,
-    marginRight: Spacing.md,
-    gap: Spacing.sm,
-    position: 'relative',
+    borderRadius: Radius.md,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
-  top: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  catIcon: { fontSize: 16 },
+  top: {},
+  catIcon: {},
   title: {
     fontFamily: FontFamily.serifItalic,
-    fontSize: 13,
-    lineHeight: 18,
+    fontStyle: 'italic',
+    fontSize: 15,
+    lineHeight: 21,
   },
-  stage: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: Radius.full,
-    alignSelf: 'flex-start',
-  },
-  stageText: { fontFamily: FontFamily.sansSemiBold, fontSize: 10 },
-  check: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  stage: {},
+  stageText: {},
+  check: {},
+  checkText: {},
 });
 
 // ─── Task Focus Toggle Row ────────────────────────────────────────────────────

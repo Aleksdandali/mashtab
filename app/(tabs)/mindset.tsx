@@ -16,15 +16,13 @@ import {
   getBeliefCategory,
   getCompletedStages,
 } from '@/hooks/useBeliefs';
-import { RingProgress } from '@/components/charts/RingProgress';
 import { Icon } from '@/components/ui/Icon';
 import { CATEGORY_MAP } from '@/constants/categories';
-import { STAGE_COLORS } from '@/constants/stages';
 import { FontFamily } from '@/constants/typography';
-import { Spacing, Radius, Shadow } from '@/constants/spacing';
+import { Spacing, Radius } from '@/constants/spacing';
 import { UserBelief } from '@/types';
 
-// ─── Belief Card ─────────────────────────────────────────────────────────────
+// ─── Belief Card ──────────────────────────────────────────────────────────────
 
 function BeliefCard({ ub }: { ub: UserBelief }) {
   const C = useTheme();
@@ -32,67 +30,41 @@ function BeliefCard({ ub }: { ub: UserBelief }) {
   const catKey = getBeliefCategory(ub);
   const cat = catKey ? CATEGORY_MAP[catKey] : null;
   const completed = getCompletedStages(ub);
-  const catColor = catKey ? (STAGE_COLORS as Record<string, string>)[catKey] ?? C.primary : C.primary;
+  const progress = Math.round((completed / 6) * 100);
 
   const conviction = ub.belief_id && ub.belief
-    ? ub.belief.conviction_uk
-    : ub.custom_conviction ?? '';
+    ? `Впевненість ${progress}%`
+    : `Впевненість ${progress}%`;
 
   return (
     <Pressable
       style={({ pressed }) => [
-        styles.card,
+        S.card,
         { backgroundColor: C.surface2 },
         pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
       ]}
       onPress={() => router.push(`/belief/${ub.id}`)}
     >
-      {/* Left: Ring */}
-      <View style={styles.cardRing}>
-        <RingProgress
-          progress={completed}
-          color={catColor}
-          size={64}
-          strokeWidth={5}
-          animated={false}
-        />
-        <Text style={styles.ringLabel}>{completed}/6</Text>
-      </View>
-
-      {/* Right: Content */}
-      <View style={styles.cardContent}>
-        {/* Top row */}
-        <View style={styles.cardTopRow}>
-          {cat && (
-            <View style={[styles.catBadge, { backgroundColor: catColor + '22' }]}>
-              <Icon name={cat.icon} size={11} color={catColor} />
-              <Text style={[styles.catName, { color: catColor }]}>{cat.nameUk}</Text>
-            </View>
-          )}
-          <View style={[styles.scoreBadge, { backgroundColor: C.surface3 }]}>
-            <Text style={[styles.scoreText, { color: C.textSecondary }]}>{ub.score}/10</Text>
-          </View>
-        </View>
-
-        {/* Belief title */}
-        <Text style={[styles.beliefTitle, { color: C.text }]} numberOfLines={2}>
-          «{title}»
+      {/* Category label */}
+      {cat && (
+        <Text style={[S.catLabel, { color: C.primary }]}>
+          {cat.nameUk.toUpperCase()}
         </Text>
+      )}
 
-        {/* Conviction */}
-        {!!conviction && (
-          <Text style={[styles.conviction, { color: C.textSecondary }]} numberOfLines={2}>
-            {conviction}
-          </Text>
-        )}
+      {/* Belief title — italic serif */}
+      <Text style={[S.beliefTitle, { color: C.text }]} numberOfLines={3}>
+        "{title}"
+      </Text>
 
-        {/* Stage indicator */}
-        <View style={styles.stageRow}>
-          <View style={[styles.stageDot, { backgroundColor: catColor }]} />
-          <Text style={[styles.stageLabel, { color: C.textTertiary }]}>
-            Етап {ub.current_stage}/6
-          </Text>
-        </View>
+      {/* Conviction + progress bar */}
+      <View style={S.progressWrap}>
+        <Text style={[S.convictionText, { color: C.textSecondary }]}>{conviction}</Text>
+      </View>
+      <View style={[S.progressTrack, { backgroundColor: C.surface3 }]}>
+        <View
+          style={[S.progressFill, { backgroundColor: C.primary, width: `${progress}%` as `${number}%` }]}
+        />
       </View>
     </Pressable>
   );
@@ -103,27 +75,19 @@ function BeliefCard({ ub }: { ub: UserBelief }) {
 function EmptyState() {
   const C = useTheme();
   return (
-    <View style={styles.emptyWrap}>
-      <View style={[styles.emptyIconWrap, { backgroundColor: C.primaryMuted }]}>
+    <View style={S.emptyWrap}>
+      <View style={[S.emptyIcon, { backgroundColor: C.primaryMuted }]}>
         <Icon name="Brain" size={32} color={C.primary} />
       </View>
-      <Text style={[styles.emptyTitle, { color: C.text }]}>
-        Немає активних установок
-      </Text>
-      <Text style={[styles.emptyBody, { color: C.textSecondary }]}>
+      <Text style={[S.emptyTitle, { color: C.text }]}>Немає активних установок</Text>
+      <Text style={[S.emptyBody, { color: C.textSecondary }]}>
         Пройдіть діагностику, щоб виявити установки, що стримують ваш бізнес.
       </Text>
       <Pressable
-        style={({ pressed }) => [
-          styles.diagnosticBtn,
-          { backgroundColor: C.primary },
-          pressed && { opacity: 0.85 },
-        ]}
+        style={({ pressed }) => [S.diagBtn, { backgroundColor: C.primary }, pressed && { opacity: 0.85 }]}
         onPress={() => router.push('/onboarding/diagnostic')}
       >
-        <Text style={[styles.diagnosticBtnText, { color: C.surface1 }]}>
-          Пройти діагностику
-        </Text>
+        <Text style={S.diagBtnText}>Пройти діагностику</Text>
       </Pressable>
     </View>
   );
@@ -142,36 +106,32 @@ export default function MindsetScreen() {
   );
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: C.surface1 }]}>
+    <SafeAreaView style={[S.root, { backgroundColor: C.bg }]}>
       {/* Header */}
-      <View style={[styles.header, { borderBottomColor: C.border }]}>
+      <View style={S.header}>
         <View>
-          <Text style={[styles.headerTitle, { color: C.text }]}>Mindset</Text>
-          {beliefs.length > 0 && (
-            <Text style={[styles.headerSub, { color: C.textSecondary }]}>
-              {beliefs.length} активн{beliefs.length === 1 ? 'а' : 'их'} установк{beliefs.length === 1 ? 'а' : 'и'}
-            </Text>
-          )}
+          <Text style={[S.headerEyebrow, { color: C.primary }]}>MINDSET</Text>
+          <Text style={[S.headerTitle, { color: C.text }]}>Ваші установки</Text>
         </View>
         <Pressable
           style={({ pressed }) => [
-            styles.headerBtn,
-            { backgroundColor: C.primary + '18' },
+            S.addBtn,
+            { backgroundColor: C.primaryMuted },
             pressed && { opacity: 0.75 },
           ]}
           onPress={() => router.push('/belief/create')}
         >
-          <Text style={[styles.headerBtnText, { color: C.primary }]}>＋ Додати</Text>
+          <Text style={[S.addBtnText, { color: C.primary }]}>＋ Додати</Text>
         </Pressable>
       </View>
 
       {loading && beliefs.length === 0 ? (
-        <View style={styles.loader}>
+        <View style={S.loader}>
           <ActivityIndicator color={C.primary} />
         </View>
       ) : (
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={S.scroll}
           showsVerticalScrollIndicator={false}
         >
           {beliefs.length === 0 ? (
@@ -181,215 +141,106 @@ export default function MindsetScreen() {
               {beliefs.map((ub) => (
                 <BeliefCard key={ub.id} ub={ub} />
               ))}
+
+              {/* Add new belief — dashed border */}
+              <Pressable
+                style={({ pressed }) => [
+                  S.addCard,
+                  { borderColor: C.border },
+                  pressed && { opacity: 0.7, borderColor: 'rgba(200,230,74,0.3)' },
+                ]}
+                onPress={() => router.push('/belief/create')}
+              >
+                <Text style={[S.addCardText, { color: C.textSecondary }]}>
+                  + Додати свою установку
+                </Text>
+              </Pressable>
             </>
           )}
-
-          {/* Add custom belief card — always at bottom when there are beliefs */}
-          {beliefs.length > 0 && (
-            <Pressable
-              style={({ pressed }) => [
-                styles.addCard,
-                { borderColor: C.border },
-                pressed && { opacity: 0.7 },
-              ]}
-              onPress={() => router.push('/belief/create')}
-            >
-              <Text style={[styles.addPlus, { color: C.primary }]}>＋</Text>
-              <Text style={[styles.addText, { color: C.textSecondary }]}>
-                Додати свою установку
-              </Text>
-            </Pressable>
-          )}
-
-          <View style={{ height: 8 }} />
+          <View style={{ height: 16 }} />
         </ScrollView>
       )}
     </SafeAreaView>
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
+// ─── Styles ───────────────────────────────────────────────────────────────────
 
-const styles = StyleSheet.create({
+const S = StyleSheet.create({
   root: { flex: 1 },
 
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     justifyContent: 'space-between',
-    paddingHorizontal: 5,
-    paddingTop: 4,
-    paddingBottom: 4,
-    borderBottomWidth: 1,
+    paddingHorizontal: Spacing.screen,
+    paddingTop: 12,
+    paddingBottom: 16,
+  },
+  headerEyebrow: {
+    fontFamily: FontFamily.sansSemiBold,
+    fontSize: 11,
+    letterSpacing: 2,
+    marginBottom: 4,
   },
   headerTitle: {
-    fontFamily: FontFamily.serif,
+    fontFamily: FontFamily.serifBold,
     fontSize: 28,
-    fontWeight: '700',
-    letterSpacing: -0.5,
+    lineHeight: 34,
+    letterSpacing: -0.3,
   },
-  headerSub: {
-    fontFamily: FontFamily.sans,
-    fontSize: 13,
-    marginTop: 2,
-  },
-  headerBtn: {
-    paddingHorizontal: 4,
-    paddingVertical: 2,
+  addBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: Radius.full,
   },
-  headerBtnText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '600',
+  addBtnText: {
+    fontFamily: FontFamily.sansSemiBold,
+    fontSize: 13,
   },
 
   loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
-  scroll: {
-    paddingHorizontal: 5,
-    paddingTop: 5,
-  },
+  scroll: { paddingHorizontal: Spacing.screen, gap: 14, paddingTop: 4 },
 
   // Belief card
   card: {
-    flexDirection: 'row',
     borderRadius: Radius.lg,
-    padding: 16,
-    marginBottom: 8,
+    padding: 20,
+    gap: 10,
   },
-  cardRing: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 4,
-  },
-  ringLabel: {
-    fontFamily: FontFamily.sans,
+  catLabel: {
+    fontFamily: FontFamily.sansSemiBold,
     fontSize: 11,
-    fontWeight: '600',
-    marginTop: 4,
-    color: '#888',
-  },
-  cardContent: { flex: 1 },
-  cardTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 2,
-  },
-  catBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: Radius.full,
-    gap: 4,
-  },
-  catIcon: { width: 11, height: 11 },
-  catName: {
-    fontFamily: FontFamily.sans,
-    fontSize: 11,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-  },
-  scoreBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: Radius.full,
-  },
-  scoreText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 11,
-    fontWeight: '600',
+    letterSpacing: 1.5,
   },
   beliefTitle: {
-    fontFamily: FontFamily.serif,
-    fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FontFamily.serifItalic,
     fontStyle: 'italic',
-    lineHeight: 22,
-    marginBottom: 1,
+    fontSize: 18,
+    lineHeight: 25,
   },
-  conviction: {
-    fontFamily: FontFamily.sans,
-    fontSize: 12,
-    lineHeight: 17,
-    marginBottom: 2,
-  },
-  stageRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  stageDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  stageLabel: {
-    fontFamily: FontFamily.sans,
-    fontSize: 11,
-    fontWeight: '500',
-  },
+  progressWrap: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  convictionText: { fontFamily: FontFamily.sans, fontSize: 13 },
+  progressTrack: { height: 4, borderRadius: 2, overflow: 'hidden' },
+  progressFill: { height: '100%', borderRadius: 2 },
 
   // Add card
   addCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: Radius.lg,
     borderWidth: 1.5,
     borderStyle: 'dashed',
-    paddingVertical: 5,
-    marginBottom: 3,
-    gap: 2,
-  },
-  addPlus: {
-    fontFamily: FontFamily.serif,
-    fontSize: 22,
-  },
-  addText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-
-  // Empty state
-  emptyWrap: {
-    alignItems: 'center',
-    paddingTop: 12,
-    paddingHorizontal: 8,
-  },
-  emptyIconWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    borderRadius: Radius.lg,
+    paddingVertical: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
   },
-  emptyTitle: {
-    fontFamily: FontFamily.serif,
-    fontSize: 22,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 3,
-  },
-  emptyBody: {
-    fontFamily: FontFamily.sans,
-    fontSize: 15,
-    lineHeight: 22,
-    textAlign: 'center',
-    marginBottom: 6,
-  },
-  diagnosticBtn: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: Radius.md,
-  },
-  diagnosticBtnText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 15,
-    fontWeight: '600',
-  },
+  addCardText: { fontFamily: FontFamily.sansMedium, fontSize: 14 },
+
+  // Empty
+  emptyWrap: { alignItems: 'center', paddingTop: 40, paddingHorizontal: 8 },
+  emptyIcon: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  emptyTitle: { fontFamily: FontFamily.serifBold, fontSize: 22, textAlign: 'center', marginBottom: 8 },
+  emptyBody: { fontFamily: FontFamily.sans, fontSize: 15, lineHeight: 22, textAlign: 'center', marginBottom: 20 },
+  diagBtn: { paddingHorizontal: 24, paddingVertical: 14, borderRadius: 12 },
+  diagBtnText: { fontFamily: FontFamily.sansSemiBold, fontSize: 15, color: '#050608' },
 });

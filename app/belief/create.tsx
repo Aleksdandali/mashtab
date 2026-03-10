@@ -36,46 +36,25 @@ function StepIndicator({ current }: { current: number }) {
         const done = i < current;
         const active = i === current;
         return (
-          <View key={i} style={stepStyles.item}>
-            <View
-              style={[
-                stepStyles.dot,
-                {
-                  backgroundColor: done || active ? C.primary : C.surface3,
-                  borderColor: active ? C.primary : 'transparent',
-                  borderWidth: active ? 2 : 0,
-                },
-              ]}
-            >
-              {done && <Icon name="Check" size={10} color="#050608" strokeWidth={2.5} />}
-              {active && (
-                <View style={[stepStyles.dotInner, { backgroundColor: C.primary }]} />
-              )}
-            </View>
-            <Text
-              style={[
-                stepStyles.label,
-                { color: active ? C.primary : done ? C.textSecondary : C.textTertiary },
-              ]}
-            >
-              {s.label}
-            </Text>
-            {i < STEPS.length - 1 && (
-              <View style={[stepStyles.line, { backgroundColor: done ? C.primary : C.border }]} />
-            )}
-          </View>
+          <View key={i} style={[stepStyles.bar, { backgroundColor: done || active ? C.primary : C.surface3 }]} />
         );
       })}
     </View>
   );
 }
 
+
 const stepStyles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 5,
-    marginBottom: 6,
+    gap: 6,
+    marginBottom: 24,
+  },
+  bar: {
+    flex: 1,
+    height: 4,
+    borderRadius: 2,
   },
   item: {
     flex: 1,

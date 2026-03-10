@@ -164,14 +164,14 @@ function ChatBubble({
           style={[
             bubbleStyles.bubble,
             isUser
-              ? [bubbleStyles.bubbleUser, { backgroundColor: C.primary }]
-              : [bubbleStyles.bubbleAssistant, { backgroundColor: C.surface2, ...Shadow.sm }],
+              ? [bubbleStyles.bubbleUser, { backgroundColor: C.primaryMuted }]
+              : [bubbleStyles.bubbleAssistant, { backgroundColor: C.surface2 }],
           ]}
         >
           <Text
             style={[
               bubbleStyles.text,
-              { color: isUser ? '#1A1714' : C.text },
+              { color: C.text },
             ]}
           >
             {content}
@@ -362,13 +362,10 @@ export default function AICoachScreen() {
         </Pressable>
 
         <View style={styles.headerCenter}>
-          <View style={styles.statusRow}>
-            <View style={[styles.statusDot, { backgroundColor: '#7CB392' }]} />
-            <Text style={[styles.headerTitle, { color: C.text }]}>AI-коуч</Text>
-          </View>
+          <Text style={[styles.headerTitle, { color: C.text }]}>AI Coach</Text>
           {contextLabel && (
-            <View style={[styles.contextBadge, { backgroundColor: contextColor + '22' }]}>
-              <Text style={[styles.contextBadgeText, { color: contextColor }]}>
+            <View style={[styles.contextBadge, { backgroundColor: C.surface2 }]}>
+              <Text style={[styles.contextBadgeText, { color: C.textSecondary }]}>
                 {contextLabel}
               </Text>
             </View>
@@ -414,44 +411,37 @@ export default function AICoachScreen() {
           <LimitBanner message={limitReason ?? 'Ліміт вичерпано.'} />
         ) : (
           <View style={[styles.inputArea, { backgroundColor: C.surface1, borderTopColor: C.border }]}>
-            <TextInput
-              style={[
-                styles.textInput,
-                {
-                  backgroundColor: C.surface2,
-                  color: C.text,
-                  borderColor: inputText.length > 0 ? C.primary + '60' : C.border,
-                  height: Math.min(inputHeight, MAX_INPUT_HEIGHT),
-                },
-              ]}
-              placeholder="Напишіть повідомлення..."
-              placeholderTextColor={C.textTertiary}
-              multiline
-              value={inputText}
-              onChangeText={setInputText}
-              onContentSizeChange={(e) => {
-                setInputHeight(e.nativeEvent.contentSize.height + 22);
-              }}
-              onSubmitEditing={handleSend}
-              returnKeyType="send"
-              blurOnSubmit={false}
-            />
-
-            <Pressable
-              style={({ pressed }) => [
-                styles.sendBtn,
-                { backgroundColor: inputText.trim().length > 0 ? C.primary : C.surface3 },
-                pressed && { transform: [{ scale: 0.94 }] },
-              ]}
-              onPress={handleSend}
-              disabled={!inputText.trim() || loading}
-            >
-              {loading ? (
-                <ActivityIndicator color={C.surface1} size="small" />
-              ) : (
-                <Icon name="ArrowRight" size={20} color={inputText.trim() ? '#050608' : C.textTertiary} />
-              )}
-            </Pressable>
+            <View style={[styles.inputRow, { backgroundColor: C.surface2 }]}>
+              <TextInput
+                style={[styles.textInput, { color: C.text, height: Math.min(inputHeight, MAX_INPUT_HEIGHT) }]}
+                placeholder="Напишіть питання..."
+                placeholderTextColor={C.textTertiary}
+                multiline
+                value={inputText}
+                onChangeText={setInputText}
+                onContentSizeChange={(e) => {
+                  setInputHeight(e.nativeEvent.contentSize.height + 22);
+                }}
+                onSubmitEditing={handleSend}
+                returnKeyType="send"
+                blurOnSubmit={false}
+              />
+              <Pressable
+                style={({ pressed }) => [
+                  styles.sendBtn,
+                  { backgroundColor: inputText.trim().length > 0 ? C.primary : C.surface3 },
+                  pressed && { transform: [{ scale: 0.94 }] },
+                ]}
+                onPress={handleSend}
+                disabled={!inputText.trim() || loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color={C.surface1} size="small" />
+                ) : (
+                  <Icon name="Send" size={16} color={inputText.trim() ? '#050608' : C.textTertiary} strokeWidth={1.5} />
+                )}
+              </Pressable>
+            </View>
           </View>
         )}
       </KeyboardAvoidingView>
@@ -477,22 +467,23 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.sansSemiBold,
     fontSize: 22,
   },
-  headerCenter: { alignItems: 'center', gap: Spacing.xs },
+  headerCenter: { alignItems: 'center', gap: 4 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   statusDot: { width: 7, height: 7, borderRadius: 4 },
   headerTitle: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 16,
+    fontFamily: FontFamily.serif,
+    fontSize: 20,
+    fontWeight: '600',
+    lineHeight: 26,
   },
   contextBadge: {
     paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: Radius.full,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   contextBadgeText: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 11,
-    letterSpacing: 0.2,
+    fontFamily: FontFamily.sansMedium,
+    fontSize: 12,
   },
 
   messagesList: { flex: 1 },
@@ -514,27 +505,28 @@ const styles = StyleSheet.create({
   },
 
   inputArea: {
+    padding: Spacing.base,
+    paddingBottom: Spacing.lg,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: Spacing.sm,
-    padding: Spacing.md,
-    paddingBottom: Spacing.base,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    gap: 12,
+    borderRadius: Radius.lg,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
   },
   textInput: {
     flex: 1,
-    borderRadius: Radius.lg,
-    borderWidth: 1.5,
-    paddingHorizontal: Spacing.base,
-    paddingVertical: 11,
-    fontFamily: FontFamily.sansMedium,
+    fontFamily: FontFamily.sans,
     fontSize: 15,
     lineHeight: 22,
   },
   sendBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
