@@ -17,53 +17,57 @@ import {
   getCompletedStages,
 } from '@/hooks/useBeliefs';
 import { Icon } from '@/components/ui/Icon';
-import { CATEGORY_MAP } from '@/constants/categories';
 import { FontFamily } from '@/constants/typography';
-import { Spacing, Radius } from '@/constants/spacing';
+import { Spacing } from '@/constants/spacing';
 import { UserBelief } from '@/types';
+
+// ─── Stage name map ────────────────────────────────────────────────────────────
+
+const STAGE_NAMES: Record<number, string> = {
+  1: 'Усвідомлення',
+  2: 'Розуміння',
+  3: 'Прийняття',
+  4: 'Інтеграція',
+  5: 'Практика',
+  6: 'Ідентичність',
+};
 
 // ─── Belief Card ──────────────────────────────────────────────────────────────
 
 function BeliefCard({ ub }: { ub: UserBelief }) {
   const C = useTheme();
   const title = getBeliefTitle(ub);
-  const catKey = getBeliefCategory(ub);
-  const cat = catKey ? CATEGORY_MAP[catKey] : null;
   const completed = getCompletedStages(ub);
   const progress = Math.round((completed / 6) * 100);
+  const stageNum = ub.current_stage ?? 1;
+  const stageName = STAGE_NAMES[stageNum] ?? 'Усвідомлення';
 
   return (
     <Pressable
       style={({ pressed }) => [
         S.card,
-        { backgroundColor: C.surface2 },
+        { backgroundColor: C.surface1 },
         pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
       ]}
       onPress={() => router.push(`/belief/${ub.id}`)}
     >
-      {cat && (
-        <Text style={[S.catLabel, { color: C.primary }]}>
-          {cat.nameUk.toUpperCase()}
-        </Text>
-      )}
+      <View style={S.cardRow}>
+        {/* Progress ring */}
+        <View style={[S.progressRing, { borderColor: C.primary }]}>
+          <Text style={[S.progressRingText, { color: C.primary }]}>{progress}%</Text>
+        </View>
 
-      <Text style={[S.beliefTitle, { color: C.text }]} numberOfLines={3}>
-        "{title}"
-      </Text>
+        {/* Content */}
+        <View style={S.cardContent}>
+          <Text style={[S.beliefTitle, { color: C.text }]} numberOfLines={2}>
+            {title}
+          </Text>
+          <Text style={[S.beliefStage, { color: C.textSecondary }]}>
+            Етап {stageNum} · {stageName}
+          </Text>
+        </View>
 
-      <View style={S.progressWrap}>
-        <Text style={[S.convictionText, { color: C.textSecondary }]}>
-          Впевненість {progress}%
-        </Text>
-      </View>
-
-      <View style={[S.progressTrack, { backgroundColor: C.surface3 }]}>
-        <View
-          style={[
-            S.progressFill,
-            { backgroundColor: C.primary, width: `${progress}%` as `${number}%` },
-          ]}
-        />
+        <Icon name="ChevronRight" size={20} color={C.textSecondary} />
       </View>
     </Pressable>
   );
@@ -74,21 +78,17 @@ function BeliefCard({ ub }: { ub: UserBelief }) {
 function EmptyState() {
   const C = useTheme();
   return (
-    <View style={S.emptyWrap}>
-      <View style={[S.emptyIcon, { backgroundColor: C.primaryMuted }]}>
-        <Icon name="Brain" size={32} color={C.primary} />
-      </View>
-      <Text style={[S.emptyTitle, { color: C.text }]}>Немає активних установок</Text>
-      <Text style={[S.emptyBody, { color: C.textSecondary }]}>
-        Пройдіть діагностику, щоб виявити установки, що стримують ваш бізнес.
-      </Text>
-      <Pressable
-        style={({ pressed }) => [S.diagBtn, { backgroundColor: C.primary }, pressed && { opacity: 0.85 }]}
-        onPress={() => router.push('/onboarding/diagnostic')}
-      >
-        <Text style={S.diagBtnText}>Пройти діагностику</Text>
-      </Pressable>
-    </View>
+    <Pressable
+      style={({ pressed }) => [
+        S.emptyCard,
+        { backgroundColor: C.surface1, borderColor: C.border },
+        pressed && { opacity: 0.75 },
+      ]}
+      onPress={() => router.push('/belief/create')}
+    >
+      <Icon name="Plus" size={32} color={C.textSecondary} />
+      <Text style={[S.emptyText, { color: C.textSecondary }]}>Додати нову установку</Text>
+    </Pressable>
   );
 }
 
@@ -106,10 +106,24 @@ export default function MindsetScreen() {
 
   return (
     <SafeAreaView style={[S.root, { backgroundColor: C.bg }]}>
-      {/* Header — eyebrow + title only, no right-side element */}
-      <View style={S.header}>
-        <Text style={[S.headerEyebrow, { color: C.primary }]}>MINDSET</Text>
-        <Text style={[S.headerTitle, { color: C.text }]}>Ваші установки</Text>
+      {/* Header */}
+      <View style={[S.header, { borderBottomColor: C.border }]}>
+        <View style={S.headerLeft}>
+          <Text style={[S.headerTitle, { color: C.text }]}>Установки</Text>
+          <Text style={[S.headerSubtitle, { color: C.textSecondary }]}>
+            Це не афірмації. Це база твоєї нової реальності.
+          </Text>
+        </View>
+        <Pressable
+          onPress={() => router.push('/belief/create')}
+          style={({ pressed }) => [
+            S.addButton,
+            { backgroundColor: C.primary },
+            pressed && { opacity: 0.85, transform: [{ scale: 0.95 }] },
+          ]}
+        >
+          <Icon name="Plus" size={24} color="#060810" />
+        </Pressable>
       </View>
 
       {loading && beliefs.length === 0 ? (
@@ -137,8 +151,9 @@ export default function MindsetScreen() {
                 ]}
                 onPress={() => router.push('/belief/create')}
               >
+                <Icon name="Plus" size={32} color={C.textSecondary} />
                 <Text style={[S.addCardText, { color: C.textSecondary }]}>
-                  + Додати свою установку
+                  Додати нову установку
                 </Text>
               </Pressable>
             </>
@@ -156,84 +171,100 @@ const S = StyleSheet.create({
   root: { flex: 1 },
 
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: Spacing.screen,
-    paddingTop: 12,
-    paddingBottom: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
   },
-  headerEyebrow: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 11,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
+  headerLeft: { flex: 1, paddingRight: 16 },
+  headerTitle: {
+    fontFamily: FontFamily.sansExtraBold,
+    fontSize: 32,
+    letterSpacing: -0.5,
     marginBottom: 4,
   },
-  headerTitle: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 28,
-    lineHeight: 34,
-    letterSpacing: -0.3,
+  headerSubtitle: {
+    fontFamily: FontFamily.sansMedium,
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  addButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
 
   loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
-  scroll: { paddingHorizontal: Spacing.screen, gap: 16, paddingTop: 4 },
+  scroll: { paddingHorizontal: Spacing.screen, paddingTop: 16, gap: 12 },
 
+  // Belief card
   card: {
-    borderRadius: Radius.lg,
-    padding: 24,
+    borderRadius: 16,
+    padding: 20,
   },
-  catLabel: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 11,
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-    marginBottom: 12,
-  },
-  beliefTitle: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 18,
-    lineHeight: 25,
-    fontStyle: 'italic',
-    marginBottom: 12,
-  },
-  progressWrap: {
+  cardRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
+    gap: 14,
   },
-  convictionText: {
-    fontFamily: FontFamily.sans,
+  progressRing: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 3,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  progressRingText: {
+    fontFamily: FontFamily.sansBold,
+    fontSize: 15,
+  },
+  cardContent: { flex: 1 },
+  beliefTitle: {
+    fontFamily: FontFamily.sansBold,
+    fontSize: 17,
+    lineHeight: 23,
+    marginBottom: 4,
+  },
+  beliefStage: {
+    fontFamily: FontFamily.sansMedium,
     fontSize: 13,
   },
-  progressTrack: {
-    height: 4,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 2,
-  },
 
+  // Add card (dashed)
   addCard: {
     borderWidth: 2,
     borderStyle: 'dashed',
-    borderRadius: Radius.lg,
-    paddingVertical: 20,
-    paddingHorizontal: 20,
+    borderRadius: 16,
+    padding: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },
   addCardText: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 14,
+    fontFamily: FontFamily.sansSemiBold,
+    fontSize: 15,
+    marginTop: 12,
   },
 
-  emptyWrap: { alignItems: 'center', paddingTop: 40, paddingHorizontal: 8 },
-  emptyIcon: { width: 72, height: 72, borderRadius: 36, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  emptyTitle: { fontFamily: FontFamily.sansBold, fontSize: 22, textAlign: 'center', marginBottom: 8 },
-  emptyBody: { fontFamily: FontFamily.sans, fontSize: 15, lineHeight: 22, textAlign: 'center', marginBottom: 20 },
-  diagBtn: { paddingHorizontal: 24, paddingVertical: 14, borderRadius: 12 },
-  diagBtnText: { fontFamily: FontFamily.sansSemiBold, fontSize: 15, color: '#060810' },
+  // Empty state (same as addCard)
+  emptyCard: {
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderRadius: 16,
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    fontFamily: FontFamily.sansSemiBold,
+    fontSize: 15,
+    marginTop: 12,
+  },
 });

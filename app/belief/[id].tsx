@@ -13,6 +13,7 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/hooks/useTheme';
@@ -23,7 +24,6 @@ import {
   getCompletedStages,
 } from '@/hooks/useBeliefs';
 import { useTasks } from '@/hooks/useTasks';
-import { RingProgress } from '@/components/charts/RingProgress';
 import { STAGES, STAGE_COLORS, StageKey, Stage } from '@/constants/stages';
 import { Icon } from '@/components/ui/Icon';
 import { CATEGORY_MAP } from '@/constants/categories';
@@ -31,30 +31,15 @@ import { FontFamily } from '@/constants/typography';
 import { Spacing, Radius } from '@/constants/spacing';
 import { UserBelief } from '@/types';
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Ring constants ───────────────────────────────────────────────────────────
 
-function getStageContent(ub: UserBelief, key: StageKey): string | null {
-  const fieldMap: Record<StageKey, string> = {
-    identify: 'conviction_uk',
-    explore: 'source_hypothesis_uk',
-    reality: 'source_hypothesis_uk',
-    replace: 'new_belief_template_uk',
-    action: 'experiment_template_uk',
-    identity: 'identity_template_uk',
-  };
-  if (ub.belief_id && ub.belief) {
-    return (ub.belief as unknown as Record<string, string>)[fieldMap[key]] ?? null;
-  }
-  const customMap: Record<StageKey, string | null> = {
-    identify: ub.custom_conviction,
-    explore: ub.custom_source,
-    reality: ub.custom_source,
-    replace: ub.custom_new_belief,
-    action: ub.custom_experiment,
-    identity: ub.custom_identity,
-  };
-  return customMap[key];
-}
+const RING_SIZE = 200;
+const RING_CENTER = RING_SIZE / 2;
+const RING_RADIUS = 80;
+const RING_STROKE = 8;
+const CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function getStageStatus(
   stage: Stage,
@@ -93,7 +78,7 @@ function ScoreSelector({
             <Text
               style={[
                 scoreStyles.btnText,
-                { color: active ? C.surface1 : C.textSecondary },
+                { color: active ? '#060810' : C.textSecondary },
               ]}
             >
               {n}
@@ -114,16 +99,12 @@ const scoreStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  btnText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 13,
-    fontWeight: '700',
-  },
+  btnText: { fontFamily: FontFamily.sansBold, fontSize: 13 },
 });
 
-// ─── Stage Row ────────────────────────────────────────────────────────────────
+// ─── Stage Card ───────────────────────────────────────────────────────────────
 
-interface StageRowProps {
+interface StageCardProps {
   stage: Stage;
   status: 'completed' | 'current' | 'locked';
   reflection: string;
@@ -135,7 +116,7 @@ interface StageRowProps {
   showTaskBtn?: boolean;
 }
 
-function StageRow({
+function StageCard({
   stage,
   status,
   reflection,
@@ -145,199 +126,184 @@ function StageRow({
   onCoach,
   onCreateTask,
   showTaskBtn,
-}: StageRowProps) {
+}: StageCardProps) {
   const C = useTheme();
+  const isCompleted = status === 'completed';
+  const isCurrent = status === 'current';
+  const isLocked = status === 'locked';
 
-  if (status === 'completed') {
-    return (
-      <View style={[stageStyles.row, stageStyles.rowCompleted, { backgroundColor: C.surface2 }]}>
-        <View style={[stageStyles.circle, { backgroundColor: C.primary }]}>
-          <Icon name="Check" size={14} strokeWidth={2.5} color="#060810" />
-        </View>
-        <View style={stageStyles.rowContent}>
-          <Text style={[stageStyles.rowTitle, { color: C.text }]}>{stage.nameUk}</Text>
-          <Text style={[stageStyles.rowDesc, { color: C.textSecondary }]}>{stage.descriptionUk}</Text>
-        </View>
-      </View>
-    );
-  }
-
-  if (status === 'locked') {
-    return (
-      <View style={[stageStyles.row, stageStyles.rowLocked, { backgroundColor: C.surface2, opacity: 0.5 }]}>
-        <View style={[stageStyles.circle, { backgroundColor: C.surface3 }]}>
-          <Icon name="Lock" size={14} color={C.textSecondary} strokeWidth={1.5} />
-        </View>
-        <View style={stageStyles.rowContent}>
-          <Text style={[stageStyles.rowTitle, { color: C.text }]}>{stage.nameUk}</Text>
-          <Text style={[stageStyles.rowDesc, { color: C.textSecondary }]}>{stage.descriptionUk}</Text>
-        </View>
-      </View>
-    );
-  }
+  const iconBg = isCompleted
+    ? C.primary
+    : isCurrent
+    ? C.primaryMuted
+    : 'rgba(163,174,196,0.12)';
+  const titleColor = isLocked ? 'rgba(163,174,196,0.4)' : C.text;
+  const descColor = isLocked ? 'rgba(163,174,196,0.4)' : C.textSecondary;
 
   return (
-    <View style={[stageStyles.currentCard, { backgroundColor: C.surface2, borderColor: 'rgba(200,255,0,0.5)' }]}>
-      <View style={stageStyles.currentHeader}>
-        <View style={[stageStyles.circle, { backgroundColor: C.primary }]}>
-          <Text style={stageStyles.circleNum}>{stage.index}</Text>
-        </View>
-        <View style={stageStyles.rowContent}>
-          <Text style={[stageStyles.currentName, { color: C.text }]}>{stage.nameUk}</Text>
-          <Text style={[stageStyles.currentDesc, { color: C.textSecondary }]}>{stage.descriptionUk}</Text>
-        </View>
-      </View>
-
-      {/* Question — italic */}
-      <View style={stageStyles.questionWrap}>
-        <Text style={[stageStyles.questionText, { color: C.textSecondary }]}>
-          {stage.questionUk}
-        </Text>
-      </View>
-
-      {/* Textarea */}
-      <TextInput
-        style={[
-          stageStyles.textarea,
-          { backgroundColor: C.surface3, color: C.text },
-        ]}
-        placeholder="Напишіть вашу відповідь..."
-        placeholderTextColor={C.textTertiary}
-        multiline
-        numberOfLines={4}
-        textAlignVertical="top"
-        value={reflection}
-        onChangeText={onChangeReflection}
-      />
-
-      {/* Action buttons */}
-      <View style={stageStyles.btnRow}>
-        <Pressable
-          style={({ pressed }) => [
-            stageStyles.coachBtn,
-            { borderColor: C.border },
-            pressed && { opacity: 0.7 },
-          ]}
-          onPress={onCoach}
-        >
-          <Icon name="MessageSquare" size={18} color={C.textSecondary} strokeWidth={1.5} />
-          <Text style={[stageStyles.coachBtnText, { color: C.textSecondary }]}>Запитати коуча</Text>
-        </Pressable>
-
-        <Pressable
-          style={({ pressed }) => [
-            stageStyles.continueBtn,
-            { backgroundColor: C.primary },
-            (!reflection.trim() || saving) && { opacity: 0.5 },
-            pressed && { transform: [{ scale: 0.97 }] },
-          ]}
-          onPress={onContinue}
-          disabled={!reflection.trim() || saving}
-        >
-          {saving ? (
-            <ActivityIndicator color="#060810" size="small" />
-          ) : (
-            <>
-              <Text style={stageStyles.continueBtnText}>Продовжити шлях</Text>
-              <Icon name="ArrowRight" size={18} strokeWidth={1.5} color="#060810" />
-            </>
+    <View style={[cardStyles.card, { backgroundColor: C.surface1 }]}>
+      <View style={cardStyles.header}>
+        <View style={[cardStyles.iconCircle, { backgroundColor: iconBg }]}>
+          {isCompleted && (
+            <Icon name="Check" size={20} strokeWidth={2} color="#060810" />
           )}
-        </Pressable>
+          {isCurrent && (
+            <Text style={[cardStyles.iconNum, { color: C.primary }]}>
+              {stage.index}
+            </Text>
+          )}
+          {isLocked && (
+            <Icon
+              name="Lock"
+              size={20}
+              color="rgba(163,174,196,0.4)"
+              strokeWidth={1.5}
+            />
+          )}
+        </View>
+        <View style={cardStyles.content}>
+          <Text style={[cardStyles.cardTitle, { color: titleColor }]}>
+            {stage.nameUk}
+          </Text>
+          <Text style={[cardStyles.cardDesc, { color: descColor }]}>
+            {stage.descriptionUk}
+          </Text>
+        </View>
       </View>
 
-      {showTaskBtn && (
-        <Pressable
-          style={({ pressed }) => [
-            stageStyles.taskBtn,
-            { borderColor: C.primary, backgroundColor: C.primaryMuted },
-            pressed && { opacity: 0.75 },
-          ]}
-          onPress={onCreateTask}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Icon name="Plus" size={14} color={C.primary} />
-            <Text style={[stageStyles.taskBtnText, { color: C.primary }]}>Створити задачу</Text>
+      {isCurrent && (
+        <>
+          <Text style={[cardStyles.question, { color: C.textSecondary }]}>
+            {stage.questionUk}
+          </Text>
+
+          <TextInput
+            style={[
+              cardStyles.textarea,
+              { backgroundColor: C.surface2, color: C.text },
+            ]}
+            placeholder="Напишіть вашу відповідь..."
+            placeholderTextColor={C.textTertiary}
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+            value={reflection}
+            onChangeText={onChangeReflection}
+          />
+
+          <View style={cardStyles.btnRow}>
+            <Pressable
+              style={({ pressed }) => [
+                cardStyles.coachBtn,
+                { borderColor: C.border },
+                pressed && { opacity: 0.7 },
+              ]}
+              onPress={onCoach}
+            >
+              <Icon
+                name="MessageSquare"
+                size={18}
+                color={C.textSecondary}
+                strokeWidth={1.5}
+              />
+              <Text style={[cardStyles.coachBtnText, { color: C.textSecondary }]}>
+                Запитати коуча
+              </Text>
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [
+                cardStyles.continueBtn,
+                { backgroundColor: C.primary },
+                (!reflection.trim() || saving) && { opacity: 0.5 },
+                pressed && { transform: [{ scale: 0.97 }] },
+              ]}
+              onPress={onContinue}
+              disabled={!reflection.trim() || saving}
+            >
+              {saving ? (
+                <ActivityIndicator color="#060810" size="small" />
+              ) : (
+                <>
+                  <Text style={cardStyles.continueBtnText}>
+                    Продовжити шлях
+                  </Text>
+                  <Icon
+                    name="ArrowRight"
+                    size={18}
+                    strokeWidth={1.5}
+                    color="#060810"
+                  />
+                </>
+              )}
+            </Pressable>
           </View>
-        </Pressable>
+
+          {showTaskBtn && (
+            <Pressable
+              style={({ pressed }) => [
+                cardStyles.taskBtn,
+                { borderColor: C.primary, backgroundColor: C.primaryMuted },
+                pressed && { opacity: 0.75 },
+              ]}
+              onPress={onCreateTask}
+            >
+              <Icon name="Plus" size={14} color={C.primary} />
+              <Text style={[cardStyles.taskBtnText, { color: C.primary }]}>
+                Створити задачу
+              </Text>
+            </Pressable>
+          )}
+        </>
       )}
     </View>
   );
 }
 
-const stageStyles = StyleSheet.create({
-  row: {
+const cardStyles = StyleSheet.create({
+  card: {
+    borderRadius: Radius.lg,
+    padding: 20,
+  },
+  header: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
-    borderRadius: Radius.lg,
-    marginBottom: 12,
   },
-  rowCompleted: {
-    padding: 20,
-  },
-  rowLocked: {
-    padding: 20,
-  },
-  rowContent: {
-    flex: 1,
-  },
-  rowTitle: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 2,
-  },
-  rowDesc: {
-    fontFamily: FontFamily.sans,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  circle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
-    marginTop: 1,
   },
-  circleNum: {
+  iconNum: {
     fontFamily: FontFamily.sansBold,
-    fontSize: 12,
-    color: '#060810',
+    fontSize: 17,
   },
-
-  currentCard: {
-    borderRadius: Radius.lg,
-    padding: 24,
-    marginBottom: 12,
-    borderWidth: 1,
+  content: {
+    flex: 1,
+    paddingTop: 2,
   },
-  currentHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-    marginBottom: 16,
+  cardTitle: {
+    fontFamily: FontFamily.sansBold,
+    fontSize: 17,
+    lineHeight: 22,
+    marginBottom: 4,
   },
-  currentName: {
+  cardDesc: {
     fontFamily: FontFamily.sansMedium,
     fontSize: 15,
-    lineHeight: 21,
-    marginBottom: 2,
+    lineHeight: 22,
   },
-  currentDesc: {
+  question: {
     fontFamily: FontFamily.sans,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  questionWrap: {
-    marginBottom: 16,
-  },
-  questionText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 13,
+    fontSize: 14,
     lineHeight: 20,
     fontStyle: 'italic',
+    marginTop: 16,
+    marginBottom: 12,
   },
   textarea: {
     borderRadius: Radius.md,
@@ -385,10 +351,13 @@ const stageStyles = StyleSheet.create({
   },
   taskBtn: {
     marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
     paddingVertical: 14,
     borderRadius: Radius.md,
     borderWidth: 1.5,
-    alignItems: 'center',
   },
   taskBtnText: {
     fontFamily: FontFamily.sansSemiBold,
@@ -396,7 +365,7 @@ const stageStyles = StyleSheet.create({
   },
 });
 
-// ─── Butterfly Completion ─────────────────────────────────────────────────────
+// ─── Butterfly Overlay ────────────────────────────────────────────────────────
 
 function ButterflyOverlay({
   visible,
@@ -433,41 +402,48 @@ function ButterflyOverlay({
   const color = STAGE_COLORS.identity;
 
   return (
-    <View style={[butterflyStyles.overlay, { backgroundColor: C.surface1 }]}>
-      <Animated.View style={[butterflyStyles.content, { opacity, transform: [{ scale }] }]}>
-        <View style={butterflyStyles.sparklesWrap}>
+    <View style={[bfStyles.overlay, { backgroundColor: C.surface1 }]}>
+      <Animated.View style={[bfStyles.content, { opacity, transform: [{ scale }] }]}>
+        <View style={bfStyles.sparklesWrap}>
           <Icon name="Sparkles" size={64} color={STAGE_COLORS.identity} />
         </View>
       </Animated.View>
 
-      <Animated.View style={[butterflyStyles.stats, { opacity: statsOpacity }]}>
-        <Text style={[butterflyStyles.title, { color: C.text }]}>
+      <Animated.View style={[bfStyles.stats, { opacity: statsOpacity }]}>
+        <Text style={[bfStyles.title, { color: C.text }]}>
           Трансформація завершена
         </Text>
 
-        <View style={[butterflyStyles.scoreCard, { backgroundColor: C.surface2 }]}>
-          <View style={butterflyStyles.scoreRow}>
-            <View style={butterflyStyles.scoreItem}>
-              <Text style={[butterflyStyles.scoreLabel, { color: C.textSecondary }]}>Було</Text>
-              <Text style={[butterflyStyles.scoreNum, { color: C.textSecondary }]}>{scoreBefore}/10</Text>
+        <View style={[bfStyles.scoreCard, { backgroundColor: C.surface2 }]}>
+          <View style={bfStyles.scoreRow}>
+            <View style={bfStyles.scoreItem}>
+              <Text style={[bfStyles.scoreLabel, { color: C.textSecondary }]}>Було</Text>
+              <Text style={[bfStyles.scoreNum, { color: C.textSecondary }]}>{scoreBefore}/10</Text>
             </View>
-            <Text style={[butterflyStyles.arrow, { color: color }]}>→</Text>
-            <View style={butterflyStyles.scoreItem}>
-              <Text style={[butterflyStyles.scoreLabel, { color: color }]}>Стало</Text>
-              <Text style={[butterflyStyles.scoreNum, { color: color }]}>{scoreAfter}/10</Text>
+            <Text style={[bfStyles.arrow, { color }]}>→</Text>
+            <View style={bfStyles.scoreItem}>
+              <Text style={[bfStyles.scoreLabel, { color }]}>Стало</Text>
+              <Text style={[bfStyles.scoreNum, { color }]}>{scoreAfter}/10</Text>
             </View>
           </View>
           {diff > 0 && (
-            <Text style={[butterflyStyles.diffText, { color: C.textSecondary }]}>
+            <Text style={[bfStyles.diffText, { color: C.textSecondary }]}>
               Ви звільнили {diff} пункт{diff === 1 ? '' : diff < 5 ? 'и' : 'ів'} потенціалу
             </Text>
           )}
         </View>
 
         {!!identityText && (
-          <View style={[butterflyStyles.identityCard, { backgroundColor: color + '18', borderColor: color + '44' }]}>
-            <Text style={[butterflyStyles.identityLabel, { color: color }]}>Ваша нова ідентичність</Text>
-            <Text style={[butterflyStyles.identityText, { color: C.text }]}>
+          <View
+            style={[
+              bfStyles.identityCard,
+              { backgroundColor: color + '18', borderColor: color + '44' },
+            ]}
+          >
+            <Text style={[bfStyles.identityLabel, { color }]}>
+              Ваша нова ідентичність
+            </Text>
+            <Text style={[bfStyles.identityText, { color: C.text }]}>
               «{identityText}»
             </Text>
           </View>
@@ -475,50 +451,46 @@ function ButterflyOverlay({
 
         <Pressable
           style={({ pressed }) => [
-            butterflyStyles.doneBtn,
+            bfStyles.doneBtn,
             { backgroundColor: color },
             pressed && { opacity: 0.85 },
           ]}
           onPress={onDone}
         >
-          <Text style={butterflyStyles.doneBtnText}>Завершено</Text>
+          <Text style={bfStyles.doneBtnText}>Завершено</Text>
         </Pressable>
       </Animated.View>
     </View>
   );
 }
 
-const butterflyStyles = StyleSheet.create({
+const bfStyles = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 100,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 6,
+    paddingHorizontal: 24,
   },
-  content: {
-    marginBottom: 6,
-  },
+  content: { marginBottom: 8 },
   sparklesWrap: { width: 80, height: 80, alignItems: 'center', justifyContent: 'center' },
-  stats: { width: '100%', alignItems: 'center' },
+  stats: { width: '100%', alignItems: 'center', gap: 12 },
   title: {
     fontFamily: FontFamily.sansBold,
     fontSize: 24,
     textAlign: 'center',
-    marginBottom: 5,
   },
   scoreCard: {
     width: '100%',
     borderRadius: Radius.lg,
-    padding: 5,
-    marginBottom: 4,
+    padding: 20,
     alignItems: 'center',
   },
   scoreRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    marginBottom: 2,
+    gap: 16,
+    marginBottom: 8,
   },
   scoreItem: { alignItems: 'center' },
   scoreLabel: {
@@ -537,21 +509,19 @@ const butterflyStyles = StyleSheet.create({
   diffText: {
     fontFamily: FontFamily.sans,
     fontSize: 13,
-    marginTop: 2,
   },
   identityCard: {
     width: '100%',
     borderRadius: Radius.lg,
     borderWidth: 1,
-    padding: 4,
-    marginBottom: 5,
+    padding: 16,
   },
   identityLabel: {
     fontFamily: FontFamily.sansBold,
     fontSize: 11,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
-    marginBottom: 2,
+    marginBottom: 8,
   },
   identityText: {
     fontFamily: FontFamily.sansSemiBold,
@@ -559,9 +529,10 @@ const butterflyStyles = StyleSheet.create({
     lineHeight: 24,
   },
   doneBtn: {
-    paddingVertical: 14,
-    paddingHorizontal: 10,
+    width: '100%',
+    paddingVertical: 16,
     borderRadius: Radius.md,
+    alignItems: 'center',
   },
   doneBtnText: {
     fontFamily: FontFamily.sansBold,
@@ -620,37 +591,23 @@ function ScoreModal({
 }
 
 const modalStyles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
+  backdrop: { flex: 1, justifyContent: 'flex-end' },
   card: {
     borderTopLeftRadius: Radius.xl,
     borderTopRightRadius: Radius.xl,
-    padding: 6,
-    paddingBottom: 8,
-    gap: 4,
+    padding: 24,
+    paddingBottom: 36,
+    gap: 16,
   },
-  title: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 22,
-  },
-  body: {
-    fontFamily: FontFamily.sans,
-    fontSize: 14,
-    lineHeight: 20,
-  },
+  title: { fontFamily: FontFamily.sansBold, fontSize: 22 },
+  body: { fontFamily: FontFamily.sans, fontSize: 14, lineHeight: 20 },
   submitBtn: {
     paddingVertical: 14,
     borderRadius: Radius.md,
     alignItems: 'center',
-    marginTop: 2,
+    marginTop: 4,
   },
-  submitText: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 15,
-    color: '#fff',
-  },
+  submitText: { fontFamily: FontFamily.sansBold, fontSize: 15, color: '#fff' },
 });
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
@@ -695,25 +652,25 @@ export default function BeliefDetailScreen() {
 
   if (loadingBelief || !ub) {
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: C.surface1 }]}>
+      <SafeAreaView style={[styles.root, { backgroundColor: C.bg }]}>
         <ActivityIndicator style={{ marginTop: 80 }} color={C.primary} />
       </SafeAreaView>
     );
   }
 
   const title = getBeliefTitle(ub);
-  const catKey = getBeliefCategory(ub);
-  const cat = catKey ? CATEGORY_MAP[catKey] : null;
   const completed = getCompletedStages(ub);
-  const catColor = catKey
-    ? (STAGE_COLORS as Record<string, string>)[catKey] ?? C.primary
-    : C.primary;
-
-  const identityText = ub.belief_id && ub.belief
-    ? ub.belief.identity_template_uk
-    : ub.custom_identity ?? null;
+  const progress = completed / 6;
+  const strokeDashoffset = CIRCUMFERENCE * (1 - progress);
+  const progressPercent = Math.round(progress * 100);
 
   const currentStage = STAGES.find((s) => s.index === ub.current_stage);
+  const currentStageName = currentStage?.nameUk ?? 'Завершено';
+
+  const identityText =
+    ub.belief_id && ub.belief
+      ? ub.belief.identity_template_uk
+      : ub.custom_identity ?? null;
 
   const handleContinue = async () => {
     if (!currentStage || !reflection.trim()) return;
@@ -756,18 +713,14 @@ export default function BeliefDetailScreen() {
     }
   };
 
-  const handleButterflyDone = () => {
-    router.back();
-  };
-
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: C.surface1 }]}>
+    <SafeAreaView style={[styles.root, { backgroundColor: C.bg }]}>
       <ButterflyOverlay
         visible={showButterfly}
         scoreBefore={ub.score}
         scoreAfter={scoreAfterSelected ?? 1}
         identityText={identityText}
-        onDone={handleButterflyDone}
+        onDone={() => router.back()}
       />
 
       <ScoreModal
@@ -793,42 +746,58 @@ export default function BeliefDetailScreen() {
             <Icon name="ChevronLeft" size={22} color={C.textSecondary} />
           </Pressable>
 
-          {/* Header: Ring + category + title */}
-          <View style={styles.header}>
-            <View style={styles.headerRow}>
-              <View style={styles.headerRing}>
-                <RingProgress
-                  progress={completed}
-                  color={C.primary}
-                  size={68}
-                  strokeWidth={4}
-                  animated
-                />
-                <View style={styles.headerRingCenter}>
-                  <Text style={[styles.headerRingText, { color: C.textSecondary }]}>{completed}/6</Text>
-                </View>
-              </View>
-              <View style={styles.headerMeta}>
-                {cat && (
-                  <Text style={[styles.catLabel, { color: C.primary }]}>
-                    {cat.nameUk.toUpperCase()}
-                  </Text>
-                )}
-                <Text style={[styles.beliefTitle, { color: C.text }]} numberOfLines={4}>
-                  "{title}"
-                </Text>
-              </View>
+          {/* Centered ring */}
+          <View style={styles.ringContainer}>
+            <Svg width={RING_SIZE} height={RING_SIZE}>
+              <Circle
+                cx={RING_CENTER}
+                cy={RING_CENTER}
+                r={RING_RADIUS}
+                stroke="rgba(163,174,196,0.12)"
+                strokeWidth={RING_STROKE}
+                fill="none"
+              />
+              <Circle
+                cx={RING_CENTER}
+                cy={RING_CENTER}
+                r={RING_RADIUS}
+                stroke={C.primary}
+                strokeWidth={RING_STROKE}
+                fill="none"
+                strokeDasharray={[CIRCUMFERENCE, CIRCUMFERENCE]}
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+                rotation="-90"
+                origin={`${RING_CENTER}, ${RING_CENTER}`}
+              />
+            </Svg>
+            <View style={styles.ringCenter}>
+              <Text style={[styles.ringPercent, { color: C.text }]}>
+                {progressPercent}%
+              </Text>
+              <Text style={[styles.ringLabel, { color: C.textSecondary }]}>
+                ПРОГРЕС
+              </Text>
             </View>
           </View>
 
-          {/* Stages */}
-          <View style={styles.stages}>
+          {/* Title + current stage */}
+          <Text style={[styles.beliefTitle, { color: C.text }]} numberOfLines={4}>
+            {title}
+          </Text>
+          <Text style={[styles.currentStageText, { color: C.textSecondary }]}>
+            {completed < 6
+              ? `Поточний етап: ${currentStageName} · ${completed}/6`
+              : `Всі 6 етапів завершено`}
+          </Text>
+
+          {/* Stage cards */}
+          <View style={styles.stagesList}>
             {STAGES.map((stage) => {
               const status = getStageStatus(stage, ub);
               const isCurrent = status === 'current';
-
               return (
-                <StageRow
+                <StageCard
                   key={stage.key}
                   stage={stage}
                   status={status}
@@ -849,8 +818,22 @@ export default function BeliefDetailScreen() {
             })}
           </View>
 
-          <View style={{ height: 8 }} />
+          <View style={{ height: 96 }} />
         </ScrollView>
+
+        {/* Sticky CTA */}
+        <View style={[styles.footer, { backgroundColor: C.bg, borderTopColor: C.border }]}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.ctaBtn,
+              { backgroundColor: C.primary },
+              pressed && { opacity: 0.85 },
+            ]}
+            onPress={() => router.push('/ai-coach')}
+          >
+            <Text style={styles.ctaBtnText}>Записати інсайт</Text>
+          </Pressable>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -861,14 +844,21 @@ export default function BeliefDetailScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
 
-  scroll: { paddingHorizontal: Spacing.screen, paddingTop: Spacing.base },
+  scroll: {
+    paddingHorizontal: Spacing.screen,
+    paddingTop: Spacing.base,
+  },
 
-  backBtn: { marginBottom: 16, alignSelf: 'flex-start' },
+  backBtn: {
+    marginBottom: 8,
+    alignSelf: 'flex-start',
+  },
 
-  header: { marginBottom: 32 },
-  headerRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
-  headerRing: { position: 'relative', width: 68, height: 68, flexShrink: 0 },
-  headerRingCenter: {
+  ringContainer: {
+    alignItems: 'center',
+    marginVertical: 32,
+  },
+  ringCenter: {
     position: 'absolute',
     top: 0,
     left: 0,
@@ -877,28 +867,53 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerRingText: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 12,
+  ringPercent: {
+    fontFamily: FontFamily.sansExtraBold,
+    fontSize: 48,
+    letterSpacing: -1,
+    lineHeight: 52,
   },
-  headerMeta: {
-    flex: 1,
-    paddingTop: 8,
-  },
-
-  catLabel: {
+  ringLabel: {
     fontFamily: FontFamily.sansSemiBold,
     fontSize: 11,
-    letterSpacing: 1.5,
     textTransform: 'uppercase',
-    marginBottom: 8,
-  },
-  beliefTitle: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 20,
-    lineHeight: 28,
-    fontStyle: 'italic',
+    letterSpacing: 1.5,
+    marginTop: 2,
   },
 
-  stages: { gap: 0 },
+  beliefTitle: {
+    fontFamily: FontFamily.sansExtraBold,
+    fontSize: 32,
+    letterSpacing: -0.5,
+    textAlign: 'center',
+    lineHeight: 38,
+  },
+  currentStageText: {
+    fontFamily: FontFamily.sansMedium,
+    fontSize: 15,
+    textAlign: 'center',
+    marginTop: 8,
+    marginBottom: 32,
+  },
+
+  stagesList: {
+    gap: 12,
+  },
+
+  footer: {
+    paddingHorizontal: Spacing.screen,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+  },
+  ctaBtn: {
+    height: 56,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ctaBtnText: {
+    fontFamily: FontFamily.sansBold,
+    fontSize: 17,
+    color: '#060810',
+  },
 });

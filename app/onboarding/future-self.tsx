@@ -6,121 +6,71 @@ import {
   ScrollView,
   SafeAreaView,
   Animated,
-  Dimensions,
+  Pressable,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Colors as C } from '@/constants/colors';
-import { useTheme } from '@/hooks/useTheme';
 import { FontFamily } from '@/constants/typography';
-import { Spacing, Radius, Shadow } from '@/constants/spacing';
-import { BeliefCategory, CATEGORY_MAP } from '@/constants/categories';
+import { Radius, Spacing } from '@/constants/spacing';
+import { BeliefCategory } from '@/constants/categories';
 import { SAMPLE_BELIEFS } from '@/constants/sample-beliefs';
 import { getAnswers } from '@/lib/onboarding-storage';
-import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
-import type { IconName } from '@/components/ui/Icon';
-
-const { width: SW } = Dimensions.get('window');
 
 // ─── Positive outcomes per category ──────────────────────────────────────────
 
-const OUTCOMES: Record<BeliefCategory, { icon: IconName; outcome: string; color: string }> = {
-  pricing: {
-    icon: 'Coins',
-    outcome: 'впевнено встановлювати ціни, що відображають реальну цінність вашої роботи',
-    color: '#C8FF00',
-  },
-  delegation: {
-    icon: 'Users',
-    outcome: 'будувати команду і масштабувати бізнес без вашої прямої участі в кожному процесі',
-    color: '#7BB8C9',
-  },
-  fear: {
-    icon: 'ShieldAlert',
-    outcome: 'діяти попри невизначеність і перетворювати провали на точки зростання',
-    color: '#E8976B',
-  },
-  selfworth: {
-    icon: 'Award',
-    outcome: 'приймати рішення з позиції впевненості та не продавати себе дешевше за свою цінність',
-    color: '#9B8AC4',
-  },
-  growth: {
-    icon: 'TrendingUp',
-    outcome: 'свідомо масштабувати бізнес за чіткою стратегією без відчуття хаосу',
-    color: '#4AE68C',
-  },
-  time: {
-    icon: 'Clock',
-    outcome: 'управляти часом стратегічно і мати простір для відновлення та стратегії',
-    color: '#E6B44A',
-  },
-  relationships: {
-    icon: 'Heart',
-    outcome: 'будувати сильні партнерства і залучати потрібних людей у свій бізнес',
-    color: '#E64A5E',
-  },
-  money: {
-    icon: 'Wallet',
-    outcome: 'приймати фінансові рішення без внутрішніх обмежень і будувати систему достатку',
-    color: '#4AE68C',
-  },
+const OUTCOMES: Record<BeliefCategory, string> = {
+  pricing: 'впевнено встановлювати ціни, що відображають реальну цінність вашої роботи',
+  delegation: 'будувати команду і масштабувати бізнес без вашої прямої участі в кожному процесі',
+  fear: 'діяти попри невизначеність і перетворювати провали на точки зростання',
+  selfworth: 'приймати рішення з позиції впевненості та не продавати себе дешевше за свою цінність',
+  growth: 'свідомо масштабувати бізнес за чіткою стратегією без відчуття хаосу',
+  time: 'управляти часом стратегічно і мати простір для відновлення та стратегії',
+  relationships: 'будувати сильні партнерства і залучати потрібних людей у свій бізнес',
+  money: 'приймати фінансові рішення без внутрішніх обмежень і будувати систему достатку',
 };
 
-// ─── Transformation card ──────────────────────────────────────────────────────
+const HARDCODED_CARDS = [
+  { was: 'Працював 80 год/тиждень', becomes: '4-денний робочий тиждень' },
+  { was: 'Боявся делегувати', becomes: 'Команда з 12 людей' },
+  { was: '$5K/міс revenue', becomes: '$50K/міс стабільно' },
+];
 
-interface CardData {
-  rank: number;
-  beliefUk: string;
-  category: BeliefCategory;
-}
+// ─── Transformation Card ──────────────────────────────────────────────────────
 
-function TransformCard({ card, delay }: { card: CardData; delay: number }) {
-  const C = useTheme();
+function TransformCard({
+  was,
+  becomes,
+  delay,
+}: {
+  was: string;
+  becomes: string;
+  delay: number;
+}) {
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(28)).current;
 
-  const outcome = OUTCOMES[card.category];
-  const cat = CATEGORY_MAP[card.category];
-
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 500,
-        delay,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateY, {
-        toValue: 0,
-        duration: 450,
-        delay,
-        useNativeDriver: true,
-      }),
+      Animated.timing(opacity, { toValue: 1, duration: 500, delay, useNativeDriver: true }),
+      Animated.timing(translateY, { toValue: 0, duration: 450, delay, useNativeDriver: true }),
     ]).start();
   }, []);
 
   return (
-    <Animated.View
-      style={[styles.card, { backgroundColor: C.surface2, opacity, transform: [{ translateY }] }]}
-    >
-      {/* БУЛО */}
-      <View style={styles.sectionBlock}>
-        <Text style={[styles.wasLabel, { color: 'rgba(163,174,196,0.30)' }]}>БУЛО</Text>
-        <Text style={[styles.beliefText, { color: C.textSecondary }]}>"{card.beliefUk}"</Text>
+    <Animated.View style={[styles.card, { opacity, transform: [{ translateY }] }]}>
+      <View style={styles.wasSection}>
+        <Text style={styles.sectionLabel}>БУЛО</Text>
+        <Text style={styles.wasText}>"{was}"</Text>
       </View>
 
-      {/* Arrow */}
-      <View style={styles.arrowRow}>
-        <View style={[styles.arrowCircle, { backgroundColor: C.surface3 }]}>
-          <Icon name="ArrowRight" size={18} color={C.textSecondary} strokeWidth={1.5} />
-        </View>
+      <View style={styles.arrowContainer}>
+        <Icon name="ArrowRight" size={24} color={C.primary} strokeWidth={1.5} />
       </View>
 
-      {/* СТАНЕ МОЖЛИВИМ */}
-      <View style={styles.sectionBlock}>
-        <Text style={[styles.outcomeLabel, { color: C.primary }]}>СТАНЕ МОЖЛИВИМ</Text>
-        <Text style={[styles.outcomeText, { color: C.text }]}>{outcome.outcome}</Text>
+      <View style={styles.becomesSection}>
+        <Text style={styles.sectionLabel}>СТАНЕ МОЖЛИВИМ</Text>
+        <Text style={styles.becomesText}>{becomes}</Text>
       </View>
     </Animated.View>
   );
@@ -129,45 +79,31 @@ function TransformCard({ card, delay }: { card: CardData; delay: number }) {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function FutureSelfScreen() {
-  const [cards, setCards] = useState<CardData[]>([]);
+  const [cardData, setCardData] = useState<{ was: string; becomes: string }[]>([]);
   const [loaded, setLoaded] = useState(false);
-
-  const headerOpacity = useRef(new Animated.Value(0)).current;
-  const headerY = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
     (async () => {
       const answers = await getAnswers();
       const answered = answers.filter((a) => a.score > 0);
 
-      let top3: CardData[];
       if (answered.length >= 3) {
-        top3 = answered
+        const top3 = answered
           .sort((a, b) => b.score - a.score)
           .slice(0, 3)
-          .map((a, i) => {
+          .map((a) => {
             const belief = SAMPLE_BELIEFS.find((b) => b.id === a.beliefId);
             return {
-              rank: i + 1,
-              beliefUk: belief?.belief_uk ?? a.category,
-              category: a.category,
+              was: belief?.belief_uk ?? a.category,
+              becomes: OUTCOMES[a.category as BeliefCategory] ?? a.category,
             };
           });
+        setCardData(top3);
       } else {
-        top3 = [
-          { rank: 1, beliefUk: 'Я не можу встановлювати високі ціни', category: 'pricing' },
-          { rank: 2, beliefUk: 'Якщо хочеш зробити добре — зроби сам', category: 'delegation' },
-          { rank: 3, beliefUk: 'Я недостатньо компетентний для цього рівня', category: 'selfworth' },
-        ];
+        setCardData(HARDCODED_CARDS);
       }
 
-      setCards(top3);
       setLoaded(true);
-
-      Animated.parallel([
-        Animated.timing(headerOpacity, { toValue: 1, duration: 600, useNativeDriver: true }),
-        Animated.timing(headerY, { toValue: 0, duration: 550, useNativeDriver: true }),
-      ]).start();
     })();
   }, []);
 
@@ -175,39 +111,47 @@ export default function FutureSelfScreen() {
 
   return (
     <SafeAreaView style={styles.root}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Майбутнє Я</Text>
+      </View>
+
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header — centered */}
-        <Animated.View
-          style={[styles.header, { opacity: headerOpacity, transform: [{ translateY: headerY }] }]}
+        {/* Intro */}
+        <Text style={styles.introText}>
+          Ось як виглядає ваше підприємницьке життя через 3 місяці після того, як ви пропрацюєте
+          ключові обмеження.
+        </Text>
+
+        {/* Transformation cards */}
+        {cardData.map((item, i) => (
+          <TransformCard key={i} was={item.was} becomes={item.becomes} delay={200 + i * 160} />
+        ))}
+
+        {/* Reflection card */}
+        <View style={styles.reflectionCard}>
+          <Text style={styles.reflectionLabel}>РЕФЛЕКСІЯ</Text>
+          <Text style={styles.reflectionQuestion}>
+            Як би змінилось ваше підприємницьке життя без цих обмежень?
+          </Text>
+          <Pressable
+            style={({ pressed }) => [styles.reflectionButton, pressed && { opacity: 0.7 }]}
+            onPress={() => router.push('/ai-coach')}
+          >
+            <Text style={styles.reflectionButtonText}>Записати думки</Text>
+          </Pressable>
+        </View>
+
+        {/* CTA */}
+        <Pressable
+          style={({ pressed }) => [styles.ctaButton, pressed && { opacity: 0.85 }]}
+          onPress={() => router.push('/onboarding/paywall')}
         >
-          <Text style={styles.title}>
-            Уявіть себе{'\n'}через 3 місяці
-          </Text>
-          <Text style={styles.subtitle}>
-            Ось що стане можливим, коли ви пропрацюєте свої ключові обмеження
-          </Text>
-        </Animated.View>
-
-        {/* Cards */}
-        <View style={styles.cardsList}>
-          {cards.map((card, i) => (
-            <TransformCard key={card.rank} card={card} delay={300 + i * 180} />
-          ))}
-        </View>
-
-        {/* CTA — inline in content flow */}
-        <View style={styles.ctaWrap}>
-          <Button
-            label="Почати трансформацію"
-            onPress={() => router.push('/onboarding/paywall')}
-            variant="primary"
-            size="lg"
-            style={styles.btn}
-          />
-        </View>
+          <Text style={styles.ctaText}>Почати трансформацію</Text>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
@@ -220,86 +164,121 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: C.bg,
   },
-  scroll: {
-    paddingHorizontal: Spacing.screen,
-    paddingBottom: Spacing.xxl,
-    gap: Spacing.xl,
-  },
 
-  // Header — centered
   header: {
-    paddingTop: Spacing.xl,
-    gap: Spacing.sm,
-    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: C.border,
   },
-  title: {
+  headerTitle: {
     fontFamily: FontFamily.sansExtraBold,
     fontSize: 32,
-    lineHeight: 40,
-    letterSpacing: -0.64,
+    letterSpacing: -0.5,
     color: C.text,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontFamily: FontFamily.sans,
-    fontSize: 17,
-    lineHeight: 25,
-    color: C.textSecondary,
-    textAlign: 'center',
   },
 
-  // Cards
-  cardsList: {
-    gap: Spacing.md,
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 48,
   },
+
+  introText: {
+    fontFamily: FontFamily.sansMedium,
+    fontSize: 15,
+    lineHeight: 22,
+    color: C.textSecondary,
+    marginBottom: 24,
+  },
+
+  // Transformation card
   card: {
+    backgroundColor: C.surface1,
     borderRadius: Radius.lg,
     padding: Spacing.xl,
-    gap: 16,
+    marginBottom: 16,
   },
 
-  sectionBlock: { gap: 8 },
-  wasLabel: {
+  wasSection: {
+    marginBottom: 20,
+  },
+  sectionLabel: {
     fontFamily: FontFamily.sansSemiBold,
     fontSize: 11,
-    letterSpacing: 1.5,
-  },
-  beliefText: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 16,
-    lineHeight: 23,
-    fontStyle: 'italic',
-  },
-
-  arrowRow: {
-    alignItems: 'center',
-  },
-  arrowCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  outcomeLabel: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 11,
-    letterSpacing: 1.5,
     textTransform: 'uppercase',
+    letterSpacing: 1.5,
+    color: C.textSecondary,
+    marginBottom: 8,
   },
-  outcomeText: {
+  wasText: {
+    fontFamily: FontFamily.sansMedium,
+    fontSize: 15,
+    lineHeight: 22,
+    color: 'rgba(163,174,196,0.4)',
+  },
+
+  arrowContainer: {
+    alignItems: 'center',
+    marginVertical: 16,
+  },
+
+  becomesSection: {
+    marginTop: 20,
+  },
+  becomesText: {
     fontFamily: FontFamily.sansBold,
     fontSize: 17,
     lineHeight: 24,
+    color: C.text,
   },
 
-  // CTA — inline
-  ctaWrap: {
-    marginTop: Spacing.xxl,
+  // Reflection card
+  reflectionCard: {
+    backgroundColor: C.surface2,
+    borderRadius: Radius.lg,
+    padding: Spacing.xl,
+    marginBottom: 16,
   },
-  btn: {
-    width: '100%',
-    paddingVertical: 20,
+  reflectionLabel: {
+    fontFamily: FontFamily.sansSemiBold,
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+    color: C.textSecondary,
+    marginBottom: 8,
+  },
+  reflectionQuestion: {
+    fontFamily: FontFamily.sansBold,
+    fontSize: 20,
+    lineHeight: 28,
+    color: C.text,
+    marginBottom: 20,
+  },
+  reflectionButton: {
+    backgroundColor: C.primaryMuted,
+    borderRadius: Radius.md,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reflectionButtonText: {
+    fontFamily: FontFamily.sansSemiBold,
+    fontSize: 15,
+    color: C.primary,
+  },
+
+  // CTA
+  ctaButton: {
+    backgroundColor: C.primary,
+    borderRadius: Radius.md,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  ctaText: {
+    fontFamily: FontFamily.sansBold,
+    fontSize: 17,
+    color: '#060810',
   },
 });
