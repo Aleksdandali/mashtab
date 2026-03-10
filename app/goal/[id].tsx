@@ -127,7 +127,7 @@ const itemStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  check: { color: '#1A1714', fontSize: 12, fontWeight: '700' },
+  check: { color: '#060810', fontSize: 12, fontWeight: '700' },
   title: {
     flex: 1,
     fontFamily: FontFamily.sans,

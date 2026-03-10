@@ -130,7 +130,7 @@ function WeekBar({
               <Text
                 style={[
                   weekStyles.dayNum,
-                  { color: isSelected ? '#1A1714' : isToday ? C.primary : C.text },
+                  { color: isSelected ? '#060810' : isToday ? C.primary : C.text },
                 ]}
               >
                 {dayNum}
@@ -328,7 +328,7 @@ const taskStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  checkmark: { color: '#1A1714', fontSize: 12, fontWeight: '700' },
+  checkmark: { color: '#060810', fontSize: 12, fontWeight: '700' },
   title: {
     flex: 1,
     fontFamily: FontFamily.sans,

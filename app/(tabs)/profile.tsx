@@ -32,7 +32,7 @@ const TIER_LABELS: Record<string, string> = {
 const TIER_COLORS: Record<string, string> = {
   free: '#888',
   standard: '#7BB8C9',
-  premium: '#D4A574',
+  premium: '#C8FF00',
 };
 
 const LANG_OPTIONS: { value: Language; label: string }[] = [

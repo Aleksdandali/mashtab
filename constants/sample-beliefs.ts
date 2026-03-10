@@ -149,7 +149,7 @@ export const SAMPLE_BELIEFS: SampleBelief[] = [
 
 // Category color map for diagnostic UI
 export const CATEGORY_COLORS: Record<BeliefCategory, string> = {
-  pricing:       '#D4A574',
+  pricing:       '#C8FF00',
   delegation:    '#7BB8C9',
   fear:          '#E8976B',
   selfworth:     '#9B8AC4',

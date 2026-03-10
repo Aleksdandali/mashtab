@@ -634,6 +634,6 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.sans,
     fontSize: 16,
     fontWeight: '700',
-    color: '#1A1714',
+    color: '#060810',
   },
 });
