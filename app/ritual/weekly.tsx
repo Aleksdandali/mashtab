@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/hooks/useTheme';
 import { useBeliefs, getBeliefTitle, getBeliefCategory, getCompletedStages } from '@/hooks/useBeliefs';
 import { useJournal } from '@/hooks/useJournal';
@@ -28,15 +29,6 @@ import { formatDisplayDate } from '@/utils/dates';
 function EnergySlider({ value, onChange }: { value: number; onChange: (n: number) => void }) {
   const C = useTheme();
 
-  const getEmoji = (v: number) => {
-    if (v <= 2) return '😩';
-    if (v <= 4) return '😕';
-    if (v === 5) return '😐';
-    if (v <= 7) return '🙂';
-    if (v <= 8) return '😊';
-    return '🔥';
-  };
-
   const getColor = (v: number) => {
     if (v <= 3) return '#C47B8A';
     if (v <= 5) return '#E8976B';
@@ -49,7 +41,6 @@ function EnergySlider({ value, onChange }: { value: number; onChange: (n: number
   return (
     <View style={sliderStyles.wrap}>
       <View style={sliderStyles.header}>
-        <Text style={sliderStyles.emoji}>{getEmoji(value)}</Text>
         <Text style={[sliderStyles.value, { color }]}>{value}/10</Text>
       </View>
 
@@ -73,8 +64,8 @@ function EnergySlider({ value, onChange }: { value: number; onChange: (n: number
       </View>
 
       <View style={sliderStyles.hints}>
-        <Text style={[sliderStyles.hint, { color: C.textTertiary }]}>😩 Виснажений</Text>
-        <Text style={[sliderStyles.hint, { color: C.textTertiary }]}>Заряджений 🔥</Text>
+        <Text style={[sliderStyles.hint, { color: C.textTertiary }]}>Виснажений</Text>
+        <Text style={[sliderStyles.hint, { color: C.textTertiary }]}>Заряджений</Text>
       </View>
     </View>
   );
@@ -83,7 +74,6 @@ function EnergySlider({ value, onChange }: { value: number; onChange: (n: number
 const sliderStyles = StyleSheet.create({
   wrap: { gap: Spacing.md },
   header: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  emoji: { fontSize: 28 },
   value: { fontFamily: FontFamily.serifBold, fontSize: 28, letterSpacing: -0.5 },
   segments: { flexDirection: 'row', gap: 3, height: 32 },
   segment: { flex: 1 },
@@ -105,9 +95,10 @@ function BeliefProgressRow({ ub, weekCount }: { ub: import('@/types').UserBelief
     <View style={[beliefStyles.row, { borderBottomColor: C.border }]}>
       <RingProgress progress={completed} color={color} size={40} strokeWidth={3} animated={false} />
       <View style={beliefStyles.info}>
-        <Text style={[beliefStyles.title, { color: C.text }]} numberOfLines={1}>
-          {cat?.icon} {title}
-        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          {cat && <Icon name={cat.icon} size={12} color={color} />}
+          <Text style={[beliefStyles.title, { color: C.text }]} numberOfLines={1}>{title}</Text>
+        </View>
         <Text style={[beliefStyles.sub, { color: C.textSecondary }]}>
           {completed}/6 етапів
           {weekCount > 0 && ` · +${weekCount} цього тижня`}
@@ -145,7 +136,7 @@ function Textarea({
   onChange,
 }: {
   label: string;
-  icon: string;
+  icon: import('@/components/ui/Icon').IconName;
   placeholder: string;
   value: string;
   onChange: (v: string) => void;
@@ -156,7 +147,7 @@ function Textarea({
   return (
     <View style={textareaStyles.wrap}>
       <View style={textareaStyles.labelRow}>
-        <Text style={textareaStyles.icon}>{icon}</Text>
+        <Icon name={icon} size={14} color={C.textSecondary} />
         <Text style={[textareaStyles.label, { color: C.textSecondary }]}>{label}</Text>
       </View>
       <TextInput
@@ -256,10 +247,10 @@ export default function WeeklyRitualScreen() {
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: C.border }]}>
         <Pressable onPress={() => router.back()} style={styles.closeBtn}>
-          <Text style={[styles.closeText, { color: C.textSecondary }]}>✕</Text>
+          <Icon name="X" size={20} color={C.textSecondary} />
         </Pressable>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerEmoji}>📊</Text>
+          <Icon name="BarChart2" size={18} color={C.primary} />
           <Text style={[styles.headerTitle, { color: C.text }]}>Тижневий підсумок</Text>
         </View>
         <View style={styles.closeBtn} />
@@ -278,7 +269,7 @@ export default function WeeklyRitualScreen() {
           {beliefs.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionIcon}>🧠</Text>
+                <Icon name="Brain" size={16} color={C.primary} />
                 <Text style={[styles.sectionTitle, { color: C.textSecondary }]}>
                   Прогрес установок
                 </Text>
@@ -299,21 +290,21 @@ export default function WeeklyRitualScreen() {
           <View style={styles.section}>
             <Textarea
               label="Що вийшло цього тижня?"
-              icon="🏆"
+              icon="Award"
               placeholder="Мої перемоги, досягнення, результати..."
               value={winsOfWeek}
               onChange={setWinsOfWeek}
             />
             <Textarea
               label="Що НЕ вийшло?"
-              icon="😤"
+              icon="Minus"
               placeholder="Без самокритики — просто факти..."
               value={didntWork}
               onChange={setDidntWork}
             />
             <Textarea
               label="Фокус наступного тижня"
-              icon="🎯"
+              icon="Target"
               placeholder="3 ключові речі, на яких зосередитись..."
               value={focusNextWeek}
               onChange={setFocusNextWeek}
@@ -323,7 +314,7 @@ export default function WeeklyRitualScreen() {
           {/* ─── Energy level ─── */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionIcon}>⚡</Text>
+              <Icon name="Zap" size={16} color={C.primary} />
               <Text style={[styles.sectionTitle, { color: C.textSecondary }]}>
                 Рівень енергії за тиждень
               </Text>
@@ -353,7 +344,7 @@ export default function WeeklyRitualScreen() {
               <ActivityIndicator color={C.surface1} size="small" />
             ) : (
               <Text style={[styles.saveBtnText, { color: C.surface1 }]}>
-                Завершити тиждень ✓
+                Тиждень закритий.
               </Text>
             )}
           </Pressable>

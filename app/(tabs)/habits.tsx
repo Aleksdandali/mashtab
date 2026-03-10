@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import Svg, { Circle, Line, Polygon, Text as SvgText } from 'react-native-svg';
 import { useFocusEffect } from 'expo-router';
+import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/hooks/useTheme';
 import { useWheel, ScoreMap } from '@/hooks/useWheel';
 import { SPHERES, SphereKey } from '@/constants/spheres';
@@ -203,7 +204,7 @@ function ScoreRow({
     <View style={rowStyles.row}>
       {/* Icon + name */}
       <View style={rowStyles.labelRow}>
-        <Text style={rowStyles.icon}>{sphere.icon}</Text>
+        <Icon name={sphere.icon} size={16} color={sphere.color} />
         <Text style={[rowStyles.name, { color: colors.textSecondary }]} numberOfLines={1}>
           {sphere.nameUk}
         </Text>
@@ -280,7 +281,7 @@ const rowStyles = StyleSheet.create({
 // ─── Coming Soon Card ─────────────────────────────────────────────────────────
 
 function ComingSoonCard({ icon, title, subtitle, colors }: {
-  icon: string;
+  icon: import('@/components/ui/Icon').IconName;
   title: string;
   subtitle: string;
   colors: ReturnType<typeof useTheme>;
@@ -295,7 +296,7 @@ function ComingSoonCard({ icon, title, subtitle, colors }: {
         },
       ]}
     >
-      <Text style={comingStyles.cardIcon}>{icon}</Text>
+      <Icon name={icon} size={22} color={colors.textTertiary} />
       <View style={{ flex: 1 }}>
         <Text style={[comingStyles.cardTitle, { color: colors.text }]}>{title}</Text>
         <Text style={[comingStyles.cardSubtitle, { color: colors.textTertiary }]}>{subtitle}</Text>
@@ -433,13 +434,13 @@ export default function HabitsScreen() {
             Незабаром у МАСШТАБ
           </Text>
           <ComingSoonCard
-            icon="🧘"
+            icon="Activity"
             title="Трекер звичок"
             subtitle="Щоденні звички зі стриком та статистикою"
             colors={C}
           />
           <ComingSoonCard
-            icon="📚"
+            icon="BookOpen"
             title="Книжкова полиця"
             subtitle="Інсайти з книг, пов'язані з установками"
             colors={C}

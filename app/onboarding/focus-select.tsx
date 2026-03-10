@@ -14,12 +14,14 @@ import { Spacing, Radius } from '@/constants/spacing';
 import { BeliefCategory } from '@/constants/categories';
 import { saveSelectedFocus } from '@/lib/onboarding-storage';
 import { Button } from '@/components/ui/Button';
+import { Icon } from '@/components/ui/Icon';
+import type { IconName } from '@/components/ui/Icon';
 
 // ─── Focus options ────────────────────────────────────────────────────────────
 
 interface FocusOption {
   key: BeliefCategory;
-  icon: string;
+  icon: IconName;
   title: string;
   description: string;
   color: string;
@@ -28,28 +30,28 @@ interface FocusOption {
 const FOCUS_OPTIONS: FocusOption[] = [
   {
     key: 'money',
-    icon: '💰',
+    icon: 'Wallet',
     title: 'Гроші',
     description: 'Ціноутворення, дохід, фінансові установки',
-    color: '#7CB392',
+    color: '#4AE68C',
   },
   {
     key: 'delegation',
-    icon: '🤝',
+    icon: 'Users',
     title: 'Делегування',
     description: 'Контроль, команда, масштабування через людей',
     color: '#7BB8C9',
   },
   {
     key: 'selfworth',
-    icon: '💎',
+    icon: 'Award',
     title: 'Самооцінка',
     description: 'Впевненість, синдром самозванця, гідність',
     color: '#9B8AC4',
   },
   {
     key: 'fear',
-    icon: '🔥',
+    icon: 'ShieldAlert',
     title: 'Страх',
     description: 'Страх провалу, думки оточення, ризик',
     color: '#E8976B',
@@ -83,11 +85,11 @@ function FocusCard({
 
       <View style={styles.cardTop}>
         <View style={[styles.iconWrap, { backgroundColor: option.color + '20' }]}>
-          <Text style={styles.icon}>{option.icon}</Text>
+          <Icon name={option.icon} size={22} color={option.color} />
         </View>
         {selected && (
           <View style={[styles.checkDot, { backgroundColor: option.color }]}>
-            <Text style={styles.checkMark}>✓</Text>
+            <Icon name="Check" size={12} color="#050608" strokeWidth={2.5} />
           </View>
         )}
       </View>
@@ -269,7 +271,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   icon: {
-    fontSize: 22,
+    width: 22,
+    height: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   checkDot: {
     width: 22,

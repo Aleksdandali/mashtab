@@ -17,6 +17,7 @@ import {
   getCompletedStages,
 } from '@/hooks/useBeliefs';
 import { RingProgress } from '@/components/charts/RingProgress';
+import { Icon } from '@/components/ui/Icon';
 import { CATEGORY_MAP } from '@/constants/categories';
 import { STAGE_COLORS } from '@/constants/stages';
 import { FontFamily } from '@/constants/typography';
@@ -64,7 +65,7 @@ function BeliefCard({ ub }: { ub: UserBelief }) {
         <View style={styles.cardTopRow}>
           {cat && (
             <View style={[styles.catBadge, { backgroundColor: catColor + '22' }]}>
-              <Text style={styles.catIcon}>{cat.icon}</Text>
+              <Icon name={cat.icon} size={11} color={catColor} />
               <Text style={[styles.catName, { color: catColor }]}>{cat.nameUk}</Text>
             </View>
           )}
@@ -103,7 +104,9 @@ function EmptyState() {
   const C = useTheme();
   return (
     <View style={styles.emptyWrap}>
-      <Text style={styles.emptyEmoji}>🧠</Text>
+      <View style={[styles.emptyIconWrap, { backgroundColor: C.primaryMuted }]}>
+        <Icon name="Brain" size={32} color={C.primary} />
+      </View>
       <Text style={[styles.emptyTitle, { color: C.text }]}>
         Немає активних установок
       </Text>
@@ -252,9 +255,8 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     borderRadius: Radius.lg,
-    padding: 4,
-    marginBottom: 3,
-    ...Shadow.sm,
+    padding: 16,
+    marginBottom: 8,
   },
   cardRing: {
     alignItems: 'center',
@@ -283,7 +285,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.full,
     gap: 4,
   },
-  catIcon: { fontSize: 12 },
+  catIcon: { width: 11, height: 11 },
   catName: {
     fontFamily: FontFamily.sans,
     fontSize: 11,
@@ -358,7 +360,14 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingHorizontal: 8,
   },
-  emptyEmoji: { fontSize: 56, marginBottom: 4 },
+  emptyIconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
   emptyTitle: {
     fontFamily: FontFamily.serif,
     fontSize: 22,

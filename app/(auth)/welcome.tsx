@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderRadius: width * 0.7,
-    backgroundColor: 'rgba(212, 165, 116, 0.045)',
+    backgroundColor: 'rgba(200, 230, 74, 0.04)',
   },
 
   // Sections

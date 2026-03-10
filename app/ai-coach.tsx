@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/hooks/useTheme';
 import { useAI } from '@/hooks/useAI';
 import { useBeliefs, getBeliefTitle } from '@/hooks/useBeliefs';
@@ -154,7 +155,7 @@ function ChatBubble({
       {/* Avatar for assistant */}
       {!isUser && (
         <View style={[bubbleStyles.avatar, { backgroundColor: C.primary + '20' }]}>
-          <Text style={bubbleStyles.avatarText}>🤖</Text>
+          <Icon name="MessageCircle" size={16} color={C.primary} />
         </View>
       )}
 
@@ -357,7 +358,7 @@ export default function AICoachScreen() {
           style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.6 }]}
           onPress={() => router.back()}
         >
-          <Text style={[styles.backText, { color: C.textSecondary }]}>←</Text>
+          <Icon name="ChevronLeft" size={24} color={C.textSecondary} />
         </Pressable>
 
         <View style={styles.headerCenter}>
@@ -448,9 +449,7 @@ export default function AICoachScreen() {
               {loading ? (
                 <ActivityIndicator color={C.surface1} size="small" />
               ) : (
-                <Text style={[styles.sendIcon, { color: inputText.trim() ? C.surface1 : C.textTertiary }]}>
-                  →
-                </Text>
+                <Icon name="ArrowRight" size={20} color={inputText.trim() ? '#050608' : C.textTertiary} />
               )}
             </Pressable>
           </View>

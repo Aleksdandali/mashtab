@@ -14,6 +14,7 @@ import {
   Platform,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
+import { Icon } from '@/components/ui/Icon';
 import { Swipeable, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
@@ -233,7 +234,7 @@ function SwipeableTaskItem({
   // Swipe RIGHT reveals Done action (on the left)
   const renderLeftActions = () => (
     <Pressable style={[taskStyles.doneAction, { backgroundColor: '#7CB392' }]} onPress={handleDone}>
-      <Text style={taskStyles.actionText}>✓ Виконано</Text>
+      <Icon name="Check" size={20} color="#fff" strokeWidth={2.5} />
     </Pressable>
   );
 
@@ -268,7 +269,7 @@ function SwipeableTaskItem({
       >
         {/* Focus star */}
         {isFocusSection && (
-          <Text style={[taskStyles.star, { color: C.primary }]}>★</Text>
+          <Icon name="Zap" size={14} color={C.primary} />
         )}
 
         {/* Checkbox */}
@@ -282,7 +283,7 @@ function SwipeableTaskItem({
           ]}
           onPress={() => onToggle(task.id)}
         >
-          {task.is_completed && <Text style={taskStyles.checkmark}>✓</Text>}
+          {task.is_completed && <Icon name="Check" size={11} color="#050608" strokeWidth={2.5} />}
         </Pressable>
 
         {/* Title */}
@@ -300,7 +301,7 @@ function SwipeableTaskItem({
         {/* Belief badge */}
         {task.user_belief_id && (
           <View style={[taskStyles.beliefBadge, { backgroundColor: C.primary + '20' }]}>
-            <Text style={taskStyles.beliefBadgeText}>🧠</Text>
+            <Icon name="Brain" size={12} color={C.primary} />
           </View>
         )}
       </Pressable>
@@ -433,7 +434,10 @@ function EditTaskModal({
 
           {/* Focus toggle */}
           <View style={[editStyles.toggleRow, { borderColor: C.border }]}>
-            <Text style={[editStyles.toggleLabel, { color: C.text }]}>★ Фокус-задача</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Icon name="Zap" size={16} color={isFocus ? C.primary : C.textSecondary} />
+              <Text style={[editStyles.toggleLabel, { color: C.text }]}>Фокус-задача</Text>
+            </View>
             <Switch
               value={isFocus}
               onValueChange={setIsFocus}
@@ -459,15 +463,21 @@ function EditTaskModal({
                 style={[editStyles.chip, goalId === g.id && { borderColor: C.primary, backgroundColor: C.primary + '18' }]}
                 onPress={() => setGoalId(g.id)}
               >
-                <Text style={[editStyles.chipText, { color: goalId === g.id ? C.primary : C.textSecondary }]} numberOfLines={1}>
-                  {SPHERE_MAP[g.sphere]?.icon} {g.title}
-                </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  {SPHERE_MAP[g.sphere] && <Icon name={SPHERE_MAP[g.sphere].icon} size={12} color={goalId === g.id ? C.primary : C.textSecondary} />}
+                  <Text style={[editStyles.chipText, { color: goalId === g.id ? C.primary : C.textSecondary }]} numberOfLines={1}>
+                    {g.title}
+                  </Text>
+                </View>
               </Pressable>
             ))}
           </ScrollView>
 
           {/* Belief select */}
-          <Text style={[editStyles.sectionLabel, { color: C.textSecondary }]}>Прив'язати до установки 🧠</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Icon name="Brain" size={14} color={C.textSecondary} />
+            <Text style={[editStyles.sectionLabel, { color: C.textSecondary }]}>Прив'язати до установки</Text>
+          </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={editStyles.chipScroll}>
             <Pressable
               style={[editStyles.chip, beliefId === null && { borderColor: C.primary, backgroundColor: C.primary + '18' }]}
@@ -484,7 +494,7 @@ function EditTaskModal({
                 onPress={() => setBeliefId(b.id)}
               >
                 <Text style={[editStyles.chipText, { color: beliefId === b.id ? C.primary : C.textSecondary }]} numberOfLines={1}>
-                  🧠 {getBeliefTitle(b)}
+                  {getBeliefTitle(b)}
                 </Text>
               </Pressable>
             ))}
@@ -784,7 +794,7 @@ function TasksView() {
 
                 {focus.length === 0 && regular.length === 0 && overdue.length === 0 && (
                   <View style={tasksStyles.emptyWrap}>
-                    <Text style={tasksStyles.emptyEmoji}>📋</Text>
+                    <Icon name="CheckCircle2" size={36} color={C.textTertiary} />
                     <Text style={[tasksStyles.emptyText, { color: C.textSecondary }]}>
                       Задач немає. Додайте першу!
                     </Text>
@@ -935,7 +945,7 @@ function GoalCard({ goal }: { goal: Goal }) {
       {/* Top row */}
       <View style={goalCardStyles.topRow}>
         <View style={[goalCardStyles.sphereIcon, { backgroundColor: sphere?.color + '22' }]}>
-          <Text style={goalCardStyles.sphereEmoji}>{sphere?.icon}</Text>
+          {sphere && <Icon name={sphere.icon} size={18} color={sphere.color} />}
         </View>
         <Text style={[goalCardStyles.title, { color: C.text }]} numberOfLines={2}>
           {goal.title}
@@ -950,7 +960,7 @@ function GoalCard({ goal }: { goal: Goal }) {
               router.push(`/belief/${goal.user_belief_id}`);
             }}
           >
-            <Text style={[goalCardStyles.beliefBtnText, { color: C.primary }]}>🧠</Text>
+            <Icon name="Brain" size={14} color={C.primary} />
           </Pressable>
         )}
       </View>
@@ -1068,7 +1078,7 @@ function GoalsView() {
             return (
               <View key={sphereKey} style={goalsStyles.group}>
                 <View style={goalsStyles.groupHeader}>
-                  <Text style={goalsStyles.groupEmoji}>{sphere.icon}</Text>
+                  <Icon name={sphere.icon} size={16} color={sphere.color} />
                   <Text style={[goalsStyles.groupName, { color: C.textSecondary }]}>
                     {sphere.nameUk}
                   </Text>
@@ -1093,7 +1103,7 @@ function GoalsView() {
 
           {goals.length === 0 && (
             <View style={goalsStyles.emptyWrap}>
-              <Text style={goalsStyles.emptyEmoji}>🎯</Text>
+              <Icon name="Target" size={36} color={C.textTertiary} />
               <Text style={[goalsStyles.emptyTitle, { color: C.text }]}>
                 Ще немає цілей
               </Text>

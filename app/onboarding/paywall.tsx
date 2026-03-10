@@ -15,6 +15,7 @@ import { Colors as C } from '@/constants/colors';
 import { FontFamily } from '@/constants/typography';
 import { Spacing, Radius, Shadow } from '@/constants/spacing';
 import { Button } from '@/components/ui/Button';
+import { Icon } from '@/components/ui/Icon';
 
 const { width: SW } = Dimensions.get('window');
 
@@ -109,7 +110,7 @@ function FeatureRow({ text }: { text: string }) {
   return (
     <View style={styles.featureRow}>
       <View style={styles.checkWrap}>
-        <Text style={styles.checkIcon}>✓</Text>
+        <Icon name="Check" size={11} color={C.primary} strokeWidth={2.5} />
       </View>
       <Text style={styles.featureText}>{text}</Text>
     </View>
@@ -176,7 +177,7 @@ export default function PaywallScreen() {
             style={({ pressed }) => [styles.closeBtn, pressed && { opacity: 0.6 }]}
             disabled={!showClose}
           >
-            <Text style={styles.closeIcon}>✕</Text>
+            <Icon name="X" size={20} color={C.textSecondary} />
           </Pressable>
         </Animated.View>
 
@@ -192,7 +193,9 @@ export default function PaywallScreen() {
           >
             {/* Hero */}
             <View style={styles.hero}>
-              <Text style={styles.heroEmoji}>🎯</Text>
+              <View style={styles.heroIconWrap}>
+                <Icon name="Target" size={32} color={C.primary} />
+              </View>
               <Text style={styles.heroTitle}>
                 Ваш персональний{'\n'}коуч за ціну кави
               </Text>
@@ -264,17 +267,12 @@ export default function PaywallScreen() {
 
           {/* Social proof */}
           <View style={styles.socialProof}>
-            <Text style={styles.socialProofText}>
-              🔒 Скасувати будь-коли
-            </Text>
+            <View style={styles.socialProofItem}>
+              <Icon name="Lock" size={11} color={C.textTertiary} />
+              <Text style={styles.socialProofText}>Скасувати будь-коли</Text>
+            </View>
             <View style={styles.socialDivider} />
-            <Text style={styles.socialProofText}>
-              ⭐ 4.9
-            </Text>
-            <View style={styles.socialDivider} />
-            <Text style={styles.socialProofText}>
-              2 400+ відгуків
-            </Text>
+            <Text style={styles.socialProofText}>4.9 · 2 400+ відгуків</Text>
           </View>
         </View>
       </SafeAreaView>
@@ -333,9 +331,13 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     paddingTop: Spacing.lg,
   },
-  heroEmoji: {
-    fontSize: 48,
-    lineHeight: 58,
+  heroIconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: C.primaryMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: Spacing.xs,
   },
   heroTitle: {
@@ -376,10 +378,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   checkIcon: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 11,
-    color: C.primary,
-    lineHeight: 14,
+    width: 11,
+    height: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   featureText: {
     fontFamily: FontFamily.sansMedium,
@@ -533,6 +535,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,
+  },
+  socialProofItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   socialProofText: {
     fontFamily: FontFamily.sansMedium,

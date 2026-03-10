@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/hooks/useTheme';
 import { useTasks } from '@/hooks/useTasks';
 import { useJournal } from '@/hooks/useJournal';
@@ -82,7 +83,7 @@ function FocusResultRow({
           onPress={() => onSelect(result === 'done' ? null : 'done')}
         >
           <Text style={[resultStyles.btnText, { color: result === 'done' ? '#fff' : C.textSecondary }]}>
-            Виконав ✓
+            Виконав
           </Text>
         </Pressable>
         <Pressable
@@ -200,10 +201,10 @@ export default function EveningRitualScreen() {
   };
 
   const stepMeta = [
-    { icon: '🏆', title: 'Перемоги дня' },
-    { icon: '💡', title: 'Інсайт дня' },
-    { icon: '🚀', title: 'Завтра' },
-    { icon: '✅', title: 'Огляд фокусу' },
+    { icon: 'Award' as const, title: 'Перемоги дня' },
+    { icon: 'Lightbulb' as const, title: 'Інсайт дня' },
+    { icon: 'ArrowRight' as const, title: 'Завтра' },
+    { icon: 'CheckCircle2' as const, title: 'Огляд фокусу' },
   ];
 
   const current = stepMeta[step];
@@ -214,10 +215,10 @@ export default function EveningRitualScreen() {
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: C.border }]}>
         <Pressable onPress={() => router.back()} style={styles.closeBtn}>
-          <Text style={[styles.closeText, { color: C.textSecondary }]}>✕</Text>
+          <Icon name="X" size={20} color={C.textSecondary} />
         </Pressable>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerEmoji}>🌙</Text>
+          <Icon name="Moon" size={18} color={accentColor} />
           <Text style={[styles.headerTitle, { color: C.text }]}>Вечірній ритуал</Text>
         </View>
         <View style={styles.closeBtn} />
@@ -252,7 +253,7 @@ export default function EveningRitualScreen() {
                     <View key={i} style={styles.winItem}>
                       <View style={[styles.winBadge, { backgroundColor: accentColor + '22' }]}>
                         <Text style={[styles.winBadgeText, { color: accentColor }]}>
-                          {['🥇', '🥈', '🥉'][i]}
+                          {i + 1}
                         </Text>
                       </View>
                       <TextInput
@@ -349,7 +350,7 @@ export default function EveningRitualScreen() {
                 {focusTasks.length > 0 && (
                   <View style={[styles.resultSummary, { backgroundColor: C.surface2 }]}>
                     <Text style={[styles.resultSummaryText, { color: C.textSecondary }]}>
-                      {Object.values(focusResults).filter((r) => r === 'done').length} з {focusTasks.length} виконано 💪
+                      {Object.values(focusResults).filter((r) => r === 'done').length} з {focusTasks.length} виконано
                     </Text>
                   </View>
                 )}
@@ -393,7 +394,7 @@ export default function EveningRitualScreen() {
               {saving ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
-                <Text style={[styles.nextBtnText, { color: '#fff' }]}>Завершити ритуал ✓</Text>
+                <Text style={[styles.nextBtnText, { color: '#fff' }]}>День закритий.</Text>
               )}
             </Pressable>
           )}

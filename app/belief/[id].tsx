@@ -25,6 +25,7 @@ import {
 import { useTasks } from '@/hooks/useTasks';
 import { RingProgress } from '@/components/charts/RingProgress';
 import { STAGES, STAGE_COLORS, StageKey, Stage } from '@/constants/stages';
+import { Icon } from '@/components/ui/Icon';
 import { CATEGORY_MAP } from '@/constants/categories';
 import { FontFamily } from '@/constants/typography';
 import { Spacing, Radius, Shadow } from '@/constants/spacing';
@@ -170,13 +171,13 @@ function StageRow({
     return (
       <View style={[stageStyles.completedRow, { borderLeftColor: color }]}>
         <View style={[stageStyles.iconBadge, { backgroundColor: color + '28' }]}>
-          <Text style={stageStyles.icon}>{stage.icon}</Text>
+          <Icon name={stage.icon} size={16} color={color} />
         </View>
         <Text style={[stageStyles.completedName, { color: color }]}>
           {stage.nameUk}
         </Text>
         <View style={[stageStyles.checkBadge, { backgroundColor: color }]}>
-          <Text style={stageStyles.checkText}>✓</Text>
+          <Icon name="Check" size={11} color="#050608" strokeWidth={2.5} />
         </View>
       </View>
     );
@@ -186,12 +187,12 @@ function StageRow({
     return (
       <View style={[stageStyles.lockedRow, { opacity: 0.28 }]}>
         <View style={[stageStyles.iconBadge, { backgroundColor: C.surface3 }]}>
-          <Text style={stageStyles.icon}>{stage.icon}</Text>
+          <Icon name={stage.icon} size={16} color={C.textTertiary} />
         </View>
         <Text style={[stageStyles.lockedName, { color: C.textSecondary }]}>
           {stage.nameUk}
         </Text>
-        <Text style={stageStyles.lockIcon}>🔒</Text>
+        <Icon name="Lock" size={14} color={C.textTertiary} />
       </View>
     );
   }
@@ -211,7 +212,7 @@ function StageRow({
       {/* Stage header */}
       <View style={stageStyles.currentHeader}>
         <View style={[stageStyles.iconBadgeLarge, { backgroundColor: color + '28' }]}>
-          <Text style={stageStyles.iconLarge}>{stage.icon}</Text>
+          <Icon name={stage.icon} size={20} color={color} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={[stageStyles.currentName, { color: color }]}>
@@ -276,9 +277,10 @@ function StageRow({
           ]}
           onPress={onCoach}
         >
-          <Text style={[stageStyles.coachBtnText, { color: C.textSecondary }]}>
-            🤖 Запитати коуча
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Icon name="MessageCircle" size={14} color={C.textSecondary} />
+            <Text style={[stageStyles.coachBtnText, { color: C.textSecondary }]}>Запитати коуча</Text>
+          </View>
         </Pressable>
 
         <Pressable
@@ -294,7 +296,7 @@ function StageRow({
           {saving ? (
             <ActivityIndicator color="#fff" size="small" />
           ) : (
-            <Text style={stageStyles.continueBtnText}>Продовжити шлях ✓</Text>
+            <Text style={stageStyles.continueBtnText}>Продовжити шлях</Text>
           )}
         </Pressable>
       </View>
@@ -309,9 +311,10 @@ function StageRow({
           ]}
           onPress={onCreateTask}
         >
-          <Text style={[stageStyles.taskBtnText, { color: color }]}>
-            📋 Створити задачу з цією дією
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Icon name="Plus" size={14} color={color} />
+            <Text style={[stageStyles.taskBtnText, { color: color }]}>Створити задачу</Text>
+          </View>
         </Pressable>
       )}
     </View>
@@ -336,7 +339,7 @@ const stageStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  icon: { fontSize: 16 },
+  icon: { width: 16, height: 16 },
   completedName: {
     flex: 1,
     fontFamily: FontFamily.sans,
@@ -371,7 +374,7 @@ const stageStyles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  lockIcon: { fontSize: 14 },
+  lockIcon: { width: 14, height: 14 },
 
   // Current
   currentCard: {
@@ -394,7 +397,7 @@ const stageStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconLarge: { fontSize: 20 },
+  iconLarge: { width: 20, height: 20 },
   currentName: {
     fontFamily: FontFamily.sans,
     fontSize: 15,
@@ -536,7 +539,9 @@ function ButterflyOverlay({
   return (
     <View style={[butterflyStyles.overlay, { backgroundColor: C.surface1 }]}>
       <Animated.View style={[butterflyStyles.content, { opacity, transform: [{ scale }] }]}>
-        <Text style={butterflyStyles.emoji}>🦋</Text>
+        <View style={butterflyStyles.sparklesWrap}>
+          <Icon name="Sparkles" size={64} color={STAGE_COLORS.identity} />
+        </View>
       </Animated.View>
 
       <Animated.View style={[butterflyStyles.stats, { opacity: statsOpacity }]}>
@@ -580,7 +585,7 @@ function ButterflyOverlay({
           ]}
           onPress={onDone}
         >
-          <Text style={butterflyStyles.doneBtnText}>Завершити ✓</Text>
+          <Text style={butterflyStyles.doneBtnText}>Завершено</Text>
         </Pressable>
       </Animated.View>
     </View>
@@ -598,7 +603,7 @@ const butterflyStyles = StyleSheet.create({
   content: {
     marginBottom: 6,
   },
-  emoji: { fontSize: 80 },
+  sparklesWrap: { width: 80, height: 80, alignItems: 'center', justifyContent: 'center' },
   stats: { width: '100%', alignItems: 'center' },
   title: {
     fontFamily: FontFamily.serif,

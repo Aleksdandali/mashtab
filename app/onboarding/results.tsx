@@ -16,6 +16,7 @@ import { CATEGORY_MAP, BeliefCategory } from '@/constants/categories';
 import { SAMPLE_BELIEFS, CATEGORY_COLORS } from '@/constants/sample-beliefs';
 import { getAnswers, StoredAnswer } from '@/lib/onboarding-storage';
 import { Button } from '@/components/ui/Button';
+import { Icon } from '@/components/ui/Icon';
 
 const { width: SW } = Dimensions.get('window');
 const BAR_MAX_W = SW - Spacing.screen * 2 - 100; // label + value space
@@ -113,7 +114,7 @@ function CategoryBar({
   return (
     <Animated.View style={[styles.barRow, { opacity: opacityAnim }]}>
       <View style={styles.barLabelWrap}>
-        <Text style={styles.barIcon}>{cat.icon}</Text>
+        <Icon name={cat.icon} size={13} color={isTop ? color : color + 'AA'} />
         <Text
           style={[
             styles.barLabel,
@@ -146,23 +147,27 @@ function CategoryBar({
 
 // ─── Top belief item ──────────────────────────────────────────────────────────
 
-const MEDALS = ['🥇', '🥈', '🥉'];
+const RANK_COLORS = ['#C8E64A', '#4AE68C', '#7BB8C9'];
 
 function TopBeliefItem({ item }: { item: TopBelief }) {
   const color = CATEGORY_COLORS[item.category];
   const cat   = CATEGORY_MAP[item.category];
+  const rankColor = RANK_COLORS[item.rank - 1] ?? color;
 
   return (
-    <View style={[styles.topItem, { borderLeftColor: color }]}>
-      <Text style={styles.topMedal}>{MEDALS[item.rank - 1]}</Text>
+    <View style={[styles.topItem, { borderLeftColor: rankColor }]}>
+      <View style={[styles.rankBadge, { backgroundColor: rankColor + '20' }]}>
+        <Text style={[styles.rankNum, { color: rankColor }]}>{item.rank}</Text>
+      </View>
       <View style={styles.topContent}>
         <Text style={styles.topBeliefText} numberOfLines={2}>
           «{item.beliefUk}»
         </Text>
         <View style={styles.topMeta}>
-          <Text style={[styles.topCat, { color }]}>
-            {cat.icon} {cat.nameUk}
-          </Text>
+          <View style={styles.topCatRow}>
+            <Icon name={cat.icon} size={11} color={color} />
+            <Text style={[styles.topCat, { color }]}>{cat.nameUk}</Text>
+          </View>
           <View style={[styles.topScore, { backgroundColor: color + '22' }]}>
             <Text style={[styles.topScoreText, { color }]}>{item.score}/10</Text>
           </View>
@@ -260,7 +265,7 @@ export default function ResultsScreen() {
 
         {/* Insight */}
         <View style={styles.insightCard}>
-          <Text style={styles.insightIcon}>💡</Text>
+          <Icon name="Lightbulb" size={18} color={C.primary} />
           <Text style={styles.insightText}>
             Середній рівень впливу ваших установок —{' '}
             <Text style={{ color: C.primary, fontFamily: FontFamily.sansSemiBold }}>
@@ -354,8 +359,8 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   barIcon: {
-    fontSize: 14,
-    lineHeight: 18,
+    width: 13,
+    height: 13,
   },
   barLabel: {
     fontFamily: FontFamily.sansMedium,
@@ -418,10 +423,19 @@ const styles = StyleSheet.create({
     borderColor: C.border,
     borderLeftWidth: 3,
   },
-  topMedal: {
-    fontSize: 20,
-    lineHeight: 24,
+  rankBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 2,
+    flexShrink: 0,
+  },
+  rankNum: {
+    fontFamily: FontFamily.sansBold,
+    fontSize: 11,
+    lineHeight: 14,
   },
   topContent: {
     flex: 1,
@@ -437,6 +451,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  topCatRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   topCat: {
     fontFamily: FontFamily.sansMedium,
@@ -464,8 +483,8 @@ const styles = StyleSheet.create({
     borderColor: C.primary + '30',
   },
   insightIcon: {
-    fontSize: 18,
-    lineHeight: 22,
+    width: 18,
+    height: 18,
   },
   insightText: {
     flex: 1,

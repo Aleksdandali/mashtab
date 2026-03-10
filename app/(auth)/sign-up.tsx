@@ -18,6 +18,7 @@ import { Spacing, Radius } from '@/constants/spacing';
 import { supabase } from '@/lib/supabase';
 import { syncOnboardingData } from '@/lib/onboarding-storage';
 import { Button } from '@/components/ui/Button';
+import { Icon } from '@/components/ui/Icon';
 
 // ─── Social auth button ───────────────────────────────────────────────────────
 
@@ -27,7 +28,7 @@ function SocialButton({
   onPress,
   loading,
 }: {
-  icon: string;
+  icon: import('@/components/ui/Icon').IconName;
   label: string;
   onPress: () => void;
   loading?: boolean;
@@ -46,7 +47,7 @@ function SocialButton({
         }
         style={({ pressed }) => [styles.socialBtn, pressed && { opacity: 0.85 }]}
       >
-        <Text style={styles.socialIcon}>{icon}</Text>
+        <Icon name={icon} size={20} color={C.textSecondary} />
         <Text style={styles.socialLabel}>{label}</Text>
       </Pressable>
     </Animated.View>
@@ -202,13 +203,13 @@ export default function SignUpScreen() {
           {/* Social auth */}
           <View style={styles.socialBlock}>
             <SocialButton
-              icon="G"
+              icon="Globe"
               label="Продовжити з Google"
               onPress={handleGoogle}
               loading={loadingGoogle}
             />
             <SocialButton
-              icon=""
+              icon="Monitor"
               label="Продовжити з Apple"
               onPress={handleApple}
               loading={loadingApple}
@@ -325,12 +326,9 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   socialIcon: {
-    fontSize: 18,
-    fontFamily: FontFamily.sansBold,
-    color: C.text,
     width: 24,
-    textAlign: 'center',
-    lineHeight: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   socialLabel: {
     fontFamily: FontFamily.sansSemiBold,

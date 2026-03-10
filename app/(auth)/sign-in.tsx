@@ -16,6 +16,7 @@ import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/hooks/useTheme';
 import { FontFamily } from '@/constants/typography';
 import { Spacing, Radius } from '@/constants/spacing';
+import { Icon } from '@/components/ui/Icon';
 
 export default function SignInScreen() {
   const C = useTheme();
@@ -134,7 +135,7 @@ export default function SignInScreen() {
               if (!err) router.replace('/(tabs)/home');
             }}
           >
-            <Text style={styles.socialIcon}>🌐</Text>
+            <Icon name="Globe" size={20} color={C.textSecondary} />
             <Text style={[styles.socialText, { color: C.text }]}>Продовжити з Google</Text>
           </Pressable>
 
@@ -181,7 +182,7 @@ const styles = StyleSheet.create({
     gap: Spacing.md, borderWidth: 1.5, borderRadius: Radius.md,
     paddingVertical: 14, marginBottom: Spacing.xl,
   },
-  socialIcon: { fontSize: 20 },
+  socialIcon: { width: 20 },
   socialText: { fontFamily: FontFamily.sansSemiBold, fontSize: 15 },
   footerRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
   footerText: { fontFamily: FontFamily.sans, fontSize: 14 },

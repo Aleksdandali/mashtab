@@ -42,7 +42,7 @@ export function Button({
 
   const handlePressIn = () => {
     Animated.spring(scale, {
-      toValue: 0.96,
+      toValue: 0.97,
       useNativeDriver: true,
       speed: 50,
       bounciness: 0,
@@ -128,7 +128,7 @@ const variants = (c: typeof Colors): Record<Variant, ViewStyle> => ({
 });
 
 const labelColors = (c: typeof Colors): Record<Variant, TextStyle> => ({
-  primary: { color: '#1A1208' },
+  primary: { color: '#050608' },
   secondary: { color: c.primary },
   ghost: { color: c.textSecondary },
 });

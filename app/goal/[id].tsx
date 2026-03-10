@@ -14,6 +14,7 @@ import {
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Swipeable } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
+import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/hooks/useTheme';
 import { useGoals } from '@/hooks/useGoals';
 import { useBeliefs, getBeliefTitle } from '@/hooks/useBeliefs';
@@ -54,7 +55,7 @@ function GoalTaskItem({
       style={[itemStyles.doneAction, { backgroundColor: '#7CB392' }]}
       onPress={handleToggle}
     >
-      <Text style={itemStyles.actionText}>✓</Text>
+      <Icon name="Check" size={20} color="#fff" strokeWidth={2.5} />
     </Pressable>
   );
 
@@ -92,7 +93,7 @@ function GoalTaskItem({
           ]}
           onPress={() => onToggle(task.id)}
         >
-          {task.is_completed && <Text style={itemStyles.check}>✓</Text>}
+          {task.is_completed && <Icon name="Check" size={11} color="#050608" strokeWidth={2.5} />}
         </Pressable>
         <Text
           style={[
@@ -104,7 +105,7 @@ function GoalTaskItem({
         >
           {task.title}
         </Text>
-        {task.is_focus && <Text style={[itemStyles.star, { color: C.primary }]}>★</Text>}
+        {task.is_focus && <Icon name="Zap" size={14} color={C.primary} />}
       </View>
     </Swipeable>
   );
@@ -288,7 +289,7 @@ export default function GoalDetailScreen() {
             {/* Sphere + period */}
             <View style={styles.headerMeta}>
               <View style={[styles.sphereIcon, { backgroundColor: sphere?.color + '22' }]}>
-                <Text style={styles.sphereEmoji}>{sphere?.icon}</Text>
+                {sphere && <Icon name={sphere.icon} size={18} color={sphere.color} />}
               </View>
               <View style={[styles.periodBadge, { backgroundColor: C.surface3 }]}>
                 <Text style={[styles.periodText, { color: C.textSecondary }]}>
@@ -308,11 +309,12 @@ export default function GoalDetailScreen() {
             {/* Belief link */}
             {linkedBelief && (
               <Pressable
-                style={[styles.beliefLink, { backgroundColor: C.primary + '18', borderColor: C.primary + '40' }]}
+                style={[styles.beliefLink, { backgroundColor: C.primary + '18', borderColor: C.primary + '40', flexDirection: 'row', alignItems: 'center', gap: 6 }]}
                 onPress={() => router.push(`/belief/${linkedBelief.id}`)}
               >
+                <Icon name="Brain" size={14} color={C.primary} />
                 <Text style={[styles.beliefLinkText, { color: C.primary }]}>
-                  🧠 Пов'язана установка: «{getBeliefTitle(linkedBelief)}»
+                  Пов'язана установка: «{getBeliefTitle(linkedBelief)}»
                 </Text>
               </Pressable>
             )}
@@ -350,7 +352,7 @@ export default function GoalDetailScreen() {
 
             {tasks.length === 0 ? (
               <View style={[styles.emptyCard, { backgroundColor: C.surface2, borderColor: C.border }]}>
-                <Text style={styles.emptyEmoji}>📝</Text>
+                <Icon name="Plus" size={28} color={C.textTertiary} />
                 <Text style={[styles.emptyText, { color: C.textSecondary }]}>
                   Декомпозуйте: додайте конкретні кроки до цієї цілі.
                 </Text>

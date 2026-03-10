@@ -11,6 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
+import { Icon } from '@/components/ui/Icon';
 import { supabase } from '@/lib/supabase';
 import { useTheme } from '@/hooks/useTheme';
 import { useProfile } from '@/hooks/useProfile';
@@ -35,15 +36,15 @@ const TIER_COLORS: Record<string, string> = {
 };
 
 const LANG_OPTIONS: { value: Language; label: string }[] = [
-  { value: 'uk', label: '🇺🇦  Українська' },
-  { value: 'ru', label: '🇷🇺  Русский' },
-  { value: 'en', label: '🇺🇸  English' },
+  { value: 'uk', label: 'Українська' },
+  { value: 'ru', label: 'Русский' },
+  { value: 'en', label: 'English' },
 ];
 
-const THEME_OPTIONS: { value: ThemeMode; label: string; icon: string }[] = [
-  { value: 'auto', label: 'Авто', icon: '🌓' },
-  { value: 'dark', label: 'Темна', icon: '🌙' },
-  { value: 'light', label: 'Світла', icon: '☀️' },
+const THEME_OPTIONS: { value: ThemeMode; label: string; icon: import('@/components/ui/Icon').IconName }[] = [
+  { value: 'auto', label: 'Авто', icon: 'SunMoon' },
+  { value: 'dark', label: 'Темна', icon: 'Moon' },
+  { value: 'light', label: 'Світла', icon: 'Sun' },
 ];
 
 const DAY_OPTIONS = [
@@ -85,7 +86,7 @@ const statStyles = StyleSheet.create({
 function SettingRow({
   icon, label, value, onPress, colors, danger = false,
 }: {
-  icon: string;
+  icon: import('@/components/ui/Icon').IconName;
   label: string;
   value?: string;
   onPress: () => void;
@@ -101,8 +102,8 @@ function SettingRow({
       ]}
       onPress={onPress}
     >
-      <Text style={settingStyles.icon}>{icon}</Text>
-      <Text style={[settingStyles.label, { color: danger ? '#C47B8A' : colors.text }]}>
+      <Icon name={icon} size={18} color={danger ? colors.error : colors.textSecondary} />
+      <Text style={[settingStyles.label, { color: danger ? colors.error : colors.text }]}>
         {label}
       </Text>
       <View style={{ flex: 1 }} />
@@ -110,7 +111,7 @@ function SettingRow({
         <Text style={[settingStyles.value, { color: colors.primary }]}>{value}</Text>
       )}
       {!danger && (
-        <Text style={[settingStyles.arrow, { color: colors.textTertiary }]}>›</Text>
+        <Icon name="ChevronRight" size={16} color={colors.textTertiary} />
       )}
     </Pressable>
   );
@@ -125,7 +126,7 @@ const settingStyles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     gap: Spacing.md,
   },
-  icon: { fontSize: 18, width: 24 },
+  icon: { width: 24 },
   label: { fontFamily: FontFamily.sansMedium, fontSize: 15 },
   value: { fontFamily: FontFamily.sansSemiBold, fontSize: 13 },
   arrow: { fontFamily: FontFamily.sans, fontSize: 20, marginLeft: 4 },
@@ -193,7 +194,7 @@ function PickerSheet<T extends string | number>({
           >
             <Text style={[pickerStyles.optLabel, { color: colors.text }]}>{opt.label}</Text>
             {selected === opt.value && (
-              <Text style={[pickerStyles.checkmark, { color: colors.primary }]}>✓</Text>
+              <Icon name="Check" size={16} color={colors.primary} strokeWidth={2.5} />
             )}
           </Pressable>
         ))}
@@ -273,7 +274,7 @@ function ThemeModal({ visible, selected, onSelect, onClose, colors }: {
               ]}
               onPress={() => { onSelect(opt.value); onClose(); }}
             >
-              <Text style={themeStyles.optIcon}>{opt.icon}</Text>
+              <Icon name={opt.icon} size={20} color={selected === opt.value ? colors.primary : colors.textSecondary} />
               <Text style={[themeStyles.optLabel, { color: colors.text }]}>{opt.label}</Text>
             </Pressable>
           ))}
@@ -457,35 +458,35 @@ export default function ProfileScreen() {
         {/* ─── Налаштування ─── */}
         <Section title="Налаштування" colors={C}>
           <SettingRow
-            icon="🌐"
+            icon="Globe"
             label="Мова"
             value={langLabel}
             onPress={() => setShowLang(true)}
             colors={C}
           />
           <SettingRow
-            icon="🌓"
+            icon="SunMoon"
             label="Тема"
             value={themeLabel}
             onPress={() => setShowTheme(true)}
             colors={C}
           />
           <SettingRow
-            icon="⏰"
+            icon="Bell"
             label="Ранковий ритуал"
             value={morningTime}
             onPress={() => setShowMorning(true)}
             colors={C}
           />
           <SettingRow
-            icon="🌙"
+            icon="Moon"
             label="Вечірній ритуал"
             value={eveningTime}
             onPress={() => setShowEvening(true)}
             colors={C}
           />
           <SettingRow
-            icon="📊"
+            icon="BarChart2"
             label="Тижневий підсумок"
             value={weekDay}
             onPress={() => setShowWeekDay(true)}
@@ -496,13 +497,13 @@ export default function ProfileScreen() {
         {/* ─── Інструменти ─── */}
         <Section title="Інструменти" colors={C}>
           <SettingRow
-            icon="🔄"
+            icon="RefreshCw"
             label="Пройти діагностику знову"
             onPress={() => router.push('/onboarding/diagnostic')}
             colors={C}
           />
           <SettingRow
-            icon="📈"
+            icon="TrendingUp"
             label="Профіль установок"
             onPress={() => router.push('/onboarding/results')}
             colors={C}

@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/hooks/useTheme';
 import { useGoals, CreateGoalInput } from '@/hooks/useGoals';
 import { useBeliefs, getBeliefTitle } from '@/hooks/useBeliefs';
@@ -70,7 +71,7 @@ export default function CreateGoalScreen() {
             style={({ pressed }) => [pressed && { opacity: 0.6 }]}
             onPress={() => router.back()}
           >
-            <Text style={[styles.headerBack, { color: C.textSecondary }]}>✕</Text>
+            <Icon name="X" size={22} color={C.textSecondary} />
           </Pressable>
           <Text style={[styles.headerTitle, { color: C.text }]}>Нова ціль</Text>
           <View style={{ width: 32 }} />
@@ -121,7 +122,7 @@ export default function CreateGoalScreen() {
                     ]}
                     onPress={() => setSphere(s.key)}
                   >
-                    <Text style={styles.sphereEmoji}>{s.icon}</Text>
+                    <Icon name={s.icon} size={20} color={active ? s.color : C.textTertiary} />
                     <Text
                       style={[
                         styles.sphereName,
@@ -159,7 +160,7 @@ export default function CreateGoalScreen() {
                       { color: period === p ? C.surface1 : C.textSecondary },
                     ]}
                   >
-                    {p === 'year' ? '📅 Рік' : '🗓 Квартал'}
+                    {p === 'year' ? 'Рік' : 'Квартал'}
                   </Text>
                 </Pressable>
               ))}
@@ -170,7 +171,7 @@ export default function CreateGoalScreen() {
           <View style={styles.fieldGroup}>
             <View style={styles.fieldLabelRow}>
               <Text style={[styles.fieldLabel, { color: C.textSecondary }]}>
-                Пов'язана установка 🧠
+                Пов'язана установка
               </Text>
               <Text style={[styles.optional, { color: C.textTertiary }]}>опціонально</Text>
             </View>
@@ -210,7 +211,7 @@ export default function CreateGoalScreen() {
                       style={[styles.beliefChipText, { color: beliefId === b.id ? C.primary : C.textSecondary }]}
                       numberOfLines={1}
                     >
-                      🧠 {getBeliefTitle(b)}
+                      {getBeliefTitle(b)}
                     </Text>
                   </Pressable>
                 ))}
@@ -257,7 +258,7 @@ export default function CreateGoalScreen() {
               <ActivityIndicator color={C.surface1} size="small" />
             ) : (
               <Text style={[styles.saveBtnText, { color: C.surface1 }]}>
-                Створити ціль ✓
+                Створити ціль
               </Text>
             )}
           </Pressable>

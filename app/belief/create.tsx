@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/hooks/useTheme';
 import { useBeliefs } from '@/hooks/useBeliefs';
 import { FontFamily } from '@/constants/typography';
@@ -46,7 +47,7 @@ function StepIndicator({ current }: { current: number }) {
                 },
               ]}
             >
-              {done && <Text style={stepStyles.dotCheck}>✓</Text>}
+              {done && <Icon name="Check" size={10} color="#050608" strokeWidth={2.5} />}
               {active && (
                 <View style={[stepStyles.dotInner, { backgroundColor: C.primary }]} />
               )}
@@ -356,9 +357,7 @@ export default function CreateBeliefScreen() {
             style={({ pressed }) => [pressed && { opacity: 0.6 }]}
             onPress={() => (step === 0 ? router.back() : prevStep())}
           >
-            <Text style={[styles.headerBack, { color: C.textSecondary }]}>
-              {step === 0 ? '✕' : '←'}
-            </Text>
+            <Icon name={step === 0 ? 'X' : 'ChevronLeft'} size={22} color={C.textSecondary} />
           </Pressable>
           <Text style={[styles.headerTitle, { color: C.text }]}>
             Нова установка
@@ -400,7 +399,7 @@ export default function CreateBeliefScreen() {
 
                 <View style={[styles.tipCard, { backgroundColor: C.surface3 }]}>
                   <Text style={[styles.tipText, { color: C.textSecondary }]}>
-                    💡 Підказка: згадайте ситуацію, де ви кажете собі «я не можу», «це не для мене» або «завжди так виходить».
+                    Підказка: згадайте ситуацію, де ви кажете собі «я не можу», «це не для мене» або «завжди так виходить».
                   </Text>
                 </View>
               </View>
@@ -463,7 +462,7 @@ export default function CreateBeliefScreen() {
                   }
                 >
                   <Text style={[styles.aiBtnText, { color: C.primary }]}>
-                    🤖 AI допоможе заповнити
+                    AI допоможе заповнити
                   </Text>
                 </Pressable>
 
@@ -537,7 +536,7 @@ export default function CreateBeliefScreen() {
               {saving ? (
                 <ActivityIndicator color={C.surface1} size="small" />
               ) : (
-                <Text style={styles.nextBtnText}>Зберегти установку ✓</Text>
+                <Text style={styles.nextBtnText}>Зберегти</Text>
               )}
             </Pressable>
           )}

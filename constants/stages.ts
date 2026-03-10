@@ -1,9 +1,11 @@
+import type { IconName } from '@/components/ui/Icon';
+
 export type StageKey = 'identify' | 'explore' | 'reality' | 'replace' | 'action' | 'identity';
 
 export interface Stage {
   key: StageKey;
   index: number;
-  icon: string;
+  icon: IconName;
   nameUk: string;
   nameRu: string;
   nameEn: string;
@@ -15,7 +17,7 @@ export const STAGES: Stage[] = [
   {
     key: 'identify',
     index: 1,
-    icon: '🔍',
+    icon: 'Search',
     nameUk: 'Виявити',
     nameRu: 'Выявить',
     nameEn: 'Identify',
@@ -25,7 +27,7 @@ export const STAGES: Stage[] = [
   {
     key: 'explore',
     index: 2,
-    icon: '🔬',
+    icon: 'Microscope',
     nameUk: 'Дослідити',
     nameRu: 'Исследовать',
     nameEn: 'Explore',
@@ -35,7 +37,7 @@ export const STAGES: Stage[] = [
   {
     key: 'reality',
     index: 3,
-    icon: '⚖️',
+    icon: 'Scale',
     nameUk: 'Перевірити',
     nameRu: 'Проверить',
     nameEn: 'Reality check',
@@ -45,7 +47,7 @@ export const STAGES: Stage[] = [
   {
     key: 'replace',
     index: 4,
-    icon: '🔄',
+    icon: 'RefreshCw',
     nameUk: 'Замінити',
     nameRu: 'Заменить',
     nameEn: 'Replace',
@@ -55,7 +57,7 @@ export const STAGES: Stage[] = [
   {
     key: 'action',
     index: 5,
-    icon: '🚀',
+    icon: 'PlayCircle',
     nameUk: 'Діяти',
     nameRu: 'Действовать',
     nameEn: 'Take action',
@@ -65,7 +67,7 @@ export const STAGES: Stage[] = [
   {
     key: 'identity',
     index: 6,
-    icon: '🦋',
+    icon: 'Sparkles',
     nameUk: 'Ідентичність',
     nameRu: 'Идентичность',
     nameEn: 'Identity',
@@ -76,9 +78,9 @@ export const STAGES: Stage[] = [
 
 export const STAGE_COLORS: Record<StageKey, string> = {
   identify: '#7BB8C9',
-  explore: '#9B8AC4',
-  reality: '#E8976B',
-  replace: '#7CB392',
-  action: '#D4A574',
+  explore:  '#9B8AC4',
+  reality:  '#E8976B',
+  replace:  '#7CB392',
+  action:   '#C8E64A',
   identity: '#E8C547',
 };

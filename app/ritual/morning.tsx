@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/hooks/useTheme';
 import { useBeliefs, getBeliefTitle, getBeliefCategory, getCompletedStages } from '@/hooks/useBeliefs';
 import { useTasks } from '@/hooks/useTasks';
@@ -86,7 +87,7 @@ function BeliefSelectCard({
     >
       <View style={beliefCardStyles.top}>
         <RingProgress progress={completed} color={color} size={36} strokeWidth={3} animated={false} />
-        {cat && <Text style={beliefCardStyles.catIcon}>{cat.icon}</Text>}
+        {cat && <Icon name={cat.icon} size={14} color={color} />}
       </View>
       <Text style={[beliefCardStyles.title, { color: C.text }]} numberOfLines={3}>
         «{title}»
@@ -96,7 +97,7 @@ function BeliefSelectCard({
       </View>
       {selected && (
         <View style={[beliefCardStyles.check, { backgroundColor: color }]}>
-          <Text style={beliefCardStyles.checkText}>✓</Text>
+          <Icon name="Check" size={10} color="#050608" strokeWidth={2.5} />
         </View>
       )}
     </Pressable>
@@ -174,9 +175,7 @@ function FocusTaskRow({
           },
         ]}
       >
-        <Text style={[taskRowStyles.starText, { color: isFocused ? '#1A1714' : C.textTertiary }]}>
-          ★
-        </Text>
+        <Icon name="Zap" size={14} color={isFocused ? '#050608' : C.textTertiary} />
       </View>
       <Text style={[taskRowStyles.title, { color: C.text }]} numberOfLines={2}>
         {task.title}
@@ -325,10 +324,10 @@ export default function MorningRitualScreen() {
   };
 
   const stepMeta = [
-    { icon: '🎯', title: 'Намір на сьогодні' },
-    { icon: '🙏', title: 'Вдячність' },
-    { icon: '🔥', title: 'Установка дня' },
-    { icon: '✅', title: 'Фокус-задачі' },
+    { icon: 'Target' as const, title: 'Намір на сьогодні' },
+    { icon: 'Sparkles' as const, title: 'Вдячність' },
+    { icon: 'Brain' as const, title: 'Установка дня' },
+    { icon: 'CheckCircle2' as const, title: 'Фокус-задачі' },
   ];
 
   const current = stepMeta[step];
@@ -338,10 +337,10 @@ export default function MorningRitualScreen() {
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: C.border }]}>
         <Pressable onPress={() => router.back()} style={styles.closeBtn}>
-          <Text style={[styles.closeText, { color: C.textSecondary }]}>✕</Text>
+          <Icon name="X" size={20} color={C.textSecondary} />
         </Pressable>
         <View style={styles.headerCenter}>
-          <Text style={[styles.headerEmoji]}>{current.icon}</Text>
+          <Icon name={current.icon} size={18} color={C.primary} />
           <Text style={[styles.headerTitle, { color: C.text }]}>Ранковий ритуал</Text>
         </View>
         <View style={styles.closeBtn} />
@@ -511,7 +510,7 @@ export default function MorningRitualScreen() {
                 {focusIds.size > 0 && (
                   <View style={[styles.focusCounter, { backgroundColor: C.primary + '18' }]}>
                     <Text style={[styles.focusCounterText, { color: C.primary }]}>
-                      ★ {focusIds.size}/3 фокус-задач обрано
+                      {focusIds.size}/3 фокус-задач обрано
                     </Text>
                   </View>
                 )}
@@ -556,7 +555,7 @@ export default function MorningRitualScreen() {
               {saving ? (
                 <ActivityIndicator color={C.surface1} size="small" />
               ) : (
-                <Text style={[styles.nextBtnText, { color: C.surface1 }]}>Завершити ритуал ✓</Text>
+                <Text style={[styles.nextBtnText, { color: C.surface1 }]}>Готово. Дій.</Text>
               )}
             </Pressable>
           )}

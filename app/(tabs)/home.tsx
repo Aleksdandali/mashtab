@@ -17,6 +17,7 @@ import { useBeliefs, getBeliefTitle, getBeliefCategory, getCompletedStages } fro
 import { useTasks } from '@/hooks/useTasks';
 import { useJournal } from '@/hooks/useJournal';
 import { RingProgress } from '@/components/charts/RingProgress';
+import { Icon } from '@/components/ui/Icon';
 import { FontFamily } from '@/constants/typography';
 import { Spacing, Radius, Shadow } from '@/constants/spacing';
 import { CATEGORY_MAP } from '@/constants/categories';
@@ -54,7 +55,6 @@ function RitualCard({
   const glowOpacity = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.12, 0.32] });
 
   const isMorning = period === 'morning';
-  const icon = isMorning ? '🌅' : '🌙';
   const title = isMorning ? 'Ранковий ритуал' : 'Вечірній ритуал';
   const subtitle = isMorning ? 'Намір · Вдячність · Фокус' : 'Перемоги · Інсайти · Завтра';
   const route = isMorning ? '/ritual/morning' : '/ritual/evening';
@@ -62,8 +62,8 @@ function RitualCard({
 
   if (done) {
     return (
-      <View style={[styles.ritualDone, { backgroundColor: colors.surface1, borderColor: colors.border }]}>
-        <Text style={styles.ritualDoneIcon}>✅</Text>
+      <View style={[styles.ritualDone, { backgroundColor: colors.surface2 }]}>
+        <Icon name="CheckCircle2" size={18} color={colors.success} />
         <Text style={[styles.ritualDoneText, { color: colors.textSecondary }]}>
           {isMorning ? 'Ранковий ритуал завершено' : 'Вечірній ритуал завершено'}
         </Text>
@@ -76,8 +76,8 @@ function RitualCard({
       onPress={() => router.push(route as any)}
       style={({ pressed }) => [
         styles.ritualCard,
-        { backgroundColor: colors.surface1, borderColor: accentColor + '40' },
-        pressed && { transform: [{ scale: 0.98 }], opacity: 0.9 },
+        { backgroundColor: colors.surface2 },
+        pressed && { transform: [{ scale: 0.97 }], opacity: 0.9 },
       ]}
     >
       {/* Glow pulse */}
@@ -88,7 +88,7 @@ function RitualCard({
       <View style={styles.ritualRow}>
         <View style={styles.ritualLeft}>
           <View style={[styles.ritualIconWrap, { backgroundColor: accentColor + '20' }]}>
-            <Text style={styles.ritualIcon}>{icon}</Text>
+            <Icon name={isMorning ? 'Sunrise' : 'Moon'} size={22} color={accentColor} />
           </View>
           <View style={styles.ritualText}>
             <Text style={[styles.ritualTitle, { color: colors.text }]}>{title}</Text>
@@ -110,18 +110,18 @@ function WeeklyCard({ colors }: { colors: ReturnType<typeof useTheme> }) {
       onPress={() => router.push('/ritual/weekly' as any)}
       style={({ pressed }) => [
         styles.weeklyCard,
-        { backgroundColor: colors.surface2, borderColor: colors.primary + '50' },
+        { backgroundColor: colors.surface2 },
         pressed && { opacity: 0.85 },
       ]}
     >
-      <Text style={styles.weeklyIcon}>📊</Text>
+      <Icon name="BarChart2" size={20} color={colors.primary} />
       <View style={{ flex: 1 }}>
         <Text style={[styles.weeklyTitle, { color: colors.text }]}>Тижневий підсумок</Text>
         <Text style={[styles.weeklySub, { color: colors.textTertiary }]}>
           Підбийте підсумки тижня
         </Text>
       </View>
-      <Text style={[styles.weeklyArrow, { color: colors.primary }]}>→</Text>
+      <Icon name="ChevronRight" size={18} color={colors.textTertiary} />
     </Pressable>
   );
 }
@@ -169,13 +169,13 @@ function TaskRow({
     >
       {/* Checkbox */}
       <Animated.View style={[styles.checkbox, { backgroundColor: checkBg, borderColor: task.is_completed ? colors.primary : colors.borderMedium }]}>
-        {task.is_completed && <Text style={styles.checkMark}>✓</Text>}
+        {task.is_completed && <Icon name="Check" size={11} color="#050608" strokeWidth={2.5} />}
       </Animated.View>
 
       {/* Title */}
       <View style={styles.taskContent}>
         <View style={styles.taskTitleRow}>
-          {task.is_focus && <Text style={[styles.focusStar, { color: colors.primary }]}>★ </Text>}
+          {task.is_focus && <Icon name="Zap" size={12} color={colors.primary} style={{ marginRight: 4 }} />}
           <Text
             style={[
               styles.taskTitle,
@@ -188,7 +188,10 @@ function TaskRow({
           </Text>
         </View>
         {hasBelief && (
-          <Text style={[styles.beliefBadge, { color: colors.primary }]}>🧠 Пов'язана установка</Text>
+          <View style={styles.beliefBadgeRow}>
+            <Icon name="Brain" size={10} color={colors.primary} />
+            <Text style={[styles.beliefBadge, { color: colors.primary }]}>Пов'язана установка</Text>
+          </View>
         )}
       </View>
     </Pressable>
@@ -214,14 +217,14 @@ function BeliefHomeCard({
       onPress={() => router.push(`/belief/${belief.id}` as any)}
       style={({ pressed }) => [
         styles.beliefCard,
-        { backgroundColor: colors.surface1, borderColor: colors.border },
+        { backgroundColor: colors.surface2 },
         pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
       ]}
     >
       <View style={styles.beliefRing}>
         <RingProgress progress={completed} color={color} size={52} strokeWidth={4} />
         <View style={styles.beliefRingCenter}>
-          <Text style={styles.beliefCatIcon}>{cat?.icon ?? '🧠'}</Text>
+          {cat ? <Icon name={cat.icon} size={16} color={color} /> : <Icon name="Brain" size={16} color={colors.primary} />}
         </View>
       </View>
 
@@ -237,7 +240,7 @@ function BeliefHomeCard({
         </Text>
       </View>
 
-      <Text style={[styles.beliefArrow, { color: colors.textTertiary }]}>›</Text>
+      <Icon name="ChevronRight" size={18} color={colors.textTertiary} />
     </Pressable>
   );
 }
@@ -257,16 +260,16 @@ function QuickStats({
   colors: ReturnType<typeof useTheme>;
 }) {
   const stats = [
-    { label: 'Установки', value: `${beliefsProgress}%`, icon: '🧠' },
-    { label: 'Ритуалів', value: `${streak}`, icon: '🔥' },
-    { label: 'Фокус', value: `${focusDone}/${focusTotal}`, icon: '⭐' },
+    { label: 'Установки', value: `${beliefsProgress}%`, iconName: 'Brain' as const },
+    { label: 'Ритуалів', value: `${streak}`, iconName: 'Flame' as const },
+    { label: 'Фокус', value: `${focusDone}/${focusTotal}`, iconName: 'Target' as const },
   ];
 
   return (
-    <View style={[styles.statsRow, { backgroundColor: colors.surface1, borderColor: colors.border }]}>
+    <View style={[styles.statsRow, { backgroundColor: colors.surface2 }]}>
       {stats.map((s, i) => (
         <View key={s.label} style={[styles.statItem, i < 2 && { borderRightWidth: 1, borderRightColor: colors.border }]}>
-          <Text style={styles.statIcon}>{s.icon}</Text>
+          <Icon name={s.iconName} size={16} color={colors.primary} />
           <Text style={[styles.statValue, { color: colors.text }]}>{s.value}</Text>
           <Text style={[styles.statLabel, { color: colors.textTertiary }]}>{s.label}</Text>
         </View>
@@ -444,7 +447,7 @@ function FABButton({ colors }: { colors: ReturnType<typeof useTheme> }) {
         }
         style={[styles.fab, { backgroundColor: colors.primary, ...Shadow.lg }]}
       >
-        <Text style={styles.fabIcon}>🤖</Text>
+        <Icon name="MessageCircle" size={24} color="#050608" />
       </Pressable>
     </Animated.View>
   );
@@ -500,11 +503,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-    borderRadius: Radius.md,
+    borderRadius: Radius.lg,
     padding: Spacing.base,
-    borderWidth: 1,
   },
-  weeklyIcon: { fontSize: 20 },
   weeklyTitle: {
     fontFamily: FontFamily.sansSemiBold,
     fontSize: 14,
@@ -515,17 +516,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
   },
-  weeklyArrow: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 18,
-  },
-
   // Ritual card
   ritualCard: {
     borderRadius: Radius.lg,
-    borderWidth: 1,
     overflow: 'hidden',
-    ...Shadow.sm,
   },
   ritualGlow: {
     position: 'absolute',
@@ -551,7 +545,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  ritualIcon: { fontSize: 22 },
   ritualText: { flex: 1 },
   ritualTitle: {
     fontFamily: FontFamily.sansSemiBold,
@@ -578,11 +571,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-    borderRadius: Radius.md,
+    borderRadius: Radius.lg,
     padding: Spacing.base,
-    borderWidth: 1,
   },
-  ritualDoneIcon: { fontSize: 18 },
   ritualDoneText: {
     fontFamily: FontFamily.sansMedium,
     fontSize: 14,
@@ -602,8 +593,8 @@ const styles = StyleSheet.create({
   // Tasks
   taskCard: {
     borderRadius: Radius.lg,
-    borderWidth: 1,
     overflow: 'hidden',
+    backgroundColor: 'transparent',
   },
   taskRow: {
     flexDirection: 'row',
@@ -622,18 +613,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexShrink: 0,
   },
-  checkMark: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 11,
-    color: '#1A1208',
-    lineHeight: 14,
-  },
+  beliefBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   taskContent: { flex: 1, gap: 2 },
   taskTitleRow: { flexDirection: 'row', alignItems: 'center' },
-  focusStar: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 13,
-  },
   taskTitle: {
     fontFamily: FontFamily.sansMedium,
     fontSize: 14,
@@ -661,7 +643,6 @@ const styles = StyleSheet.create({
     gap: Spacing.md,
     borderRadius: Radius.lg,
     padding: Spacing.base,
-    borderWidth: 1,
   },
   beliefRing: {
     position: 'relative',
@@ -676,7 +657,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  beliefCatIcon: { fontSize: 18 },
+  beliefCatIcon: { width: 18, height: 18, alignItems: 'center', justifyContent: 'center' },
   beliefInfo: { flex: 1, gap: 2 },
   beliefCatName: {
     fontFamily: FontFamily.sansSemiBold,
@@ -692,16 +673,10 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.sansMedium,
     fontSize: 11,
   },
-  beliefArrow: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 20,
-  },
-
   // Stats
   statsRow: {
     flexDirection: 'row',
     borderRadius: Radius.lg,
-    borderWidth: 1,
     overflow: 'hidden',
     marginTop: Spacing.xs,
   },
@@ -711,7 +686,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.base,
     gap: 3,
   },
-  statIcon: { fontSize: 16 },
   statValue: {
     fontFamily: FontFamily.serifBold,
     fontSize: 20,
@@ -736,5 +710,4 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  fabIcon: { fontSize: 24 },
 });

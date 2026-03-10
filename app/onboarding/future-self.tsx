@@ -16,51 +16,53 @@ import { BeliefCategory, CATEGORY_MAP } from '@/constants/categories';
 import { SAMPLE_BELIEFS } from '@/constants/sample-beliefs';
 import { getAnswers } from '@/lib/onboarding-storage';
 import { Button } from '@/components/ui/Button';
+import { Icon } from '@/components/ui/Icon';
+import type { IconName } from '@/components/ui/Icon';
 
 const { width: SW } = Dimensions.get('window');
 
 // ─── Positive outcomes per category ──────────────────────────────────────────
 
-const OUTCOMES: Record<BeliefCategory, { icon: string; outcome: string; color: string }> = {
+const OUTCOMES: Record<BeliefCategory, { icon: IconName; outcome: string; color: string }> = {
   pricing: {
-    icon: '💰',
+    icon: 'Coins',
     outcome: 'впевнено встановлювати ціни, що відображають реальну цінність вашої роботи',
-    color: '#D4A574',
+    color: '#C8E64A',
   },
   delegation: {
-    icon: '🚀',
+    icon: 'Users',
     outcome: 'будувати команду і масштабувати бізнес без вашої прямої участі в кожному процесі',
     color: '#7BB8C9',
   },
   fear: {
-    icon: '🔥',
+    icon: 'ShieldAlert',
     outcome: 'діяти попри невизначеність і перетворювати провали на точки зростання',
     color: '#E8976B',
   },
   selfworth: {
-    icon: '💎',
+    icon: 'Award',
     outcome: 'приймати рішення з позиції впевненості та не продавати себе дешевше за свою цінність',
     color: '#9B8AC4',
   },
   growth: {
-    icon: '📈',
+    icon: 'TrendingUp',
     outcome: 'свідомо масштабувати бізнес за чіткою стратегією без відчуття хаосу',
-    color: '#7CB392',
+    color: '#4AE68C',
   },
   time: {
-    icon: '⏳',
+    icon: 'Clock',
     outcome: 'управляти часом стратегічно і мати простір для відновлення та стратегії',
-    color: '#E8C547',
+    color: '#E6B44A',
   },
   relationships: {
-    icon: '🤝',
+    icon: 'Heart',
     outcome: 'будувати сильні партнерства і залучати потрібних людей у свій бізнес',
-    color: '#C47B8A',
+    color: '#E64A5E',
   },
   money: {
-    icon: '🏦',
+    icon: 'Wallet',
     outcome: 'приймати фінансові рішення без внутрішніх обмежень і будувати систему достатку',
-    color: '#7CB392',
+    color: '#4AE68C',
   },
 };
 
@@ -109,12 +111,11 @@ function TransformCard({ card, delay }: { card: CardData; delay: number }) {
       {/* Top row */}
       <View style={styles.cardHeader}>
         <View style={[styles.iconCircle, { backgroundColor: outcome.color + '20' }]}>
-          <Text style={styles.cardIcon}>{outcome.icon}</Text>
+          <Icon name={outcome.icon} size={22} color={outcome.color} />
         </View>
         <View style={[styles.categoryTag, { backgroundColor: outcome.color + '18', borderColor: outcome.color + '40' }]}>
-          <Text style={[styles.categoryTagText, { color: outcome.color }]}>
-            {cat.icon} {cat.nameUk}
-          </Text>
+          <Icon name={cat.icon} size={10} color={outcome.color} />
+          <Text style={[styles.categoryTagText, { color: outcome.color }]}>{cat.nameUk}</Text>
         </View>
       </View>
 
@@ -218,7 +219,7 @@ export default function FutureSelfScreen() {
           ]}
         >
           <Text style={styles.insightText}>
-            🦋 Це не мотиваційна риторика. Це результат системної роботи з методологією МАСШТАБ.
+            Це не мотиваційна риторика. Це результат системної роботи з методологією МАСШТАБ.
           </Text>
         </Animated.View>
       </ScrollView>
@@ -312,9 +313,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cardIcon: {
-    fontSize: 22,
+    width: 22,
+    height: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   categoryTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     borderRadius: Radius.full,
     paddingHorizontal: Spacing.sm,
     paddingVertical: 4,
