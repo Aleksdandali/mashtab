@@ -1,292 +1,304 @@
-import { useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  SafeAreaView,
-  Pressable,
-} from 'react-native';
-import { router, useFocusEffect } from 'expo-router';
-
-import { useTheme } from '@/hooks/useTheme';
+import React, { useEffect } from 'react';
+import { View, Text, ScrollView, Pressable, StyleSheet, SafeAreaView } from 'react-native';
+import { Flame, ChevronRight, Brain, ArrowRight } from 'lucide-react-native';
+import { router } from 'expo-router';
 import { useProfile } from '@/hooks/useProfile';
 import { useBeliefs, getBeliefTitle, getCompletedStages } from '@/hooks/useBeliefs';
 import { useTasks } from '@/hooks/useTasks';
 import { useJournal } from '@/hooks/useJournal';
-import { Icon } from '@/components/ui/Icon';
-import { FontFamily } from '@/constants/typography';
-import { Spacing } from '@/constants/spacing';
-import { getDayPeriod, getGreeting, formatDisplayDate, formatDayName, todayISO } from '@/utils/dates';
-
-// ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function HomeScreen() {
-  const C = useTheme();
-
-  const { profile, streak, fetchProfile, fetchStreak } = useProfile();
+  const { profile, fetchProfile } = useProfile();
   const { beliefs, fetchBeliefs } = useBeliefs();
-  const { tasks, fetchTasks, toggleTask, focusTasks, regularTasks } = useTasks();
+  const { tasks, fetchTasks, toggleTask } = useTasks();
   const { todayMorningDone, todayEveningDone, fetchTodayRituals } = useJournal();
 
-  const period = getDayPeriod();
-  const greeting = getGreeting(profile?.name ?? null, period);
-  const displayDate = formatDisplayDate();
-  const dayName = formatDayName();
+  useEffect(() => {
+    fetchProfile();
+    fetchBeliefs();
+    fetchTasks();
+    fetchTodayRituals();
+  }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchProfile();
-      fetchStreak();
-      fetchBeliefs();
-      fetchTasks(todayISO());
-      fetchTodayRituals();
-    }, []),
-  );
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Доброго ранку' : hour < 18 ? 'Добрий день' : 'Добрий вечір';
+  const name = profile?.name ? `, ${profile.name}` : '';
 
-  const activeFocus = focusTasks();
-  const firstFocusTask = activeFocus[0] ?? regularTasks()[0] ?? null;
-  const visibleBelief = beliefs[0] ?? null;
-  const completedStages = visibleBelief ? getCompletedStages(visibleBelief) : 0;
-  const beliefProgressPct = completedStages / 6;
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('uk-UA', { weekday: 'long', day: 'numeric', month: 'long' });
+  const dateCapitalized = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
 
-  const morningCount = todayMorningDone ? 1 : 0;
-  const eveningCount = todayEveningDone ? 1 : 0;
+  const activeBeliefs = beliefs.filter((b) => !b.completed_at);
+  const firstBelief = activeBeliefs[0];
+  const beliefProgress = firstBelief ? Math.round((getCompletedStages(firstBelief) / 6) * 100) : 0;
+
+  const focusTasks = tasks.filter((t) => t.is_focus && !t.is_completed);
+  const firstFocusTask = focusTasks[0];
+
+  const rituals = [
+    {
+      time: '06:00',
+      title: 'Ранковий ритуал',
+      completed: todayMorningDone ? 1 : 0,
+      total: 1,
+      route: '/ritual/morning' as const,
+    },
+    {
+      time: '21:00',
+      title: 'Вечірній ритуал',
+      completed: todayEveningDone ? 1 : 0,
+      total: 1,
+      route: '/ritual/evening' as const,
+    },
+  ];
 
   return (
-    <View style={[S.root, { backgroundColor: C.bg }]}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={S.scroll} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={S.container}>
+      <ScrollView style={S.scroll} contentContainerStyle={S.scrollContent}>
+        <View style={S.header}>
+          <Text style={S.greeting}>{greeting}{name}</Text>
+          <Text style={S.date}>{dateCapitalized}</Text>
+        </View>
 
-          {/* ── Header ── */}
-          <View style={S.header}>
-            <Text style={[S.greeting, { color: C.text }]}>{greeting}</Text>
-            <Text style={[S.dateText, { color: C.textSecondary }]}>
-              {dayName}, {displayDate}
-            </Text>
+        <View style={S.card}>
+          <View style={S.cardHeader}>
+            <View style={S.iconContainer}>
+              <Flame color="#C8FF00" size={20} strokeWidth={1.5} />
+            </View>
+            <Text style={S.label}>РИТУАЛИ</Text>
           </View>
 
-          {/* ── РИТУАЛИ card ── */}
-          <View style={[S.card, { backgroundColor: C.surface1 }]}>
+          {rituals.map((ritual, index) => (
+            <Pressable
+              key={index}
+              style={[S.ritualItem, index === 0 && S.ritualItemFirst]}
+              onPress={() => router.push(ritual.route)}
+            >
+              <View style={S.ritualLeft}>
+                <Text style={S.ritualTime}>{ritual.time}</Text>
+                <Text style={S.ritualTitle}>{ritual.title}</Text>
+              </View>
+              <View style={S.ritualRight}>
+                <Text style={S.ritualProgress}>{ritual.completed}/{ritual.total}</Text>
+                <ChevronRight color="#A3AEC4" size={20} strokeWidth={1.5} />
+              </View>
+            </Pressable>
+          ))}
+        </View>
+
+        {firstBelief && (
+          <View style={S.card}>
             <View style={S.cardHeader}>
-              <View style={[S.iconContainer, { backgroundColor: C.primaryMuted }]}>
-                <Icon name="Sun" size={16} color={C.primary} />
+              <View style={S.iconContainer}>
+                <Brain color="#C8FF00" size={20} strokeWidth={1.5} />
               </View>
-              <Text style={[S.cardLabel, { color: C.textSecondary }]}>РИТУАЛИ</Text>
+              <Text style={S.label}>УСТАНОВКИ</Text>
             </View>
 
-            {/* Morning ritual row */}
-            <Pressable
-              onPress={() => router.push('/ritual/morning' as any)}
-              style={({ pressed }) => [pressed && { opacity: 0.75 }]}
-            >
-              <View style={S.ritualRow}>
-                <Text style={[S.ritualTime, { color: C.primary }]}>08:00</Text>
-                <Text style={[S.ritualTitle, { color: C.text }]} numberOfLines={1}>
-                  Ранковий ритуал
-                </Text>
-                <View style={S.ritualRight}>
-                  <Text style={[S.ritualCount, { color: todayMorningDone ? C.primary : C.textSecondary }]}>
-                    {morningCount}/1
-                  </Text>
-                  <Icon name="ChevronRight" size={16} color={C.textSecondary} />
-                </View>
-              </View>
-            </Pressable>
+            <Text style={S.beliefTitle}>{getBeliefTitle(firstBelief)}</Text>
+            <View style={S.progressBar}>
+              <View style={[S.progressFill, { width: `${beliefProgress}%` as `${number}%` }]} />
+            </View>
+            <Text style={S.progressLabel}>Етап {firstBelief.current_stage} з 6</Text>
 
-            {/* Evening ritual row */}
-            <Pressable
-              onPress={() => router.push('/ritual/evening' as any)}
-              style={({ pressed }) => [pressed && { opacity: 0.75 }]}
-            >
-              <View style={[S.ritualRow, S.ritualRowBorder, { borderTopColor: C.border }]}>
-                <Text style={[S.ritualTime, { color: C.primary }]}>20:00</Text>
-                <Text style={[S.ritualTitle, { color: C.text }]} numberOfLines={1}>
-                  Вечірній ритуал
-                </Text>
-                <View style={S.ritualRight}>
-                  <Text style={[S.ritualCount, { color: todayEveningDone ? C.primary : C.textSecondary }]}>
-                    {eveningCount}/1
-                  </Text>
-                  <Icon name="ChevronRight" size={16} color={C.textSecondary} />
-                </View>
-              </View>
+            <Pressable style={S.linkButton} onPress={() => router.push('/(tabs)/mindset')}>
+              <Text style={S.linkText}>Переглянути всі установки</Text>
+              <ArrowRight color="#C8FF00" size={16} strokeWidth={1.5} />
             </Pressable>
           </View>
+        )}
 
-          {/* ── УСТАНОВКИ card ── */}
-          {visibleBelief && (
-            <View style={[S.card, { backgroundColor: C.surface1 }]}>
-              <View style={S.cardHeader}>
-                <View style={[S.iconContainer, { backgroundColor: C.primaryMuted }]}>
-                  <Icon name="Brain" size={16} color={C.primary} />
-                </View>
-                <Text style={[S.cardLabel, { color: C.textSecondary }]}>УСТАНОВКИ</Text>
-              </View>
-
-              <Text style={[S.beliefTitle, { color: C.text }]} numberOfLines={3}>
-                {getBeliefTitle(visibleBelief)}
-              </Text>
-
-              <View style={[S.progressTrack, { backgroundColor: C.border }]}>
-                <View
-                  style={[
-                    S.progressFill,
-                    { backgroundColor: C.primary, width: `${Math.round(beliefProgressPct * 100)}%` as `${number}%` },
-                  ]}
-                />
-              </View>
-
-              <Pressable
-                onPress={() => router.push('/(tabs)/mindset' as any)}
-                style={({ pressed }) => [S.linkRow, pressed && { opacity: 0.7 }]}
-              >
-                <Text style={[S.linkText, { color: C.primary }]}>Переглянути всі установки</Text>
-                <Icon name="ArrowRight" size={16} color={C.primary} />
-              </Pressable>
-            </View>
-          )}
-
-          {/* ── ДІЯ ДНЯ card ── */}
-          <View style={[S.card, { backgroundColor: C.surface1 }]}>
-            <View style={S.cardHeader}>
-              <View style={[S.iconContainer, { backgroundColor: C.primaryMuted }]}>
-                <Icon name="Zap" size={16} color={C.primary} />
-              </View>
-              <Text style={[S.cardLabel, { color: C.textSecondary }]}>ДІЯ ДНЯ</Text>
-            </View>
-
-            <Text style={[S.actionTitle, { color: C.text }]} numberOfLines={2}>
-              {firstFocusTask?.title ?? 'Немає фокусних задач'}
-            </Text>
-            <Text style={[S.actionDescription, { color: C.textSecondary }]}>
-              Виконай цю задачу сьогодні
-            </Text>
-
-            <Pressable
-              onPress={() => router.push('/ai-coach' as any)}
-              style={({ pressed }) => [S.ctaButton, { backgroundColor: C.primary }, pressed && { opacity: 0.88, transform: [{ scale: 0.98 }] }]}
-            >
-              <Text style={S.ctaButtonText}>Записати інсайт</Text>
+        {firstFocusTask && (
+          <View style={S.card}>
+            <Text style={S.label}>ДІЯ ДНЯ</Text>
+            <Text style={S.actionTitle}>{firstFocusTask.title}</Text>
+            {firstFocusTask.notes ? (
+              <Text style={S.actionDescription}>{firstFocusTask.notes}</Text>
+            ) : null}
+            <Pressable style={S.ctaButton} onPress={() => toggleTask(firstFocusTask.id)}>
+              <Text style={S.ctaButtonText}>Відмітити виконаним</Text>
             </Pressable>
           </View>
+        )}
 
-          {/* ── Coach chip ── */}
-          <Pressable
-            onPress={() => router.push('/ai-coach' as any)}
-            style={({ pressed }) => [
-              S.coachChip,
-              { backgroundColor: C.surface1 },
-              pressed && { opacity: 0.8 },
-            ]}
-          >
-            <View style={[S.coachDot, { backgroundColor: C.primary }]} />
-            <Text style={[S.coachChipText, { color: C.text }]}>Твій коуч онлайн</Text>
-          </Pressable>
-
-          <View style={{ height: 80 }} />
-        </ScrollView>
-      </SafeAreaView>
-    </View>
+        <Pressable style={S.coachChip} onPress={() => router.push('/ai-coach')}>
+          <View style={S.coachDot} />
+          <Text style={S.coachText}>Твій коуч онлайн</Text>
+        </Pressable>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 const S = StyleSheet.create({
-  root: { flex: 1 },
-  scroll: { paddingHorizontal: Spacing.screen, paddingTop: Spacing.base, paddingBottom: 32 },
-
-  // Header
-  header: { marginBottom: 24 },
-  greeting: { fontFamily: FontFamily.sansExtraBold, fontSize: 32, letterSpacing: -0.5, marginBottom: 4 },
-  dateText: { fontFamily: FontFamily.sansMedium, fontSize: 15 },
-
-  // Card base
-  card: { borderRadius: 16, padding: 24, marginBottom: 16 },
-
-  // Card header row
-  cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+  container: {
+    flex: 1,
+    backgroundColor: '#060810',
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 20,
+  },
+  header: {
+    marginBottom: 24,
+  },
+  greeting: {
+    fontFamily: 'Inter_800ExtraBold',
+    fontSize: 32,
+    letterSpacing: -0.5,
+    color: '#F9FAFF',
+    marginBottom: 4,
+  },
+  date: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 15,
+    lineHeight: 22,
+    color: '#A3AEC4',
+  },
+  card: {
+    backgroundColor: '#0B0F18',
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 16,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   iconContainer: {
     width: 32,
     height: 32,
     borderRadius: 8,
+    backgroundColor: 'rgba(200, 255, 0, 0.09)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+    marginRight: 12,
   },
-  cardLabel: {
-    fontFamily: FontFamily.sansSemiBold,
+  label: {
+    fontFamily: 'Inter_600SemiBold',
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
+    color: '#A3AEC4',
   },
-
-  // Ritual rows
-  ritualRow: {
+  ritualItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
-    gap: 12,
-  },
-  ritualRowBorder: {
+    justifyContent: 'space-between',
+    paddingVertical: 16,
     borderTopWidth: 1,
+    borderTopColor: 'rgba(163, 174, 196, 0.12)',
   },
-  ritualTime: { fontFamily: FontFamily.sansSemiBold, fontSize: 13, width: 44 },
-  ritualTitle: { fontFamily: FontFamily.sansMedium, fontSize: 15, flex: 1 },
-  ritualRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  ritualCount: { fontFamily: FontFamily.sansSemiBold, fontSize: 13 },
-
-  // Belief section
-  beliefTitle: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 24,
-    lineHeight: 30,
-    marginBottom: 16,
+  ritualItemFirst: {
+    borderTopWidth: 0,
+    paddingTop: 0,
   },
-  progressTrack: { height: 4, borderRadius: 2, overflow: 'hidden', marginBottom: 16 },
-  progressFill: { height: '100%', borderRadius: 2 },
-  linkRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  linkText: { fontFamily: FontFamily.sansSemiBold, fontSize: 15 },
-
-  // Action day section
-  actionTitle: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 24,
-    lineHeight: 30,
-    marginBottom: 8,
+  ritualLeft: {
+    flex: 1,
   },
-  actionDescription: {
-    fontFamily: FontFamily.sansMedium,
+  ritualTime: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 13,
+    color: '#C8FF00',
+    marginBottom: 4,
+  },
+  ritualTitle: {
+    fontFamily: 'Inter_500Medium',
     fontSize: 15,
     lineHeight: 22,
+    color: '#F9FAFF',
+  },
+  ritualRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  ritualProgress: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 13,
+    color: '#A3AEC4',
+  },
+  beliefTitle: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 24,
+    color: '#F9FAFF',
+    marginBottom: 16,
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: 'rgba(163, 174, 196, 0.12)',
+    borderRadius: 2,
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: 4,
+    backgroundColor: '#C8FF00',
+  },
+  progressLabel: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 13,
+    color: '#A3AEC4',
+    marginBottom: 16,
+  },
+  linkButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  linkText: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 15,
+    color: '#C8FF00',
+  },
+  actionTitle: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 24,
+    color: '#F9FAFF',
+    marginBottom: 12,
+    marginTop: 12,
+  },
+  actionDescription: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 15,
+    lineHeight: 22,
+    color: '#A3AEC4',
     marginBottom: 20,
   },
   ctaButton: {
+    backgroundColor: '#C8FF00',
     borderRadius: 12,
     height: 56,
     alignItems: 'center',
     justifyContent: 'center',
   },
   ctaButtonText: {
-    fontFamily: FontFamily.sansBold,
+    fontFamily: 'Inter_700Bold',
     fontSize: 17,
     color: '#060810',
   },
-
-  // Coach chip
   coachChip: {
+    backgroundColor: '#0B0F18',
     borderRadius: 24,
     paddingVertical: 14,
     paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    alignSelf: 'center',
+    gap: 8,
   },
   coachDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
+    backgroundColor: '#C8FF00',
   },
-  coachChipText: { fontFamily: FontFamily.sansSemiBold, fontSize: 15 },
+  coachText: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 15,
+    color: '#F9FAFF',
+  },
 });

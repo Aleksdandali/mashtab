@@ -1,12 +1,12 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
-  SafeAreaView,
   Pressable,
   TextInput,
+  StyleSheet,
+  SafeAreaView,
   Animated,
   Modal,
   KeyboardAvoidingView,
@@ -14,24 +14,13 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
+import { Check, Lock, ChevronLeft, MessageSquare, ArrowRight, Plus, Sparkles } from 'lucide-react-native';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { useTheme } from '@/hooks/useTheme';
-import {
-  useBeliefs,
-  getBeliefTitle,
-  getBeliefCategory,
-  getCompletedStages,
-} from '@/hooks/useBeliefs';
+import { useBeliefs, getBeliefTitle, getCompletedStages } from '@/hooks/useBeliefs';
 import { useTasks } from '@/hooks/useTasks';
-import { STAGES, STAGE_COLORS, StageKey, Stage } from '@/constants/stages';
-import { Icon } from '@/components/ui/Icon';
-import { CATEGORY_MAP } from '@/constants/categories';
-import { FontFamily } from '@/constants/typography';
-import { Spacing, Radius } from '@/constants/spacing';
+import { STAGES, STAGE_COLORS, StageKey } from '@/constants/stages';
 import { UserBelief } from '@/types';
-
-// ─── Ring constants ───────────────────────────────────────────────────────────
 
 const RING_SIZE = 200;
 const RING_CENTER = RING_SIZE / 2;
@@ -39,50 +28,20 @@ const RING_RADIUS = 80;
 const RING_STROKE = 8;
 const CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function getStageStatus(
-  stage: Stage,
-  ub: UserBelief,
-): 'completed' | 'current' | 'locked' {
-  if (ub.completed_stages?.[stage.key]) return 'completed';
-  if (stage.index === ub.current_stage) return 'current';
-  return 'locked';
-}
-
 // ─── Score Selector ───────────────────────────────────────────────────────────
 
-function ScoreSelector({
-  value,
-  onChange,
-  color,
-}: {
-  value: number | null;
-  onChange: (v: number) => void;
-  color: string;
-}) {
-  const C = useTheme();
+function ScoreSelector({ value, onChange }: { value: number | null; onChange: (v: number) => void }) {
   return (
-    <View style={scoreStyles.row}>
+    <View style={SC.row}>
       {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {
         const active = value === n;
         return (
           <Pressable
             key={n}
             onPress={() => onChange(n)}
-            style={[
-              scoreStyles.btn,
-              { backgroundColor: active ? color : C.surface3 },
-            ]}
+            style={[SC.btn, { backgroundColor: active ? '#C8FF00' : '#1A1F2E' }]}
           >
-            <Text
-              style={[
-                scoreStyles.btnText,
-                { color: active ? '#060810' : C.textSecondary },
-              ]}
-            >
-              {n}
-            </Text>
+            <Text style={[SC.btnText, { color: active ? '#060810' : '#A3AEC4' }]}>{n}</Text>
           </Pressable>
         );
       })}
@@ -90,279 +49,70 @@ function ScoreSelector({
   );
 }
 
-const scoreStyles = StyleSheet.create({
+const SC = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  btn: {
-    width: 34,
-    height: 34,
-    borderRadius: Radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  btnText: { fontFamily: FontFamily.sansBold, fontSize: 13 },
+  btn: { width: 34, height: 34, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  btnText: { fontFamily: 'Inter_700Bold', fontSize: 13 },
 });
 
-// ─── Stage Card ───────────────────────────────────────────────────────────────
+// ─── Score Modal ──────────────────────────────────────────────────────────────
 
-interface StageCardProps {
-  stage: Stage;
-  status: 'completed' | 'current' | 'locked';
-  reflection: string;
-  onChangeReflection: (text: string) => void;
-  saving: boolean;
-  onContinue: () => void;
-  onCoach: () => void;
-  onCreateTask?: () => void;
-  showTaskBtn?: boolean;
-}
-
-function StageCard({
-  stage,
-  status,
-  reflection,
-  onChangeReflection,
-  saving,
-  onContinue,
-  onCoach,
-  onCreateTask,
-  showTaskBtn,
-}: StageCardProps) {
-  const C = useTheme();
-  const isCompleted = status === 'completed';
-  const isCurrent = status === 'current';
-  const isLocked = status === 'locked';
-
-  const iconBg = isCompleted
-    ? C.primary
-    : isCurrent
-    ? C.primaryMuted
-    : 'rgba(163,174,196,0.12)';
-  const titleColor = isLocked ? 'rgba(163,174,196,0.4)' : C.text;
-  const descColor = isLocked ? 'rgba(163,174,196,0.4)' : C.textSecondary;
-
+function ScoreModal({
+  visible,
+  onSubmit,
+  loading,
+}: {
+  visible: boolean;
+  onSubmit: (score: number) => void;
+  loading: boolean;
+}) {
+  const [score, setScore] = useState<number | null>(null);
   return (
-    <View style={[cardStyles.card, { backgroundColor: C.surface1 }]}>
-      <View style={cardStyles.header}>
-        <View style={[cardStyles.iconCircle, { backgroundColor: iconBg }]}>
-          {isCompleted && (
-            <Icon name="Check" size={20} strokeWidth={2} color="#060810" />
-          )}
-          {isCurrent && (
-            <Text style={[cardStyles.iconNum, { color: C.primary }]}>
-              {stage.index}
-            </Text>
-          )}
-          {isLocked && (
-            <Icon
-              name="Lock"
-              size={20}
-              color="rgba(163,174,196,0.4)"
-              strokeWidth={1.5}
-            />
-          )}
-        </View>
-        <View style={cardStyles.content}>
-          <Text style={[cardStyles.cardTitle, { color: titleColor }]}>
-            {stage.nameUk}
+    <Modal visible={visible} transparent animationType="slide">
+      <View style={MM.backdrop}>
+        <View style={MM.card}>
+          <Text style={MM.title}>Оцініть вплив зараз</Text>
+          <Text style={MM.body}>
+            Ви пройшли всі 6 етапів. Наскільки ця установка впливає на вас зараз?
           </Text>
-          <Text style={[cardStyles.cardDesc, { color: descColor }]}>
-            {stage.descriptionUk}
-          </Text>
+          <ScoreSelector value={score} onChange={setScore} />
+          <Pressable
+            style={[MM.submitBtn, (!score || loading) && { opacity: 0.5 }]}
+            onPress={() => score && onSubmit(score)}
+            disabled={!score || loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#060810" size="small" />
+            ) : (
+              <Text style={MM.submitText}>Зберегти результат</Text>
+            )}
+          </Pressable>
         </View>
       </View>
-
-      {isCurrent && (
-        <>
-          <Text style={[cardStyles.question, { color: C.textSecondary }]}>
-            {stage.questionUk}
-          </Text>
-
-          <TextInput
-            style={[
-              cardStyles.textarea,
-              { backgroundColor: C.surface2, color: C.text },
-            ]}
-            placeholder="Напишіть вашу відповідь..."
-            placeholderTextColor={C.textTertiary}
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-            value={reflection}
-            onChangeText={onChangeReflection}
-          />
-
-          <View style={cardStyles.btnRow}>
-            <Pressable
-              style={({ pressed }) => [
-                cardStyles.coachBtn,
-                { borderColor: C.border },
-                pressed && { opacity: 0.7 },
-              ]}
-              onPress={onCoach}
-            >
-              <Icon
-                name="MessageSquare"
-                size={18}
-                color={C.textSecondary}
-                strokeWidth={1.5}
-              />
-              <Text style={[cardStyles.coachBtnText, { color: C.textSecondary }]}>
-                Запитати коуча
-              </Text>
-            </Pressable>
-
-            <Pressable
-              style={({ pressed }) => [
-                cardStyles.continueBtn,
-                { backgroundColor: C.primary },
-                (!reflection.trim() || saving) && { opacity: 0.5 },
-                pressed && { transform: [{ scale: 0.97 }] },
-              ]}
-              onPress={onContinue}
-              disabled={!reflection.trim() || saving}
-            >
-              {saving ? (
-                <ActivityIndicator color="#060810" size="small" />
-              ) : (
-                <>
-                  <Text style={cardStyles.continueBtnText}>
-                    Продовжити шлях
-                  </Text>
-                  <Icon
-                    name="ArrowRight"
-                    size={18}
-                    strokeWidth={1.5}
-                    color="#060810"
-                  />
-                </>
-              )}
-            </Pressable>
-          </View>
-
-          {showTaskBtn && (
-            <Pressable
-              style={({ pressed }) => [
-                cardStyles.taskBtn,
-                { borderColor: C.primary, backgroundColor: C.primaryMuted },
-                pressed && { opacity: 0.75 },
-              ]}
-              onPress={onCreateTask}
-            >
-              <Icon name="Plus" size={14} color={C.primary} />
-              <Text style={[cardStyles.taskBtnText, { color: C.primary }]}>
-                Створити задачу
-              </Text>
-            </Pressable>
-          )}
-        </>
-      )}
-    </View>
+    </Modal>
   );
 }
 
-const cardStyles = StyleSheet.create({
+const MM = StyleSheet.create({
+  backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.75)' },
   card: {
-    borderRadius: Radius.lg,
-    padding: 20,
+    backgroundColor: '#111622',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 36,
+    gap: 16,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  iconNum: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 17,
-  },
-  content: {
-    flex: 1,
-    paddingTop: 2,
-  },
-  cardTitle: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 17,
-    lineHeight: 22,
-    marginBottom: 4,
-  },
-  cardDesc: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  question: {
-    fontFamily: FontFamily.sans,
-    fontSize: 14,
-    lineHeight: 20,
-    fontStyle: 'italic',
-    marginTop: 16,
-    marginBottom: 12,
-  },
-  textarea: {
-    borderRadius: Radius.md,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontFamily: FontFamily.sans,
-    fontSize: 14,
-    lineHeight: 21,
-    minHeight: 100,
-    marginBottom: 16,
-  },
-  btnRow: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'center',
-  },
-  coachBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    borderRadius: Radius.md,
-    borderWidth: 1,
-  },
-  coachBtnText: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 13,
-  },
-  continueBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 12,
-    borderRadius: Radius.md,
-    minHeight: 46,
-  },
-  continueBtnText: {
-    color: '#060810',
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 14,
-  },
-  taskBtn: {
-    marginTop: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
+  title: { fontFamily: 'Inter_700Bold', fontSize: 22, color: '#F9FAFF' },
+  body: { fontFamily: 'Inter_400Regular', fontSize: 14, lineHeight: 20, color: '#A3AEC4' },
+  submitBtn: {
+    backgroundColor: '#C8FF00',
     paddingVertical: 14,
-    borderRadius: Radius.md,
-    borderWidth: 1.5,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 4,
   },
-  taskBtnText: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 14,
-  },
+  submitText: { fontFamily: 'Inter_700Bold', fontSize: 15, color: '#060810' },
 });
 
 // ─── Butterfly Overlay ────────────────────────────────────────────────────────
@@ -380,7 +130,6 @@ function ButterflyOverlay({
   identityText: string | null;
   onDone: () => void;
 }) {
-  const C = useTheme();
   const scale = useRef(new Animated.Value(0.1)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const statsOpacity = useRef(new Animated.Value(0)).current;
@@ -394,7 +143,7 @@ function ButterflyOverlay({
       ]),
       Animated.timing(statsOpacity, { toValue: 1, duration: 600, delay: 200, useNativeDriver: true }),
     ]).start();
-  }, [visible, opacity, scale, statsOpacity]);
+  }, [visible]);
 
   if (!visible) return null;
 
@@ -402,219 +151,89 @@ function ButterflyOverlay({
   const color = STAGE_COLORS.identity;
 
   return (
-    <View style={[bfStyles.overlay, { backgroundColor: C.surface1 }]}>
-      <Animated.View style={[bfStyles.content, { opacity, transform: [{ scale }] }]}>
-        <View style={bfStyles.sparklesWrap}>
-          <Icon name="Sparkles" size={64} color={STAGE_COLORS.identity} />
-        </View>
+    <View style={BF.overlay}>
+      <Animated.View style={{ opacity, transform: [{ scale }], marginBottom: 8 }}>
+        <Sparkles color={color} size={64} strokeWidth={1.5} />
       </Animated.View>
 
-      <Animated.View style={[bfStyles.stats, { opacity: statsOpacity }]}>
-        <Text style={[bfStyles.title, { color: C.text }]}>
-          Трансформація завершена
-        </Text>
+      <Animated.View style={[BF.stats, { opacity: statsOpacity }]}>
+        <Text style={BF.title}>Трансформація завершена</Text>
 
-        <View style={[bfStyles.scoreCard, { backgroundColor: C.surface2 }]}>
-          <View style={bfStyles.scoreRow}>
-            <View style={bfStyles.scoreItem}>
-              <Text style={[bfStyles.scoreLabel, { color: C.textSecondary }]}>Було</Text>
-              <Text style={[bfStyles.scoreNum, { color: C.textSecondary }]}>{scoreBefore}/10</Text>
+        <View style={BF.scoreCard}>
+          <View style={BF.scoreRow}>
+            <View style={BF.scoreItem}>
+              <Text style={BF.scoreLabel}>Було</Text>
+              <Text style={[BF.scoreNum, { color: '#A3AEC4' }]}>{scoreBefore}/10</Text>
             </View>
-            <Text style={[bfStyles.arrow, { color }]}>→</Text>
-            <View style={bfStyles.scoreItem}>
-              <Text style={[bfStyles.scoreLabel, { color }]}>Стало</Text>
-              <Text style={[bfStyles.scoreNum, { color }]}>{scoreAfter}/10</Text>
+            <Text style={[BF.arrow, { color }]}>→</Text>
+            <View style={BF.scoreItem}>
+              <Text style={[BF.scoreLabel, { color }]}>Стало</Text>
+              <Text style={[BF.scoreNum, { color }]}>{scoreAfter}/10</Text>
             </View>
           </View>
           {diff > 0 && (
-            <Text style={[bfStyles.diffText, { color: C.textSecondary }]}>
+            <Text style={BF.diffText}>
               Ви звільнили {diff} пункт{diff === 1 ? '' : diff < 5 ? 'и' : 'ів'} потенціалу
             </Text>
           )}
         </View>
 
         {!!identityText && (
-          <View
-            style={[
-              bfStyles.identityCard,
-              { backgroundColor: color + '18', borderColor: color + '44' },
-            ]}
-          >
-            <Text style={[bfStyles.identityLabel, { color }]}>
-              Ваша нова ідентичність
-            </Text>
-            <Text style={[bfStyles.identityText, { color: C.text }]}>
-              «{identityText}»
-            </Text>
+          <View style={[BF.identityCard, { borderColor: color + '44', backgroundColor: color + '18' }]}>
+            <Text style={[BF.identityLabel, { color }]}>Ваша нова ідентичність</Text>
+            <Text style={BF.identityText}>«{identityText}»</Text>
           </View>
         )}
 
-        <Pressable
-          style={({ pressed }) => [
-            bfStyles.doneBtn,
-            { backgroundColor: color },
-            pressed && { opacity: 0.85 },
-          ]}
-          onPress={onDone}
-        >
-          <Text style={bfStyles.doneBtnText}>Завершено</Text>
+        <Pressable style={[BF.doneBtn, { backgroundColor: color }]} onPress={onDone}>
+          <Text style={BF.doneBtnText}>Завершено</Text>
         </Pressable>
       </Animated.View>
     </View>
   );
 }
 
-const bfStyles = StyleSheet.create({
+const BF = StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 100,
+    backgroundColor: '#0B0F18',
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,
   },
-  content: { marginBottom: 8 },
-  sparklesWrap: { width: 80, height: 80, alignItems: 'center', justifyContent: 'center' },
   stats: { width: '100%', alignItems: 'center', gap: 12 },
-  title: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 24,
-    textAlign: 'center',
-  },
+  title: { fontFamily: 'Inter_700Bold', fontSize: 24, color: '#F9FAFF', textAlign: 'center' },
   scoreCard: {
     width: '100%',
-    borderRadius: Radius.lg,
+    backgroundColor: '#111622',
+    borderRadius: 16,
     padding: 20,
     alignItems: 'center',
   },
-  scoreRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    marginBottom: 8,
-  },
+  scoreRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 8 },
   scoreItem: { alignItems: 'center' },
-  scoreLabel: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  scoreNum: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 32,
-  },
-  arrow: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 24,
-  },
-  diffText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 13,
-  },
-  identityCard: {
-    width: '100%',
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    padding: 16,
-  },
+  scoreLabel: { fontFamily: 'Inter_500Medium', fontSize: 12, color: '#A3AEC4', marginBottom: 4 },
+  scoreNum: { fontFamily: 'Inter_700Bold', fontSize: 32 },
+  arrow: { fontFamily: 'Inter_700Bold', fontSize: 24 },
+  diffText: { fontFamily: 'Inter_400Regular', fontSize: 13, color: '#A3AEC4' },
+  identityCard: { width: '100%', borderRadius: 16, borderWidth: 1, padding: 16 },
   identityLabel: {
-    fontFamily: FontFamily.sansBold,
+    fontFamily: 'Inter_700Bold',
     fontSize: 11,
     letterSpacing: 0.6,
     textTransform: 'uppercase',
     marginBottom: 8,
   },
-  identityText: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 17,
-    lineHeight: 24,
-  },
-  doneBtn: {
-    width: '100%',
-    paddingVertical: 16,
-    borderRadius: Radius.md,
-    alignItems: 'center',
-  },
-  doneBtnText: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 16,
-    color: '#fff',
-  },
-});
-
-// ─── Score Modal (Stage 6) ────────────────────────────────────────────────────
-
-function ScoreModal({
-  visible,
-  color,
-  onSubmit,
-  loading,
-}: {
-  visible: boolean;
-  color: string;
-  onSubmit: (score: number) => void;
-  loading: boolean;
-}) {
-  const C = useTheme();
-  const [score, setScore] = useState<number | null>(null);
-
-  return (
-    <Modal visible={visible} transparent animationType="slide">
-      <View style={[modalStyles.backdrop, { backgroundColor: 'rgba(0,0,0,0.75)' }]}>
-        <View style={[modalStyles.card, { backgroundColor: C.surface2 }]}>
-          <Text style={[modalStyles.title, { color: C.text }]}>
-            Оцініть вплив зараз
-          </Text>
-          <Text style={[modalStyles.body, { color: C.textSecondary }]}>
-            Ви пройшли всі 6 етапів. Наскільки ця установка впливає на вас зараз?
-          </Text>
-          <ScoreSelector value={score} onChange={setScore} color={color} />
-          <Pressable
-            style={({ pressed }) => [
-              modalStyles.submitBtn,
-              { backgroundColor: color },
-              (!score || loading) && { opacity: 0.5 },
-              pressed && { transform: [{ scale: 0.97 }] },
-            ]}
-            onPress={() => score && onSubmit(score)}
-            disabled={!score || loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <Text style={modalStyles.submitText}>Зберегти результат</Text>
-            )}
-          </Pressable>
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
-const modalStyles = StyleSheet.create({
-  backdrop: { flex: 1, justifyContent: 'flex-end' },
-  card: {
-    borderTopLeftRadius: Radius.xl,
-    borderTopRightRadius: Radius.xl,
-    padding: 24,
-    paddingBottom: 36,
-    gap: 16,
-  },
-  title: { fontFamily: FontFamily.sansBold, fontSize: 22 },
-  body: { fontFamily: FontFamily.sans, fontSize: 14, lineHeight: 20 },
-  submitBtn: {
-    paddingVertical: 14,
-    borderRadius: Radius.md,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  submitText: { fontFamily: FontFamily.sansBold, fontSize: 15, color: '#fff' },
+  identityText: { fontFamily: 'Inter_600SemiBold', fontSize: 17, lineHeight: 24, color: '#F9FAFF' },
+  doneBtn: { width: '100%', paddingVertical: 16, borderRadius: 12, alignItems: 'center' },
+  doneBtnText: { fontFamily: 'Inter_700Bold', fontSize: 16, color: '#fff' },
 });
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function BeliefDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const C = useTheme();
   const { beliefs, fetchBeliefById, advanceStage, completeWithScore } = useBeliefs();
   const { addTask } = useTasks();
 
@@ -652,8 +271,8 @@ export default function BeliefDetailScreen() {
 
   if (loadingBelief || !ub) {
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: C.bg }]}>
-        <ActivityIndicator style={{ marginTop: 80 }} color={C.primary} />
+      <SafeAreaView style={S.container}>
+        <ActivityIndicator style={{ marginTop: 80 }} color="#C8FF00" />
       </SafeAreaView>
     );
   }
@@ -668,9 +287,7 @@ export default function BeliefDetailScreen() {
   const currentStageName = currentStage?.nameUk ?? 'Завершено';
 
   const identityText =
-    ub.belief_id && ub.belief
-      ? ub.belief.identity_template_uk
-      : ub.custom_identity ?? null;
+    ub.belief_id && ub.belief ? ub.belief.identity_template_uk : ub.custom_identity ?? null;
 
   const handleContinue = async () => {
     if (!currentStage || !reflection.trim()) return;
@@ -678,7 +295,6 @@ export default function BeliefDetailScreen() {
     try {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       await advanceStage(ub.id, currentStage.key, reflection.trim());
-
       if (currentStage.key === 'action') {
         setTaskReflection(reflection.trim());
         setShowTaskBtn(true);
@@ -714,7 +330,7 @@ export default function BeliefDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: C.bg }]}>
+    <SafeAreaView style={S.container}>
       <ButterflyOverlay
         visible={showButterfly}
         scoreBefore={ub.score}
@@ -722,10 +338,8 @@ export default function BeliefDetailScreen() {
         identityText={identityText}
         onDone={() => router.back()}
       />
-
       <ScoreModal
         visible={showScoreModal}
-        color={STAGE_COLORS.identity}
         onSubmit={handleScoreSubmit}
         loading={scoreSaving}
       />
@@ -734,26 +348,19 @@ export default function BeliefDetailScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scroll}
-        >
-          {/* Back button */}
-          <Pressable
-            style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.6 }]}
-            onPress={() => router.back()}
-          >
-            <Icon name="ChevronLeft" size={22} color={C.textSecondary} />
+        <ScrollView style={S.scroll} contentContainerStyle={S.scrollContent}>
+          <Pressable style={S.backBtn} onPress={() => router.back()}>
+            <ChevronLeft color="#A3AEC4" size={22} strokeWidth={1.5} />
           </Pressable>
 
-          {/* Centered ring */}
-          <View style={styles.ringContainer}>
+          {/* Progress Ring */}
+          <View style={S.ringContainer}>
             <Svg width={RING_SIZE} height={RING_SIZE}>
               <Circle
                 cx={RING_CENTER}
                 cy={RING_CENTER}
                 r={RING_RADIUS}
-                stroke="rgba(163,174,196,0.12)"
+                stroke="rgba(163, 174, 196, 0.12)"
                 strokeWidth={RING_STROKE}
                 fill="none"
               />
@@ -761,7 +368,7 @@ export default function BeliefDetailScreen() {
                 cx={RING_CENTER}
                 cy={RING_CENTER}
                 r={RING_RADIUS}
-                stroke={C.primary}
+                stroke="#C8FF00"
                 strokeWidth={RING_STROKE}
                 fill="none"
                 strokeDasharray={[CIRCUMFERENCE, CIRCUMFERENCE]}
@@ -771,148 +378,314 @@ export default function BeliefDetailScreen() {
                 origin={`${RING_CENTER}, ${RING_CENTER}`}
               />
             </Svg>
-            <View style={styles.ringCenter}>
-              <Text style={[styles.ringPercent, { color: C.text }]}>
-                {progressPercent}%
-              </Text>
-              <Text style={[styles.ringLabel, { color: C.textSecondary }]}>
-                ПРОГРЕС
-              </Text>
+            <View style={S.ringCenter}>
+              <Text style={S.ringPercent}>{progressPercent}%</Text>
+              <Text style={S.ringLabel}>ПРОГРЕС</Text>
             </View>
           </View>
 
-          {/* Title + current stage */}
-          <Text style={[styles.beliefTitle, { color: C.text }]} numberOfLines={4}>
-            {title}
-          </Text>
-          <Text style={[styles.currentStageText, { color: C.textSecondary }]}>
+          <Text style={S.beliefTitle}>{title}</Text>
+          <Text style={S.currentStage}>
             {completed < 6
-              ? `Поточний етап: ${currentStageName} · ${completed}/6`
-              : `Всі 6 етапів завершено`}
+              ? `Етап ${ub.current_stage} з 6 • ${currentStageName}`
+              : 'Всі 6 етапів завершено'}
           </Text>
 
-          {/* Stage cards */}
-          <View style={styles.stagesList}>
+          <View style={S.stagesContainer}>
             {STAGES.map((stage) => {
-              const status = getStageStatus(stage, ub);
-              const isCurrent = status === 'current';
+              const isCompleted = !!ub.completed_stages?.[stage.key];
+              const isCurrent = !isCompleted && stage.index === ub.current_stage;
+              const isLocked = !isCompleted && !isCurrent;
+
               return (
-                <StageCard
-                  key={stage.key}
-                  stage={stage}
-                  status={status}
-                  reflection={isCurrent ? reflection : ''}
-                  onChangeReflection={setReflection}
-                  saving={saving}
-                  onContinue={handleContinue}
-                  onCoach={() =>
-                    router.push({
-                      pathname: '/ai-coach',
-                      params: { beliefId: ub.id, stageKey: stage.key },
-                    })
-                  }
-                  onCreateTask={handleCreateTask}
-                  showTaskBtn={isCurrent && stage.key === 'action' && showTaskBtn}
-                />
+                <View key={stage.key} style={S.stageCard}>
+                  <View style={S.stageHeader}>
+                    <View
+                      style={[
+                        S.stageIcon,
+                        isCompleted && S.stageIconCompleted,
+                        isLocked && S.stageIconLocked,
+                      ]}
+                    >
+                      {isCompleted ? (
+                        <Check color="#060810" size={20} strokeWidth={2} />
+                      ) : isLocked ? (
+                        <Lock color="rgba(163, 174, 196, 0.4)" size={20} strokeWidth={1.5} />
+                      ) : (
+                        <Text style={S.stageNumber}>{stage.index}</Text>
+                      )}
+                    </View>
+                    <View style={S.stageContent}>
+                      <Text style={[S.stageTitle, isLocked && S.stageTitleLocked]}>
+                        {stage.nameUk}
+                      </Text>
+                      <Text style={[S.stageDescription, isLocked && S.stageDescriptionLocked]}>
+                        {stage.descriptionUk}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {isCurrent && (
+                    <>
+                      <Text style={S.stageQuestion}>{stage.questionUk}</Text>
+                      <View style={S.inputContainer}>
+                        <TextInput
+                          style={S.input}
+                          placeholder="Напишіть вашу відповідь..."
+                          placeholderTextColor="rgba(163, 174, 196, 0.4)"
+                          multiline
+                          numberOfLines={4}
+                          textAlignVertical="top"
+                          value={reflection}
+                          onChangeText={setReflection}
+                        />
+                      </View>
+                      <View style={S.btnRow}>
+                        <Pressable
+                          style={S.coachBtn}
+                          onPress={() =>
+                            router.push({
+                              pathname: '/ai-coach',
+                              params: { beliefId: ub.id, stageKey: stage.key },
+                            })
+                          }
+                        >
+                          <MessageSquare color="#A3AEC4" size={18} strokeWidth={1.5} />
+                          <Text style={S.coachBtnText}>Запитати коуча</Text>
+                        </Pressable>
+                        <Pressable
+                          style={[
+                            S.continueBtn,
+                            (!reflection.trim() || saving) && { opacity: 0.5 },
+                          ]}
+                          onPress={handleContinue}
+                          disabled={!reflection.trim() || saving}
+                        >
+                          {saving ? (
+                            <ActivityIndicator color="#060810" size="small" />
+                          ) : (
+                            <>
+                              <Text style={S.continueBtnText}>Продовжити шлях</Text>
+                              <ArrowRight color="#060810" size={18} strokeWidth={1.5} />
+                            </>
+                          )}
+                        </Pressable>
+                      </View>
+                      {stage.key === 'action' && showTaskBtn && (
+                        <Pressable style={S.taskBtn} onPress={handleCreateTask}>
+                          <Plus color="#C8FF00" size={14} strokeWidth={2} />
+                          <Text style={S.taskBtnText}>Створити задачу</Text>
+                        </Pressable>
+                      )}
+                    </>
+                  )}
+                </View>
               );
             })}
           </View>
 
-          <View style={{ height: 96 }} />
-        </ScrollView>
-
-        {/* Sticky CTA */}
-        <View style={[styles.footer, { backgroundColor: C.bg, borderTopColor: C.border }]}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.ctaBtn,
-              { backgroundColor: C.primary },
-              pressed && { opacity: 0.85 },
-            ]}
-            onPress={() => router.push('/ai-coach')}
-          >
-            <Text style={styles.ctaBtnText}>Записати інсайт</Text>
+          <Pressable style={S.ctaButton} onPress={() => router.push('/ai-coach')}>
+            <Text style={S.ctaButtonText}>Записати інсайт</Text>
           </Pressable>
-        </View>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  root: { flex: 1 },
-
-  scroll: {
-    paddingHorizontal: Spacing.screen,
-    paddingTop: Spacing.base,
+const S = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#060810',
   },
-
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
   backBtn: {
     marginBottom: 8,
     alignSelf: 'flex-start',
   },
-
   ringContainer: {
     alignItems: 'center',
+    justifyContent: 'center',
     marginVertical: 32,
+    position: 'relative',
   },
   ringCenter: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
   },
   ringPercent: {
-    fontFamily: FontFamily.sansExtraBold,
+    fontFamily: 'Inter_800ExtraBold',
     fontSize: 48,
     letterSpacing: -1,
-    lineHeight: 52,
+    color: '#F9FAFF',
   },
   ringLabel: {
-    fontFamily: FontFamily.sansSemiBold,
+    fontFamily: 'Inter_600SemiBold',
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
-    marginTop: 2,
+    color: '#A3AEC4',
+    marginTop: 4,
   },
-
   beliefTitle: {
-    fontFamily: FontFamily.sansExtraBold,
+    fontFamily: 'Inter_800ExtraBold',
     fontSize: 32,
     letterSpacing: -0.5,
+    color: '#F9FAFF',
     textAlign: 'center',
-    lineHeight: 38,
+    marginBottom: 8,
   },
-  currentStageText: {
-    fontFamily: FontFamily.sansMedium,
+  currentStage: {
+    fontFamily: 'Inter_500Medium',
     fontSize: 15,
+    color: '#A3AEC4',
     textAlign: 'center',
-    marginTop: 8,
     marginBottom: 32,
   },
-
-  stagesList: {
+  stagesContainer: {
     gap: 12,
+    marginBottom: 24,
   },
-
-  footer: {
-    paddingHorizontal: Spacing.screen,
-    paddingVertical: 12,
-    borderTopWidth: 1,
+  stageCard: {
+    backgroundColor: '#0B0F18',
+    borderRadius: 16,
+    padding: 20,
   },
-  ctaBtn: {
-    height: 56,
+  stageHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  stageIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(200, 255, 0, 0.09)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  stageIconCompleted: {
+    backgroundColor: '#C8FF00',
+  },
+  stageIconLocked: {
+    backgroundColor: 'rgba(163, 174, 196, 0.12)',
+  },
+  stageNumber: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 17,
+    color: '#C8FF00',
+  },
+  stageContent: {
+    flex: 1,
+  },
+  stageTitle: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 17,
+    color: '#F9FAFF',
+    marginBottom: 4,
+  },
+  stageTitleLocked: {
+    color: 'rgba(163, 174, 196, 0.4)',
+  },
+  stageDescription: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 15,
+    lineHeight: 22,
+    color: '#A3AEC4',
+  },
+  stageDescriptionLocked: {
+    color: 'rgba(163, 174, 196, 0.4)',
+  },
+  stageQuestion: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#A3AEC4',
+    marginTop: 16,
+    marginBottom: 12,
+  },
+  inputContainer: {
+    backgroundColor: '#060810',
     borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  input: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 15,
+    color: '#F9FAFF',
+    minHeight: 80,
+  },
+  btnRow: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'center',
+  },
+  coachBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(163, 174, 196, 0.12)',
+  },
+  coachBtnText: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 13,
+    color: '#A3AEC4',
+  },
+  continueBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#C8FF00',
+    minHeight: 46,
+  },
+  continueBtnText: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 14,
+    color: '#060810',
+  },
+  taskBtn: {
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#C8FF00',
+    backgroundColor: 'rgba(200, 255, 0, 0.09)',
+  },
+  taskBtnText: {
+    fontFamily: 'Inter_600SemiBold',
+    fontSize: 14,
+    color: '#C8FF00',
+  },
+  ctaButton: {
+    backgroundColor: '#C8FF00',
+    borderRadius: 12,
+    height: 56,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  ctaBtnText: {
-    fontFamily: FontFamily.sansBold,
+  ctaButtonText: {
+    fontFamily: 'Inter_700Bold',
     fontSize: 17,
     color: '#060810',
   },

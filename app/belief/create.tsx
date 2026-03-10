@@ -1,435 +1,343 @@
-import { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
-  SafeAreaView,
   ScrollView,
   Pressable,
   TextInput,
-  Animated,
+  StyleSheet,
+  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import { ArrowRight, Check, ChevronLeft } from 'lucide-react-native';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { Icon } from '@/components/ui/Icon';
-import { useTheme } from '@/hooks/useTheme';
 import { useBeliefs } from '@/hooks/useBeliefs';
 import { CATEGORIES, BeliefCategory } from '@/constants/categories';
-import { FontFamily } from '@/constants/typography';
-import { Spacing, Radius } from '@/constants/spacing';
-
-// ─── Example prompts for step 0 ───────────────────────────────────────────────
 
 const BELIEF_EXAMPLES = [
-  'Я не можу встановити вищі ціни',
-  'Мені важко делегувати задачі',
-  'Я не вмію ефективно управляти часом',
-  'Клієнти не готові платити більше',
+  'Я будую компанію на $10M',
+  'Мене шанують клієнти',
+  'Я приймаю великі рішення легко',
 ];
-
-const STEP_TITLES = [
-  'Яка твоя нова установка?',
-  'Яка сфера життя?',
-  'Чому це важливо?',
-];
-
-const STEP_SUBTITLES = [
-  'Починайте з «Я не можу...», «Мені важко...», «Завжди так...»',
-  'Оберіть категорію, яка найкраще описує цю установку',
-  'Розкажіть, чому ця установка має значення для вашого бізнесу',
-];
-
-// ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function CreateBeliefScreen() {
-  const C = useTheme();
   const { createCustomBelief } = useBeliefs();
 
-  const [step, setStep] = useState(0);
-  const slideAnim = useRef(new Animated.Value(0)).current;
-
-  // Step 0
+  const [step, setStep] = useState(1);
   const [beliefText, setBeliefText] = useState('');
-  // Step 1
   const [selectedCategory, setSelectedCategory] = useState<BeliefCategory | null>(null);
-  // Step 2
-  const [conviction, setConviction] = useState('');
-
+  const [why, setWhy] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const animateStep = () => {
-    Animated.sequence([
-      Animated.timing(slideAnim, { toValue: -20, duration: 120, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 180, useNativeDriver: true }),
-    ]).start();
-  };
-
-  const nextStep = () => {
-    animateStep();
-    setStep((s) => s + 1);
-  };
-
-  const prevStep = () => {
-    animateStep();
-    setStep((s) => s - 1);
-  };
-
   const handleSave = async () => {
-    if (!beliefText.trim() || !conviction.trim()) return;
+    if (!beliefText.trim()) return;
     setSaving(true);
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     try {
-      const created = await createCustomBelief({
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      await createCustomBelief({
         belief: beliefText.trim(),
-        conviction: conviction.trim(),
-        source: undefined,
-        newBelief: undefined,
-        experiment: undefined,
-        identity: undefined,
-        score: 5,
+        conviction: why.trim() || beliefText.trim(),
+        score: 7,
       });
-      if (created) {
-        router.replace(`/belief/${created.id}`);
-      }
+      router.back();
     } finally {
       setSaving(false);
     }
   };
 
-  const canProceed = [
-    beliefText.trim().length >= 5,
-    selectedCategory !== null,
-    conviction.trim().length >= 5,
-  ][step];
-
-  const progressFill = `${((step + 1) / 3) * 100}%`;
+  const canProceed =
+    step === 1 ? beliefText.trim().length > 0 :
+    step === 2 ? !!selectedCategory :
+    why.trim().length > 0;
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: C.bg }]}>
-      {/* Progress bar */}
-      <View style={styles.progressContainer}>
-        <View style={[styles.progressTrack, { backgroundColor: C.border }]}>
-          <View
-            style={[
-              styles.progressFill,
-              { backgroundColor: C.primary, width: progressFill as any },
-            ]}
-          />
+    <SafeAreaView style={S.container}>
+      <View style={S.progressContainer}>
+        <View style={S.progressBar}>
+          <View style={[S.progressFill, { width: `${(step / 3) * 100}%` as `${number}%` }]} />
         </View>
-        <Text style={[styles.progressText, { color: C.textSecondary }]}>
-          Крок {step + 1} з 3
-        </Text>
+        <Text style={S.progressText}>Крок {step} з 3</Text>
       </View>
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.scroll}
-        >
-          <Animated.View style={{ transform: [{ translateX: slideAnim }] }}>
-            {/* Step header */}
-            <Text style={[styles.stepTitle, { color: C.text }]}>
-              {STEP_TITLES[step]}
-            </Text>
-            <Text style={[styles.stepSubtitle, { color: C.textSecondary }]}>
-              {STEP_SUBTITLES[step]}
-            </Text>
+        <ScrollView style={S.scroll} contentContainerStyle={S.scrollContent}>
+          {step === 1 && (
+            <>
+              <Text style={S.title}>Яка твоя нова установка?</Text>
+              <Text style={S.subtitle}>
+                Почни з "Я..." та опиши те, ким ти хочеш стати. Не пиши "хочу" — пиши ніби це вже реальність.
+              </Text>
 
-            {/* Step 0: belief text + example chips */}
-            {step === 0 && (
-              <View>
-                <View style={[styles.inputCard, { backgroundColor: C.surface1 }]}>
-                  <TextInput
-                    style={[styles.inputCardText, { color: C.text }]}
-                    placeholder="Я не можу підвищити ціни..."
-                    placeholderTextColor={C.textTertiary}
-                    multiline
-                    textAlignVertical="top"
-                    value={beliefText}
-                    onChangeText={setBeliefText}
-                    autoFocus
-                  />
-                </View>
+              <View style={S.inputCard}>
+                <TextInput
+                  style={S.input}
+                  placeholder="Я заробляю $50K/міс"
+                  placeholderTextColor="rgba(163, 174, 196, 0.4)"
+                  value={beliefText}
+                  onChangeText={setBeliefText}
+                  multiline
+                  numberOfLines={3}
+                  autoFocus
+                />
+              </View>
 
-                <Text style={[styles.examplesLabel, { color: C.textSecondary }]}>
-                  ПРИКЛАДИ
-                </Text>
-
-                {BELIEF_EXAMPLES.map((example) => (
+              <View style={S.examples}>
+                <Text style={S.examplesLabel}>ПРИКЛАДИ</Text>
+                {BELIEF_EXAMPLES.map((example, index) => (
                   <Pressable
-                    key={example}
-                    style={({ pressed }) => [
-                      styles.exampleChip,
-                      { backgroundColor: C.surface1 },
-                      pressed && { opacity: 0.7 },
-                    ]}
-                    onPress={() => {
-                      setBeliefText(example);
-                      Haptics.selectionAsync();
-                    }}
+                    key={index}
+                    style={S.exampleChip}
+                    onPress={() => setBeliefText(example)}
                   >
-                    <Text style={[styles.exampleChipText, { color: C.text }]}>
-                      {example}
+                    <Text style={S.exampleText}>{example}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <Text style={S.title}>Яка сфера життя?</Text>
+              <Text style={S.subtitle}>
+                Обери категорію, щоб ми могли краще трекати твій прогрес.
+              </Text>
+
+              <View style={S.categoriesGrid}>
+                {CATEGORIES.map((cat) => (
+                  <Pressable
+                    key={cat.key}
+                    style={[
+                      S.categoryCard,
+                      selectedCategory === cat.key && S.categoryCardSelected,
+                    ]}
+                    onPress={() => setSelectedCategory(cat.key)}
+                  >
+                    {selectedCategory === cat.key && (
+                      <View style={S.categoryCheck}>
+                        <Check color="#060810" size={16} strokeWidth={2} />
+                      </View>
+                    )}
+                    <Text
+                      style={[
+                        S.categoryText,
+                        selectedCategory === cat.key && S.categoryTextSelected,
+                      ]}
+                    >
+                      {cat.nameUk}
                     </Text>
                   </Pressable>
                 ))}
               </View>
-            )}
+            </>
+          )}
 
-            {/* Step 1: category grid */}
-            {step === 1 && (
-              <View style={styles.categoriesGrid}>
-                {CATEGORIES.map((cat) => {
-                  const isSelected = selectedCategory === cat.key;
-                  return (
-                    <Pressable
-                      key={cat.key}
-                      style={({ pressed }) => [
-                        styles.categoryCard,
-                        { backgroundColor: isSelected ? C.primary : C.surface1 },
-                        pressed && { opacity: 0.85 },
-                      ]}
-                      onPress={() => {
-                        setSelectedCategory(isSelected ? null : cat.key);
-                        Haptics.selectionAsync();
-                      }}
-                    >
-                      <View style={styles.categoryCardInner}>
-                        <Icon
-                          name={cat.icon}
-                          size={22}
-                          color={isSelected ? '#060810' : C.textSecondary}
-                          strokeWidth={1.5}
-                        />
-                        <Text
-                          style={[
-                            styles.categoryCardText,
-                            { color: isSelected ? '#060810' : C.text },
-                          ]}
-                        >
-                          {cat.nameUk}
-                        </Text>
-                      </View>
+          {step === 3 && (
+            <>
+              <Text style={S.title}>Чому це важливо?</Text>
+              <Text style={S.subtitle}>
+                Напиши чесно — для себе. Ніхто це не побачить. Це якір, до якого ти повернешся в моменти сумніву.
+              </Text>
 
-                      {isSelected && (
-                        <View style={[styles.categoryCheck, { backgroundColor: '#060810' }]}>
-                          <Icon name="Check" size={14} strokeWidth={2.5} color={C.primary} />
-                        </View>
-                      )}
-                    </Pressable>
-                  );
-                })}
-              </View>
-            )}
-
-            {/* Step 2: why textarea */}
-            {step === 2 && (
-              <View style={[styles.inputCard, { backgroundColor: C.surface1 }]}>
+              <View style={S.inputCard}>
                 <TextInput
-                  style={[styles.inputCardTextLarge, { color: C.text }]}
-                  placeholder="Ця установка заважає мені розвивати бізнес, тому що..."
-                  placeholderTextColor={C.textTertiary}
+                  style={[S.input, S.inputLarge]}
+                  placeholder="Тому що..."
+                  placeholderTextColor="rgba(163, 174, 196, 0.4)"
+                  value={why}
+                  onChangeText={setWhy}
                   multiline
-                  textAlignVertical="top"
-                  value={conviction}
-                  onChangeText={setConviction}
+                  numberOfLines={6}
                   autoFocus
                 />
               </View>
-            )}
-          </Animated.View>
+            </>
+          )}
         </ScrollView>
 
-        {/* Sticky footer */}
-        <View style={[styles.footer, { backgroundColor: C.bg, borderTopColor: C.border }]}>
-          <View style={styles.footerRow}>
-            {step > 0 && (
-              <Pressable
-                style={({ pressed }) => [
-                  styles.backBtn,
-                  { borderColor: C.border },
-                  pressed && { opacity: 0.7 },
-                ]}
-                onPress={prevStep}
-              >
-                <Icon name="ArrowLeft" size={20} color={C.textSecondary} />
-              </Pressable>
-            )}
-
+        <View style={S.footer}>
+          {step > 1 && (
+            <Pressable style={S.backBtn} onPress={() => setStep(step - 1)}>
+              <ChevronLeft color="#A3AEC4" size={20} strokeWidth={1.5} />
+            </Pressable>
+          )}
+          {step < 3 ? (
             <Pressable
-              style={({ pressed }) => [
-                styles.nextBtn,
-                {
-                  backgroundColor: canProceed ? C.primary : C.primary + '4D',
-                  flex: 1,
-                },
-                pressed && canProceed && { transform: [{ scale: 0.97 }] },
-              ]}
-              onPress={step < 2 ? nextStep : handleSave}
+              style={[S.ctaButton, !canProceed && S.ctaButtonDisabled, { flex: 1 }]}
+              onPress={() => setStep(step + 1)}
+              disabled={!canProceed}
+            >
+              <Text style={S.ctaButtonText}>Далі</Text>
+              <ArrowRight color="#060810" size={20} strokeWidth={2} />
+            </Pressable>
+          ) : (
+            <Pressable
+              style={[S.ctaButton, (!canProceed || saving) && S.ctaButtonDisabled, { flex: 1 }]}
+              onPress={handleSave}
               disabled={!canProceed || saving}
             >
               {saving ? (
                 <ActivityIndicator color="#060810" size="small" />
-              ) : step < 2 ? (
-                <>
-                  <Text style={styles.nextBtnText}>Далі</Text>
-                  <Icon name="ArrowRight" size={18} color="#060810" />
-                </>
               ) : (
-                <Text style={styles.nextBtnText}>Створити установку</Text>
+                <Text style={S.ctaButtonText}>Створити установку</Text>
               )}
             </Pressable>
-          </View>
+          )}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  root: { flex: 1 },
-
-  progressContainer: {
-    paddingHorizontal: Spacing.screen,
-    paddingTop: Spacing.lg,
-    paddingBottom: Spacing.base,
+const S = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#060810',
   },
-  progressTrack: {
+  progressContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 12,
+  },
+  progressBar: {
     height: 4,
+    backgroundColor: 'rgba(163, 174, 196, 0.12)',
     borderRadius: 2,
+    marginBottom: 8,
     overflow: 'hidden',
-    marginBottom: 10,
   },
   progressFill: {
     height: 4,
-    borderRadius: 2,
+    backgroundColor: '#C8FF00',
   },
   progressText: {
-    fontFamily: FontFamily.sansSemiBold,
+    fontFamily: 'Inter_600SemiBold',
     fontSize: 13,
+    color: '#A3AEC4',
   },
-
   scroll: {
-    paddingHorizontal: Spacing.screen,
-    paddingTop: Spacing.sm,
-    paddingBottom: Spacing.xl,
+    flex: 1,
   },
-
-  stepTitle: {
-    fontFamily: FontFamily.sansExtraBold,
+  scrollContent: {
+    padding: 20,
+  },
+  title: {
+    fontFamily: 'Inter_800ExtraBold',
     fontSize: 32,
     letterSpacing: -0.5,
-    lineHeight: 38,
-    marginBottom: 8,
+    color: '#F9FAFF',
+    marginBottom: 12,
   },
-  stepSubtitle: {
-    fontFamily: FontFamily.sansMedium,
+  subtitle: {
+    fontFamily: 'Inter_500Medium',
     fontSize: 15,
     lineHeight: 22,
+    color: '#A3AEC4',
     marginBottom: 24,
   },
-
   inputCard: {
-    borderRadius: Radius.lg,
+    backgroundColor: '#0B0F18',
+    borderRadius: 16,
     padding: 20,
     marginBottom: 24,
   },
-  inputCardText: {
-    fontFamily: FontFamily.sansMedium,
+  input: {
+    fontFamily: 'Inter_500Medium',
     fontSize: 17,
-    lineHeight: 26,
+    color: '#F9FAFF',
     minHeight: 60,
   },
-  inputCardTextLarge: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 17,
-    lineHeight: 26,
+  inputLarge: {
     minHeight: 120,
   },
-
+  examples: {
+    gap: 12,
+  },
   examplesLabel: {
-    fontFamily: FontFamily.sansSemiBold,
+    fontFamily: 'Inter_600SemiBold',
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
-    marginBottom: 12,
-  },
-  exampleChip: {
-    borderRadius: Radius.md,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
+    color: '#A3AEC4',
     marginBottom: 8,
   },
-  exampleChipText: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 15,
-    lineHeight: 22,
+  exampleChip: {
+    backgroundColor: '#0B0F18',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
   },
-
+  exampleText: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 15,
+    color: '#F9FAFF',
+  },
   categoriesGrid: {
     gap: 12,
   },
   categoryCard: {
-    borderRadius: Radius.lg,
+    backgroundColor: '#0B0F18',
+    borderRadius: 16,
     padding: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     position: 'relative',
   },
-  categoryCardInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  categoryCardText: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 17,
+  categoryCardSelected: {
+    backgroundColor: '#C8FF00',
   },
   categoryCheck: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
     width: 24,
     height: 24,
     borderRadius: 12,
+    backgroundColor: '#060810',
     alignItems: 'center',
     justifyContent: 'center',
   },
-
-  footer: {
-    borderTopWidth: 1,
-    padding: Spacing.lg,
+  categoryText: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 17,
+    color: '#F9FAFF',
   },
-  footerRow: {
+  categoryTextSelected: {
+    color: '#060810',
+  },
+  footer: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(163, 174, 196, 0.12)',
     flexDirection: 'row',
     gap: 12,
-    alignItems: 'center',
   },
   backBtn: {
     width: 56,
     height: 56,
-    borderRadius: Radius.md,
-    borderWidth: 1.5,
+    borderRadius: 12,
+    backgroundColor: '#0B0F18',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  nextBtn: {
+  ctaButton: {
+    backgroundColor: '#C8FF00',
+    borderRadius: 12,
     height: 56,
-    borderRadius: Radius.md,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row',
     gap: 8,
   },
-  nextBtnText: {
-    fontFamily: FontFamily.sansBold,
+  ctaButtonDisabled: {
+    backgroundColor: 'rgba(200, 255, 0, 0.3)',
+  },
+  ctaButtonText: {
+    fontFamily: 'Inter_700Bold',
     fontSize: 17,
     color: '#060810',
   },

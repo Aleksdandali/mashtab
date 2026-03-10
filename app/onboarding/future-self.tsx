@@ -1,283 +1,181 @@
-import { useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  SafeAreaView,
-  Animated,
-  Pressable,
-} from 'react-native';
+import React from 'react';
+import { View, Text, ScrollView, Pressable, StyleSheet, SafeAreaView } from 'react-native';
+import { ArrowRight } from 'lucide-react-native';
 import { router } from 'expo-router';
-import { Colors as C } from '@/constants/colors';
-import { FontFamily } from '@/constants/typography';
-import { Radius, Spacing } from '@/constants/spacing';
-import { BeliefCategory } from '@/constants/categories';
-import { SAMPLE_BELIEFS } from '@/constants/sample-beliefs';
-import { getAnswers } from '@/lib/onboarding-storage';
-import { Icon } from '@/components/ui/Icon';
 
-// ─── Positive outcomes per category ──────────────────────────────────────────
-
-const OUTCOMES: Record<BeliefCategory, string> = {
-  pricing: 'впевнено встановлювати ціни, що відображають реальну цінність вашої роботи',
-  delegation: 'будувати команду і масштабувати бізнес без вашої прямої участі в кожному процесі',
-  fear: 'діяти попри невизначеність і перетворювати провали на точки зростання',
-  selfworth: 'приймати рішення з позиції впевненості та не продавати себе дешевше за свою цінність',
-  growth: 'свідомо масштабувати бізнес за чіткою стратегією без відчуття хаосу',
-  time: 'управляти часом стратегічно і мати простір для відновлення та стратегії',
-  relationships: 'будувати сильні партнерства і залучати потрібних людей у свій бізнес',
-  money: 'приймати фінансові рішення без внутрішніх обмежень і будувати систему достатку',
-};
-
-const HARDCODED_CARDS = [
+const TRANSFORMATIONS = [
   { was: 'Працював 80 год/тиждень', becomes: '4-денний робочий тиждень' },
   { was: 'Боявся делегувати', becomes: 'Команда з 12 людей' },
   { was: '$5K/міс revenue', becomes: '$50K/міс стабільно' },
+  { was: 'Синдром самозванця', becomes: 'Впевненість у рішеннях' },
 ];
 
-// ─── Transformation Card ──────────────────────────────────────────────────────
-
-function TransformCard({
-  was,
-  becomes,
-  delay,
-}: {
-  was: string;
-  becomes: string;
-  delay: number;
-}) {
-  const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(28)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(opacity, { toValue: 1, duration: 500, delay, useNativeDriver: true }),
-      Animated.timing(translateY, { toValue: 0, duration: 450, delay, useNativeDriver: true }),
-    ]).start();
-  }, []);
-
-  return (
-    <Animated.View style={[styles.card, { opacity, transform: [{ translateY }] }]}>
-      <View style={styles.wasSection}>
-        <Text style={styles.sectionLabel}>БУЛО</Text>
-        <Text style={styles.wasText}>"{was}"</Text>
-      </View>
-
-      <View style={styles.arrowContainer}>
-        <Icon name="ArrowRight" size={24} color={C.primary} strokeWidth={1.5} />
-      </View>
-
-      <View style={styles.becomesSection}>
-        <Text style={styles.sectionLabel}>СТАНЕ МОЖЛИВИМ</Text>
-        <Text style={styles.becomesText}>{becomes}</Text>
-      </View>
-    </Animated.View>
-  );
-}
-
-// ─── Screen ───────────────────────────────────────────────────────────────────
-
 export default function FutureSelfScreen() {
-  const [cardData, setCardData] = useState<{ was: string; becomes: string }[]>([]);
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      const answers = await getAnswers();
-      const answered = answers.filter((a) => a.score > 0);
-
-      if (answered.length >= 3) {
-        const top3 = answered
-          .sort((a, b) => b.score - a.score)
-          .slice(0, 3)
-          .map((a) => {
-            const belief = SAMPLE_BELIEFS.find((b) => b.id === a.beliefId);
-            return {
-              was: belief?.belief_uk ?? a.category,
-              becomes: OUTCOMES[a.category as BeliefCategory] ?? a.category,
-            };
-          });
-        setCardData(top3);
-      } else {
-        setCardData(HARDCODED_CARDS);
-      }
-
-      setLoaded(true);
-    })();
-  }, []);
-
-  if (!loaded) return <View style={styles.root} />;
+  const transformations = TRANSFORMATIONS;
 
   return (
-    <SafeAreaView style={styles.root}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Майбутнє Я</Text>
+    <SafeAreaView style={S.container}>
+      <View style={S.header}>
+        <Text style={S.title}>Майбутнє Я</Text>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Intro */}
-        <Text style={styles.introText}>
-          Ось як виглядає ваше підприємницьке життя через 3 місяці після того, як ви пропрацюєте
-          ключові обмеження.
+      <ScrollView style={S.scroll} contentContainerStyle={S.scrollContent}>
+        <Text style={S.intro}>
+          Це не мрії — це конкретні трансформації, які станеться, коли ти інтегруєш нові установки.
         </Text>
 
-        {/* Transformation cards */}
-        {cardData.map((item, i) => (
-          <TransformCard key={i} was={item.was} becomes={item.becomes} delay={200 + i * 160} />
+        {transformations.map((item, index) => (
+          <View key={index} style={S.transformCard}>
+            <View style={S.wasSection}>
+              <Text style={S.label}>БУЛО</Text>
+              <Text style={S.wasText}>{item.was}</Text>
+            </View>
+
+            <View style={S.arrowContainer}>
+              <ArrowRight color="#C8FF00" size={24} strokeWidth={1.5} />
+            </View>
+
+            <View style={S.becomesSection}>
+              <Text style={S.label}>СТАНЕ МОЖЛИВИМ</Text>
+              <Text style={S.becomesText}>{item.becomes}</Text>
+            </View>
+          </View>
         ))}
 
-        {/* Reflection card */}
-        <View style={styles.reflectionCard}>
-          <Text style={styles.reflectionLabel}>РЕФЛЕКСІЯ</Text>
-          <Text style={styles.reflectionQuestion}>
-            Як би змінилось ваше підприємницьке життя без цих обмежень?
+        <View style={S.reflectionCard}>
+          <Text style={S.reflectionLabel}>РЕФЛЕКСІЯ</Text>
+          <Text style={S.reflectionQuestion}>
+            Хто ти станеш через рік, якщо продовжиш цей шлях?
           </Text>
-          <Pressable
-            style={({ pressed }) => [styles.reflectionButton, pressed && { opacity: 0.7 }]}
-            onPress={() => router.push('/ai-coach')}
-          >
-            <Text style={styles.reflectionButtonText}>Записати думки</Text>
+          <Pressable style={S.reflectionButton} onPress={() => router.push('/ai-coach')}>
+            <Text style={S.reflectionButtonText}>Записати думки</Text>
           </Pressable>
         </View>
-
-        {/* CTA */}
-        <Pressable
-          style={({ pressed }) => [styles.ctaButton, pressed && { opacity: 0.85 }]}
-          onPress={() => router.push('/onboarding/paywall')}
-        >
-          <Text style={styles.ctaText}>Почати трансформацію</Text>
-        </Pressable>
       </ScrollView>
+
+      <View style={S.footer}>
+        <Pressable style={S.ctaButton} onPress={() => router.push('/onboarding/paywall')}>
+          <Text style={S.ctaButtonText}>Почати трансформацію</Text>
+          <ArrowRight color="#060810" size={20} strokeWidth={2} />
+        </Pressable>
+      </View>
     </SafeAreaView>
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  root: {
+const S = StyleSheet.create({
+  container: {
     flex: 1,
-    backgroundColor: C.bg,
+    backgroundColor: '#060810',
   },
-
   header: {
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: C.border,
+    borderBottomColor: 'rgba(163, 174, 196, 0.12)',
   },
-  headerTitle: {
-    fontFamily: FontFamily.sansExtraBold,
+  title: {
+    fontFamily: 'Inter_800ExtraBold',
     fontSize: 32,
     letterSpacing: -0.5,
-    color: C.text,
+    color: '#F9FAFF',
   },
-
+  scroll: {
+    flex: 1,
+  },
   scrollContent: {
     padding: 20,
-    paddingBottom: 48,
   },
-
-  introText: {
-    fontFamily: FontFamily.sansMedium,
+  intro: {
+    fontFamily: 'Inter_500Medium',
     fontSize: 15,
     lineHeight: 22,
-    color: C.textSecondary,
+    color: '#A3AEC4',
     marginBottom: 24,
   },
-
-  // Transformation card
-  card: {
-    backgroundColor: C.surface1,
-    borderRadius: Radius.lg,
-    padding: Spacing.xl,
+  transformCard: {
+    backgroundColor: '#0B0F18',
+    borderRadius: 16,
+    padding: 24,
     marginBottom: 16,
   },
-
   wasSection: {
     marginBottom: 20,
   },
-  sectionLabel: {
-    fontFamily: FontFamily.sansSemiBold,
+  label: {
+    fontFamily: 'Inter_600SemiBold',
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
-    color: C.textSecondary,
+    color: '#A3AEC4',
     marginBottom: 8,
   },
   wasText: {
-    fontFamily: FontFamily.sansMedium,
+    fontFamily: 'Inter_500Medium',
     fontSize: 15,
     lineHeight: 22,
-    color: 'rgba(163,174,196,0.4)',
+    color: 'rgba(163, 174, 196, 0.4)',
   },
-
   arrowContainer: {
     alignItems: 'center',
     marginVertical: 16,
   },
-
   becomesSection: {
     marginTop: 20,
   },
   becomesText: {
-    fontFamily: FontFamily.sansBold,
+    fontFamily: 'Inter_700Bold',
     fontSize: 17,
-    lineHeight: 24,
-    color: C.text,
+    color: '#F9FAFF',
   },
-
-  // Reflection card
   reflectionCard: {
-    backgroundColor: C.surface2,
-    borderRadius: Radius.lg,
-    padding: Spacing.xl,
-    marginBottom: 16,
+    backgroundColor: '#111622',
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 24,
   },
   reflectionLabel: {
-    fontFamily: FontFamily.sansSemiBold,
+    fontFamily: 'Inter_600SemiBold',
     fontSize: 11,
     textTransform: 'uppercase',
     letterSpacing: 1.5,
-    color: C.textSecondary,
-    marginBottom: 8,
+    color: '#A3AEC4',
+    marginBottom: 12,
   },
   reflectionQuestion: {
-    fontFamily: FontFamily.sansBold,
+    fontFamily: 'Inter_700Bold',
     fontSize: 20,
-    lineHeight: 28,
-    color: C.text,
+    color: '#F9FAFF',
     marginBottom: 20,
   },
   reflectionButton: {
-    backgroundColor: C.primaryMuted,
-    borderRadius: Radius.md,
+    backgroundColor: 'rgba(200, 255, 0, 0.09)',
+    borderRadius: 12,
     height: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
   reflectionButtonText: {
-    fontFamily: FontFamily.sansSemiBold,
+    fontFamily: 'Inter_600SemiBold',
     fontSize: 15,
-    color: C.primary,
+    color: '#C8FF00',
   },
-
-  // CTA
+  footer: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(163, 174, 196, 0.12)',
+  },
   ctaButton: {
-    backgroundColor: C.primary,
-    borderRadius: Radius.md,
+    backgroundColor: '#C8FF00',
+    borderRadius: 12,
     height: 56,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 8,
+    flexDirection: 'row',
+    gap: 8,
   },
-  ctaText: {
-    fontFamily: FontFamily.sansBold,
+  ctaButtonText: {
+    fontFamily: 'Inter_700Bold',
     fontSize: 17,
     color: '#060810',
   },

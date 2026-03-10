@@ -1,269 +1,161 @@
-import { useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  SafeAreaView,
-  Pressable,
-  ActivityIndicator,
-} from 'react-native';
-import { router, useFocusEffect } from 'expo-router';
-import { useTheme } from '@/hooks/useTheme';
-import {
-  useBeliefs,
-  getBeliefTitle,
-  getCompletedStages,
-} from '@/hooks/useBeliefs';
-import { Icon } from '@/components/ui/Icon';
-import { FontFamily } from '@/constants/typography';
-import { Spacing } from '@/constants/spacing';
-import { UserBelief } from '@/types';
-
-// ─── Stage name map ────────────────────────────────────────────────────────────
-
-const STAGE_NAMES: Record<number, string> = {
-  1: 'Усвідомлення',
-  2: 'Розуміння',
-  3: 'Прийняття',
-  4: 'Інтеграція',
-  5: 'Практика',
-  6: 'Ідентичність',
-};
-
-// ─── Belief Card ──────────────────────────────────────────────────────────────
-
-function BeliefCard({ ub }: { ub: UserBelief }) {
-  const C = useTheme();
-  const title = getBeliefTitle(ub);
-  const completed = getCompletedStages(ub);
-  const progress = Math.round((completed / 6) * 100);
-  const stageNum = ub.current_stage ?? 1;
-  const stageName = STAGE_NAMES[stageNum] ?? 'Усвідомлення';
-
-  return (
-    <Pressable
-      style={({ pressed }) => [
-        S.card,
-        { backgroundColor: C.surface1 },
-        pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
-      ]}
-      onPress={() => router.push(`/belief/${ub.id}`)}
-    >
-      <View style={S.cardRow}>
-        {/* Progress ring */}
-        <View style={[S.progressRing, { borderColor: C.primary }]}>
-          <Text style={[S.progressRingText, { color: C.primary }]}>{progress}%</Text>
-        </View>
-
-        {/* Content */}
-        <View style={S.cardContent}>
-          <Text style={[S.beliefTitle, { color: C.text }]} numberOfLines={2}>
-            {title}
-          </Text>
-          <Text style={[S.beliefStage, { color: C.textSecondary }]}>
-            Етап {stageNum} · {stageName}
-          </Text>
-        </View>
-
-        <Icon name="ChevronRight" size={20} color={C.textSecondary} />
-      </View>
-    </Pressable>
-  );
-}
-
-// ─── Empty State ──────────────────────────────────────────────────────────────
-
-function EmptyState() {
-  const C = useTheme();
-  return (
-    <Pressable
-      style={({ pressed }) => [
-        S.emptyCard,
-        { backgroundColor: C.surface1, borderColor: C.border },
-        pressed && { opacity: 0.75 },
-      ]}
-      onPress={() => router.push('/belief/create')}
-    >
-      <Icon name="Plus" size={32} color={C.textSecondary} />
-      <Text style={[S.emptyText, { color: C.textSecondary }]}>Додати нову установку</Text>
-    </Pressable>
-  );
-}
-
-// ─── Main Screen ──────────────────────────────────────────────────────────────
+import React, { useEffect } from 'react';
+import { View, Text, ScrollView, Pressable, StyleSheet, SafeAreaView } from 'react-native';
+import { Plus, ChevronRight } from 'lucide-react-native';
+import { router } from 'expo-router';
+import { useBeliefs, getBeliefTitle, getCompletedStages } from '@/hooks/useBeliefs';
+import { STAGES } from '@/constants/stages';
 
 export default function MindsetScreen() {
-  const C = useTheme();
   const { beliefs, loading, fetchBeliefs } = useBeliefs();
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchBeliefs();
-    }, [fetchBeliefs]),
-  );
+  useEffect(() => {
+    fetchBeliefs();
+  }, []);
+
+  const activeBeliefs = beliefs.filter((b) => !b.completed_at);
 
   return (
-    <SafeAreaView style={[S.root, { backgroundColor: C.bg }]}>
-      {/* Header */}
-      <View style={[S.header, { borderBottomColor: C.border }]}>
-        <View style={S.headerLeft}>
-          <Text style={[S.headerTitle, { color: C.text }]}>Установки</Text>
-          <Text style={[S.headerSubtitle, { color: C.textSecondary }]}>
-            Це не афірмації. Це база твоєї нової реальності.
-          </Text>
-        </View>
-        <Pressable
-          onPress={() => router.push('/belief/create')}
-          style={({ pressed }) => [
-            S.addButton,
-            { backgroundColor: C.primary },
-            pressed && { opacity: 0.85, transform: [{ scale: 0.95 }] },
-          ]}
-        >
-          <Icon name="Plus" size={24} color="#060810" />
+    <SafeAreaView style={S.container}>
+      <View style={S.header}>
+        <Text style={S.title}>Установки</Text>
+        <Pressable style={S.addButton} onPress={() => router.push('/belief/create')}>
+          <Plus color="#060810" size={24} strokeWidth={1.5} />
         </Pressable>
       </View>
 
-      {loading && beliefs.length === 0 ? (
-        <View style={S.loader}>
-          <ActivityIndicator color={C.primary} />
-        </View>
-      ) : (
-        <ScrollView
-          contentContainerStyle={S.scroll}
-          showsVerticalScrollIndicator={false}
-        >
-          {beliefs.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <>
-              {beliefs.map((ub) => (
-                <BeliefCard key={ub.id} ub={ub} />
-              ))}
+      <ScrollView style={S.scroll} contentContainerStyle={S.scrollContent}>
+        <Text style={S.subtitle}>
+          Це не афірмації. Це база твоєї нової реальності. Кожна установка проходить 6 етапів трансформації.
+        </Text>
 
-              <Pressable
-                style={({ pressed }) => [
-                  S.addCard,
-                  { borderColor: C.border },
-                  pressed && { opacity: 0.7, borderColor: 'rgba(200,255,0,0.3)' },
-                ]}
-                onPress={() => router.push('/belief/create')}
-              >
-                <Icon name="Plus" size={32} color={C.textSecondary} />
-                <Text style={[S.addCardText, { color: C.textSecondary }]}>
-                  Додати нову установку
-                </Text>
-              </Pressable>
-            </>
-          )}
-          <View style={{ height: 16 }} />
-        </ScrollView>
-      )}
+        {activeBeliefs.map((belief) => {
+          const completedCount = getCompletedStages(belief);
+          const progress = Math.round((completedCount / 6) * 100);
+          const stageName = STAGES[Math.max(0, belief.current_stage - 1)]?.nameUk ?? '';
+
+          return (
+            <Pressable
+              key={belief.id}
+              style={S.card}
+              onPress={() => router.push(`/belief/${belief.id}`)}
+            >
+              <View style={S.cardTop}>
+                <View style={S.progressRing}>
+                  <Text style={S.progressPercent}>{progress}%</Text>
+                </View>
+                <View style={S.cardContent}>
+                  <Text style={S.beliefTitle}>{getBeliefTitle(belief)}</Text>
+                  <Text style={S.beliefStage}>Етап • {stageName}</Text>
+                </View>
+                <ChevronRight color="#A3AEC4" size={20} strokeWidth={1.5} />
+              </View>
+            </Pressable>
+          );
+        })}
+
+        <Pressable style={S.emptyCard} onPress={() => router.push('/belief/create')}>
+          <Plus color="#A3AEC4" size={32} strokeWidth={1.5} />
+          <Text style={S.emptyText}>Додати нову установку</Text>
+        </Pressable>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
 const S = StyleSheet.create({
-  root: { flex: 1 },
-
+  container: {
+    flex: 1,
+    backgroundColor: '#060810',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.screen,
+    paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
+    borderBottomColor: 'rgba(163, 174, 196, 0.12)',
   },
-  headerLeft: { flex: 1, paddingRight: 16 },
-  headerTitle: {
-    fontFamily: FontFamily.sansExtraBold,
+  title: {
+    fontFamily: 'Inter_800ExtraBold',
     fontSize: 32,
     letterSpacing: -0.5,
-    marginBottom: 4,
-  },
-  headerSubtitle: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 15,
-    lineHeight: 22,
+    color: '#F9FAFF',
   },
   addButton: {
     width: 48,
     height: 48,
     borderRadius: 24,
+    backgroundColor: '#C8FF00',
     alignItems: 'center',
     justifyContent: 'center',
-    flexShrink: 0,
   },
-
-  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-
-  scroll: { paddingHorizontal: Spacing.screen, paddingTop: 16, gap: 12 },
-
-  // Belief card
-  card: {
-    borderRadius: 16,
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
     padding: 20,
   },
-  cardRow: {
+  subtitle: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 15,
+    lineHeight: 22,
+    color: '#A3AEC4',
+    marginBottom: 24,
+  },
+  card: {
+    backgroundColor: '#0B0F18',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 12,
+  },
+  cardTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
   },
   progressRing: {
     width: 56,
     height: 56,
     borderRadius: 28,
     borderWidth: 3,
+    borderColor: '#C8FF00',
     alignItems: 'center',
     justifyContent: 'center',
-    flexShrink: 0,
+    marginRight: 16,
   },
-  progressRingText: {
-    fontFamily: FontFamily.sansBold,
+  progressPercent: {
+    fontFamily: 'Inter_700Bold',
     fontSize: 15,
+    color: '#C8FF00',
   },
-  cardContent: { flex: 1 },
+  cardContent: {
+    flex: 1,
+  },
   beliefTitle: {
-    fontFamily: FontFamily.sansBold,
+    fontFamily: 'Inter_700Bold',
     fontSize: 17,
-    lineHeight: 23,
+    color: '#F9FAFF',
     marginBottom: 4,
   },
   beliefStage: {
-    fontFamily: FontFamily.sansMedium,
+    fontFamily: 'Inter_500Medium',
     fontSize: 13,
+    color: '#A3AEC4',
   },
-
-  // Add card (dashed)
-  addCard: {
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderRadius: 16,
-    padding: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  addCardText: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 15,
-    marginTop: 12,
-  },
-
-  // Empty state (same as addCard)
   emptyCard: {
-    borderWidth: 2,
-    borderStyle: 'dashed',
+    backgroundColor: '#0B0F18',
     borderRadius: 16,
     padding: 40,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(163, 174, 196, 0.12)',
+    borderStyle: 'dashed',
   },
   emptyText: {
-    fontFamily: FontFamily.sansSemiBold,
+    fontFamily: 'Inter_600SemiBold',
     fontSize: 15,
+    color: '#A3AEC4',
     marginTop: 12,
   },
 });
