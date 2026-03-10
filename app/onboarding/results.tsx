@@ -147,7 +147,7 @@ function CategoryBar({
 
 // ─── Top belief item ──────────────────────────────────────────────────────────
 
-const RANK_COLORS = ['#C8E64A', '#4AE68C', '#7BB8C9'];
+const RANK_COLORS = ['#C8FF00', '#4AE68C', '#7BB8C9'];
 
 function TopBeliefItem({ item }: { item: TopBelief }) {
   const color = CATEGORY_COLORS[item.category];

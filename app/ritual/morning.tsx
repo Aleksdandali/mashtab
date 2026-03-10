@@ -87,7 +87,7 @@ function BeliefSelectCard({
       <Text
         style={[
           beliefCardStyles.title,
-          { color: selected ? '#050608' : C.text },
+          { color: selected ? '#060810' : C.text },
         ]}
         numberOfLines={2}
       >
@@ -107,8 +107,7 @@ const beliefCardStyles = StyleSheet.create({
   catIcon: {},
   title: {
     fontFamily: FontFamily.serifItalic,
-    fontStyle: 'italic',
-    fontSize: 15,
+        fontSize: 15,
     lineHeight: 21,
   },
   stage: {},
@@ -151,7 +150,7 @@ function FocusTaskRow({
           },
         ]}
       >
-        <Icon name="Zap" size={14} color={isFocused ? '#050608' : C.textTertiary} />
+        <Icon name="Zap" size={14} color={isFocused ? '#060810' : C.textTertiary} />
       </View>
       <Text style={[taskRowStyles.title, { color: C.text }]} numberOfLines={2}>
         {task.title}

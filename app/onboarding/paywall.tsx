@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontFamily: FontFamily.sansSemiBold,
     fontSize: 10,
-    color: '#1A1208',
+    color: '#060810',
     letterSpacing: 0.3,
   },
   planRight: {

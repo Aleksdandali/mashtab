@@ -28,7 +28,7 @@ const OUTCOMES: Record<BeliefCategory, { icon: IconName; outcome: string; color:
   pricing: {
     icon: 'Coins',
     outcome: 'впевнено встановлювати ціни, що відображають реальну цінність вашої роботи',
-    color: '#C8E64A',
+    color: '#C8FF00',
   },
   delegation: {
     icon: 'Users',
@@ -106,7 +106,7 @@ function TransformCard({ card, delay }: { card: CardData; delay: number }) {
     >
       {/* БУЛО */}
       <View style={styles.sectionBlock}>
-        <Text style={[styles.wasLabel, { color: 'rgba(242,240,235,0.30)' }]}>БУЛО</Text>
+        <Text style={[styles.wasLabel, { color: 'rgba(163,174,196,0.30)' }]}>БУЛО</Text>
         <Text style={[styles.beliefText, { color: C.textSecondary }]}>"{card.beliefUk}"</Text>
       </View>
 
@@ -289,8 +289,7 @@ const styles = StyleSheet.create({
   withoutLabel: {},
   beliefText: {
     fontFamily: FontFamily.serifItalic,
-    fontStyle: 'italic',
-    fontSize: 16,
+        fontSize: 16,
     lineHeight: 23,
   },
 

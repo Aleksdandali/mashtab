@@ -93,7 +93,7 @@ interface IconProps extends Omit<LucideProps, 'ref'> {
   strokeWidth?: number;
 }
 
-export function Icon({ name, size = 24, color = '#F2F0EB', strokeWidth = 1.5, ...rest }: IconProps) {
+export function Icon({ name, size = 24, color = '#F9FAFF', strokeWidth = 1.5, ...rest }: IconProps) {
   const LucideIcon = ICON_MAP[name] as React.ComponentType<LucideProps>;
   if (!LucideIcon) return null;
   return <LucideIcon size={size} color={color} strokeWidth={strokeWidth} {...rest} />;

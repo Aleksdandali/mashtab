@@ -128,7 +128,7 @@ const variants = (c: typeof Colors): Record<Variant, ViewStyle> => ({
 });
 
 const labelColors = (c: typeof Colors): Record<Variant, TextStyle> => ({
-  primary: { color: '#050608' },
+  primary: { color: '#060810' },
   secondary: { color: c.primary },
   ghost: { color: c.textSecondary },
 });

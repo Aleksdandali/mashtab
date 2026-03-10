@@ -93,7 +93,7 @@ function GoalTaskItem({
           ]}
           onPress={() => onToggle(task.id)}
         >
-          {task.is_completed && <Icon name="Check" size={11} color="#050608" strokeWidth={2.5} />}
+          {task.is_completed && <Icon name="Check" size={11} color="#060810" strokeWidth={2.5} />}
         </Pressable>
         <Text
           style={[

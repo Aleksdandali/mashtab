@@ -171,7 +171,7 @@ function StageRow({
     return (
       <View style={[stageStyles.stageRow, { backgroundColor: C.surface2 }]}>
         <View style={[stageStyles.circle, { backgroundColor: C.primary }]}>
-          <Icon name="Check" size={14} strokeWidth={2.5} color="#050608" />
+          <Icon name="Check" size={14} strokeWidth={2.5} color="#060810" />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={[stageStyles.stageName, { color: C.text }]}>{stage.nameUk}</Text>
@@ -236,7 +236,7 @@ function StageRow({
 
       {/* Question */}
       <View style={stageStyles.questionWrap}>
-        <Text style={[stageStyles.questionText, { color: C.textSecondary, fontStyle: 'italic' }]}>
+        <Text style={[stageStyles.questionText, { color: C.textSecondary }]}>
           {stage.questionUk}
         </Text>
       </View>
@@ -284,7 +284,7 @@ function StageRow({
           disabled={!reflection.trim() || saving}
         >
           {saving ? (
-            <ActivityIndicator color="#050608" size="small" />
+            <ActivityIndicator color="#060810" size="small" />
           ) : (
             <Text style={stageStyles.continueBtnText}>Продовжити шлях</Text>
           )}
@@ -333,7 +333,7 @@ const stageStyles = StyleSheet.create({
   circleNum: {
     fontFamily: FontFamily.sansBold,
     fontSize: 12,
-    color: '#050608',
+    color: '#060810',
   },
   stageName: {
     fontFamily: FontFamily.sansSemiBold,
@@ -403,8 +403,7 @@ const stageStyles = StyleSheet.create({
     fontFamily: FontFamily.sans,
     fontSize: 13,
     lineHeight: 19,
-    fontStyle: 'italic',
-  },
+      },
   questionWrap: { marginBottom: 12 },
   questionText: {
     fontFamily: FontFamily.sans,
@@ -451,7 +450,7 @@ const stageStyles = StyleSheet.create({
     minHeight: 46,
   },
   continueBtnText: {
-    color: '#050608',
+    color: '#060810',
     fontFamily: FontFamily.sansSemiBold,
     fontSize: 14,
   },
@@ -634,8 +633,7 @@ const butterflyStyles = StyleSheet.create({
     fontFamily: FontFamily.serif,
     fontSize: 17,
     fontWeight: '600',
-    fontStyle: 'italic',
-    lineHeight: 24,
+        lineHeight: 24,
   },
   doneBtn: {
     paddingVertical: 14,
@@ -977,8 +975,7 @@ const styles = StyleSheet.create({
 
   beliefTitle: {
     fontFamily: FontFamily.serifItalic,
-    fontStyle: 'italic',
-    fontSize: 18,
+        fontSize: 18,
     lineHeight: 26,
   },
   conviction: {},

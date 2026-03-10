@@ -10,142 +10,86 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { Colors } from '@/constants/colors';
-import { Typography, FontFamily } from '@/constants/typography';
+import { FontFamily } from '@/constants/typography';
 import { Spacing } from '@/constants/spacing';
-import { Button } from '@/components/ui/Button';
 
 const { width, height } = Dimensions.get('window');
 const C = Colors;
 
-// Staggered animation helper
 function useEntrance(delay: number) {
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(20)).current;
-
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 700,
-        delay,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateY, {
-        toValue: 0,
-        duration: 600,
-        delay,
-        useNativeDriver: true,
-      }),
+      Animated.timing(opacity, { toValue: 1, duration: 700, delay, useNativeDriver: true }),
+      Animated.timing(translateY, { toValue: 0, duration: 600, delay, useNativeDriver: true }),
     ]).start();
   }, []);
-
   return { opacity, transform: [{ translateY }] };
 }
 
-function useScaleEntrance(delay: number) {
-  const opacity = useRef(new Animated.Value(0)).current;
-  const scaleX = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.sequence([
-      Animated.delay(delay),
-      Animated.parallel([
-        Animated.timing(opacity, { toValue: 1, duration: 400, useNativeDriver: true }),
-        Animated.spring(scaleX, {
-          toValue: 1,
-          speed: 12,
-          bounciness: 0,
-          useNativeDriver: true,
-        }),
-      ]),
-    ]).start();
-  }, []);
-
-  return { opacity, transform: [{ scaleX }] };
-}
-
 export default function WelcomeScreen() {
-  // Staggered entrance per element
-  const glowStyle  = useEntrance(0);
-  const badgeStyle = useEntrance(200);
-  const logoStyle  = useEntrance(380);
-  const lineStyle  = useScaleEntrance(560);
-  const taglineStyle = useEntrance(620);
-  const descStyle  = useEntrance(780);
-  const btnStyle   = useEntrance(920);
-  const signinStyle = useEntrance(1020);
+  const chipStyle = useEntrance(200);
+  const logoStyle = useEntrance(300);
+  const sloganStyle = useEntrance(500);
+  const descStyle = useEntrance(600);
+  const btnStyle = useEntrance(800);
+  const linkStyle = useEntrance(900);
 
   return (
-    <View style={styles.root}>
-      {/* Background ambient glow */}
-      <Animated.View style={[styles.glowOuter, glowStyle]}>
-        <View style={styles.glowInner} />
-      </Animated.View>
+    <View style={S.root}>
+      {/* Radial glow */}
+      <View style={S.glowWrap}>
+        <View style={S.glow} />
+      </View>
 
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.layout}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <View style={S.layout}>
 
-          {/* ── Top spacer ── */}
-          <View style={styles.topSpacer} />
+          {/* Chip */}
+          <Animated.View style={[S.chip, chipStyle]}>
+            <Text style={S.chipText}>DANGROW ECOSYSTEM</Text>
+          </Animated.View>
 
-          {/* ── Center block ── */}
-          <View style={styles.center}>
-
-            {/* DANGROW badge */}
-            <Animated.View style={[styles.badge, badgeStyle]}>
-              <Text style={styles.badgeText}>DANGROW ECOSYSTEM</Text>
-            </Animated.View>
-
-            {/* Logo */}
-            <Animated.Text style={[styles.logo, logoStyle]}>
+          {/* Center content */}
+          <View style={S.center}>
+            <Animated.Text style={[S.logo, logoStyle]}>
               МАСШТАБ
             </Animated.Text>
 
-            {/* Decorative line */}
-            <View style={styles.lineWrap}>
-              <Animated.View style={[styles.line, lineStyle]} />
-            </View>
-
-            {/* Tagline */}
-            <Animated.Text style={[styles.tagline, taglineStyle]}>
+            <Animated.Text style={[S.slogan, sloganStyle]}>
               Розшир свої межі
             </Animated.Text>
 
-            {/* Description */}
-            <Animated.Text style={[styles.description, descStyle]}>
-              Інструмент для підприємців,{'\n'}
-              які готові зростати зсередини
+            <Animated.Text style={[S.desc, descStyle]}>
+              Перепрошивай установки, масштабуй бізнес, приймай сміливі рішення
             </Animated.Text>
-
           </View>
 
-          {/* ── Bottom block ── */}
-          <View style={styles.bottom}>
-
-            {/* Primary CTA */}
-            <Animated.View style={[styles.btnWrap, btnStyle]}>
-              <Button
-                label="Почати"
-                onPress={() => router.push('/onboarding/social-proof')}
-                variant="primary"
-                size="lg"
-                style={styles.btn}
-              />
-            </Animated.View>
-
-            {/* Sign in link */}
-            <Animated.View style={signinStyle}>
+          {/* Bottom */}
+          <View style={S.bottom}>
+            <Animated.View style={[{ width: '100%' }, btnStyle]}>
               <Pressable
-                onPress={() => router.push('/(auth)/sign-in')}
-                style={({ pressed }) => [styles.signinBtn, pressed && { opacity: 0.6 }]}
+                onPress={() => router.push('/onboarding/social-proof')}
+                style={({ pressed }) => [
+                  S.cta,
+                  pressed && { opacity: 0.9, transform: [{ scale: 0.97 }] },
+                ]}
               >
-                <Text style={styles.signinText}>
-                  Вже маю акаунт
-                  <Text style={styles.signinAccent}> · Увійти</Text>
-                </Text>
+                <Text style={S.ctaText}>Почати</Text>
               </Pressable>
             </Animated.View>
 
+            <Animated.View style={linkStyle}>
+              <Pressable
+                onPress={() => router.push('/(auth)/sign-in')}
+                style={({ pressed }) => [S.loginBtn, pressed && { opacity: 0.6 }]}
+              >
+                <Text style={S.loginText}>
+                  Вже маю акаунт · <Text style={S.loginAccent}>Увійти</Text>
+                </Text>
+              </Pressable>
+            </Animated.View>
           </View>
 
         </View>
@@ -154,134 +98,83 @@ export default function WelcomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: C.bg,
-  },
-  safe: {
-    flex: 1,
-  },
-  layout: {
-    flex: 1,
-    paddingHorizontal: Spacing.screen,
-  },
+const S = StyleSheet.create({
+  root: { flex: 1, backgroundColor: C.bg },
+  layout: { flex: 1, paddingHorizontal: Spacing.screen, paddingTop: 48, paddingBottom: 48 },
 
-  // Background glow
-  glowOuter: {
-    position: 'absolute',
-    top: height * 0.1,
-    left: '50%',
-    marginLeft: -(width * 0.7),
-    width: width * 1.4,
-    height: width * 1.4,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  glowInner: {
-    width: '100%',
-    height: '100%',
-    borderRadius: width * 0.7,
-    backgroundColor: 'rgba(200, 230, 74, 0.04)',
-  },
+  // Glow
+  glowWrap: { position: 'absolute', top: '20%', left: '50%', marginLeft: -250 },
+  glow: { width: 500, height: 500, borderRadius: 250, backgroundColor: 'rgba(200, 255, 0, 0.06)' },
 
-  // Sections
-  topSpacer: {
-    height: height * 0.08,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingBottom: Spacing.xxl,
-  },
-  bottom: {
-    paddingBottom: Spacing.xl,
-    gap: Spacing.base,
-  },
-
-  // Badge
-  badge: {
+  // Chip
+  chip: {
+    alignSelf: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: 'rgba(200, 255, 0, 0.09)',
     borderWidth: 1,
-    borderColor: C.borderMedium,
-    borderRadius: 100,
-    paddingHorizontal: Spacing.base,
-    paddingVertical: 5,
-    marginBottom: Spacing.xl,
+    borderColor: 'rgba(200, 255, 0, 0.2)',
+    marginBottom: 64,
   },
-  badgeText: {
+  chipText: {
     fontFamily: FontFamily.sansSemiBold,
-    fontSize: 10,
-    lineHeight: 14,
-    letterSpacing: 2.5,
-    color: C.textTertiary,
-  },
-
-  // Logo
-  logo: {
-    fontFamily: FontFamily.serifBold,
-    fontSize: 56,
-    lineHeight: 64,
-    letterSpacing: 6,
+    fontSize: 11,
+    letterSpacing: 0.88,
     color: C.primary,
+    textTransform: 'uppercase',
+  },
+
+  // Center
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  logo: {
+    fontFamily: FontFamily.sansExtraBold,
+    fontSize: 72,
+    color: C.primary,
+    letterSpacing: -2.16,
+    lineHeight: 72,
+    marginBottom: 24,
     textAlign: 'center',
   },
-
-  // Decorative line
-  lineWrap: {
-    width: 64,
-    height: 1,
-    marginTop: Spacing.lg,
-    marginBottom: Spacing.xl,
-    overflow: 'hidden',
-  },
-  line: {
-    width: '100%',
-    height: 1,
-    backgroundColor: C.primary,
-    opacity: 0.6,
-  },
-
-  // Tagline
-  tagline: {
-    fontFamily: FontFamily.serifItalic,
-    fontSize: 22,
-    lineHeight: 30,
+  slogan: {
+    fontFamily: FontFamily.sansSemiBold,
+    fontSize: 18,
     color: C.text,
+    letterSpacing: -0.18,
+    marginBottom: 8,
     textAlign: 'center',
-    marginBottom: Spacing.base,
   },
-
-  // Description
-  description: {
+  desc: {
     fontFamily: FontFamily.sans,
     fontSize: 15,
-    lineHeight: 23,
-    color: C.textSecondary,
+    lineHeight: 22,
+    color: '#A3AEC4',
     textAlign: 'center',
+    maxWidth: 340,
   },
 
-  // Button
-  btnWrap: {
+  // Bottom
+  bottom: { gap: 20, alignItems: 'center' },
+  cta: {
     width: '100%',
-  },
-  btn: {
-    width: '100%',
-  },
-
-  // Sign in
-  signinBtn: {
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    backgroundColor: C.primary,
     alignItems: 'center',
-    paddingVertical: Spacing.sm,
   },
-  signinText: {
+  ctaText: {
+    fontFamily: FontFamily.sansBold,
+    fontSize: 16,
+    color: '#060810',
+  },
+  loginBtn: { paddingVertical: 8 },
+  loginText: {
     fontFamily: FontFamily.sansMedium,
     fontSize: 14,
-    lineHeight: 20,
-    color: C.textTertiary,
+    color: '#A3AEC4',
   },
-  signinAccent: {
+  loginAccent: {
     color: C.primary,
-    fontFamily: FontFamily.sansSemiBold,
   },
 });

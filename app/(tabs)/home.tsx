@@ -33,10 +33,10 @@ function RingSvg({ progress, size = 64 }: { progress: number; size?: number }) {
   const cx = size / 2;
   return (
     <Svg width={size} height={size} style={{ transform: [{ rotate: '-90deg' }] }}>
-      <Circle cx={cx} cy={cx} r={R} fill="none" stroke="rgba(242,240,235,0.08)" strokeWidth={4} />
+      <Circle cx={cx} cy={cx} r={R} fill="none" stroke="rgba(163,174,196,0.08)" strokeWidth={4} />
       <Circle
         cx={cx} cy={cx} r={R} fill="none"
-        stroke="#C8E64A" strokeWidth={4}
+        stroke="#C8FF00" strokeWidth={4}
         strokeDasharray={circumference}
         strokeDashoffset={offset}
         strokeLinecap="round"
@@ -225,7 +225,7 @@ function TaskRow({ task, onToggle }: { task: Task; onToggle: (id: string) => voi
       <Animated.View
         style={[S.checkbox, { backgroundColor: checkBg, borderColor: task.is_completed ? C.primary : C.borderMedium }]}
       >
-        {task.is_completed && <Icon name="Check" size={11} color="#050608" strokeWidth={2.5} />}
+        {task.is_completed && <Icon name="Check" size={11} color="#060810" strokeWidth={2.5} />}
       </Animated.View>
       <View style={{ flex: 1 }}>
         <Text
@@ -298,7 +298,7 @@ function FABButton() {
         onPressOut={() => Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 6 }).start()}
         style={[S.fab, { backgroundColor: C.primary }]}
       >
-        <Icon name="MessageCircle" size={24} color="#050608" />
+        <Icon name="MessageCircle" size={24} color="#060810" />
       </Pressable>
     </Animated.View>
   );
@@ -506,7 +506,7 @@ const S = StyleSheet.create({
     borderRadius: 12, paddingVertical: 12, paddingHorizontal: 16,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
-  ritualBtnText: { fontFamily: FontFamily.sansSemiBold, fontSize: 15, color: '#050608' },
+  ritualBtnText: { fontFamily: FontFamily.sansSemiBold, fontSize: 15, color: '#060810' },
   ritualBtnSub: { fontFamily: FontFamily.sans, fontSize: 13 },
 
   // Section
@@ -519,7 +519,7 @@ const S = StyleSheet.create({
   beliefRingWrap: { position: 'relative', width: 64, height: 64, flexShrink: 0 },
   beliefRingCenter: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
   beliefRingText: { fontFamily: FontFamily.sansMedium, fontSize: 11 },
-  beliefQuote: { fontFamily: FontFamily.serifItalic, fontSize: 17, lineHeight: 24, fontStyle: 'italic' },
+  beliefQuote: { fontFamily: FontFamily.serifItalic, fontSize: 17, lineHeight: 24 },
   beliefBar: { gap: 6 },
   beliefBarLabels: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   beliefBarLabel: { fontFamily: FontFamily.sansMedium, fontSize: 11 },

@@ -311,8 +311,7 @@ const styles = StyleSheet.create({
   optional: {
     fontFamily: FontFamily.sans,
     fontSize: 11,
-    fontStyle: 'italic',
-  },
+      },
 
   titleInput: {
     borderRadius: Radius.sm,
@@ -379,8 +378,7 @@ const styles = StyleSheet.create({
   noBeliefs: {
     fontFamily: FontFamily.sans,
     fontSize: 13,
-    fontStyle: 'italic',
-  },
+      },
 
   dateInput: {
     borderRadius: Radius.sm,

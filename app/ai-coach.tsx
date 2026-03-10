@@ -438,7 +438,7 @@ export default function AICoachScreen() {
                 {loading ? (
                   <ActivityIndicator color={C.surface1} size="small" />
                 ) : (
-                  <Icon name="Send" size={16} color={inputText.trim() ? '#050608' : C.textTertiary} strokeWidth={1.5} />
+                  <Icon name="Send" size={16} color={inputText.trim() ? '#060810' : C.textTertiary} strokeWidth={1.5} />
                 )}
               </Pressable>
             </View>

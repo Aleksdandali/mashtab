@@ -1,0 +1,15 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="#060810"/>
+  
+  <!-- Geometric M/Arrow symbol - sharp, bold, upward-pointing -->
+  <!-- Centered with precise geometry inspired by Linear/Raycast minimalism -->
+  <path 
+    d="M 262 712 L 262 312 L 512 512 L 762 312 L 762 712" 
+    stroke="#C8FF00" 
+    stroke-width="32" 
+    stroke-linecap="square" 
+    stroke-linejoin="miter"
+    fill="none"
+  />
+</svg>

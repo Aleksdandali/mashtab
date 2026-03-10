@@ -1,42 +1,41 @@
-// ─── МАСШТАБ Design System — Dark Only ───────────────────────────────────────
+// ─── МАСШТАБ Design System v2 — Neon Lime + Cosmic Dark ──────────────────────
 
 export const Colors = {
   // Backgrounds
-  bg:       '#050608',
-  surface1: '#0C0E12',
-  surface2: '#121418',
-  surface3: '#1A1C22',
+  bg:       '#060810',
+  surface1: '#0B0F18',
+  surface2: '#111622',
+  surface3: '#1A1F2E',
 
-  // Accent — Lime
-  primary:      '#C8E64A',
-  primaryMuted: 'rgba(200, 230, 74, 0.12)',
-  primaryDim:   'rgba(200, 230, 74, 0.06)',
+  // Accent — Neon Lime
+  primary:      '#C8FF00',
+  primaryMuted: 'rgba(200, 255, 0, 0.09)',
+  primaryDim:   'rgba(200, 255, 0, 0.04)',
 
   // Text
-  text:          '#F2F0EB',
-  textSecondary: 'rgba(242, 240, 235, 0.55)',
-  textTertiary:  'rgba(242, 240, 235, 0.30)',
-  textDisabled:  'rgba(242, 240, 235, 0.15)',
+  text:          '#F9FAFF',
+  textSecondary: '#A3AEC4',
+  textTertiary:  'rgba(163, 174, 196, 0.5)',
+  textDisabled:  'rgba(163, 174, 196, 0.3)',
 
   // Borders
-  border:        'rgba(242, 240, 235, 0.06)',
-  borderActive:  'rgba(242, 240, 235, 0.12)',
-  borderMedium:  'rgba(242, 240, 235, 0.12)', // alias for borderActive
+  border:        'rgba(163, 174, 196, 0.12)',
+  borderActive:  'rgba(163, 174, 196, 0.2)',
+  borderMedium:  'rgba(163, 174, 196, 0.2)',
 
   // Accent variants (legacy aliases)
-  primaryLight: 'rgba(200, 230, 74, 0.12)',   // alias for primaryMuted
-  primaryDark:  '#A8C230',                     // slightly darker lime
+  primaryLight: 'rgba(200, 255, 0, 0.09)',
+  primaryDark:  '#A0CC00',
 
   // Semantic
   success: '#4AE68C',
-  error:   '#E64A5E',
+  error:   '#FF4D4F',
   warning: '#E6B44A',
 
   // Tab bar
-  tabInactive: 'rgba(242, 240, 235, 0.30)',
+  tabInactive: 'rgba(163, 174, 196, 0.4)',
 } as const;
 
-// Keep legacy aliases so existing useTheme() calls keep working
 export const DarkColors = Colors;
 export const LightColors = Colors;
 

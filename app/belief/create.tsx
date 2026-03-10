@@ -166,8 +166,7 @@ const inputStyles = StyleSheet.create({
   optional: {
     fontFamily: FontFamily.sans,
     fontSize: 11,
-    fontStyle: 'italic',
-  },
+      },
   input: {
     borderRadius: Radius.sm,
     borderWidth: 1.5,
@@ -602,8 +601,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.serif,
     fontSize: 15,
     fontWeight: '600',
-    fontStyle: 'italic',
-    lineHeight: 22,
+        lineHeight: 22,
   },
 
   aiBtn: {

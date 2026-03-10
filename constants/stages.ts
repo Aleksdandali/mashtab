@@ -81,6 +81,6 @@ export const STAGE_COLORS: Record<StageKey, string> = {
   explore:  '#9B8AC4',
   reality:  '#E8976B',
   replace:  '#7CB392',
-  action:   '#C8E64A',
+  action:   '#C8FF00',
   identity: '#E8C547',
 };

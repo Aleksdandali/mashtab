@@ -216,8 +216,7 @@ const S = StyleSheet.create({
   },
   beliefTitle: {
     fontFamily: FontFamily.serifItalic,
-    fontStyle: 'italic',
-    fontSize: 18,
+        fontSize: 18,
     lineHeight: 25,
   },
   progressWrap: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
@@ -242,5 +241,5 @@ const S = StyleSheet.create({
   emptyTitle: { fontFamily: FontFamily.serifBold, fontSize: 22, textAlign: 'center', marginBottom: 8 },
   emptyBody: { fontFamily: FontFamily.sans, fontSize: 15, lineHeight: 22, textAlign: 'center', marginBottom: 20 },
   diagBtn: { paddingHorizontal: 24, paddingVertical: 14, borderRadius: 12 },
-  diagBtnText: { fontFamily: FontFamily.sansSemiBold, fontSize: 15, color: '#050608' },
+  diagBtnText: { fontFamily: FontFamily.sansSemiBold, fontSize: 15, color: '#060810' },
 });

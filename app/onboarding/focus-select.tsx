@@ -89,7 +89,7 @@ function FocusCard({
         </View>
         {selected && (
           <View style={[styles.checkDot, { backgroundColor: option.color }]}>
-            <Icon name="Check" size={12} color="#050608" strokeWidth={2.5} />
+            <Icon name="Check" size={12} color="#060810" strokeWidth={2.5} />
           </View>
         )}
       </View>
