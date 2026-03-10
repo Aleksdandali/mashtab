@@ -11,14 +11,29 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Switch,
 } from 'react-native';
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/hooks/useTheme';
 import { useBeliefs } from '@/hooks/useBeliefs';
+import { CATEGORIES, BeliefCategory } from '@/constants/categories';
 import { FontFamily } from '@/constants/typography';
 import { Spacing, Radius, Shadow } from '@/constants/spacing';
+
+// ─── Category pills for step 1 ───────────────────────────────────────────────
+
+const PILL_CATEGORIES: { key: BeliefCategory; label: string }[] = [
+  { key: 'money', label: 'ФІНАНСИ' },
+  { key: 'pricing', label: 'ПРОДАЖІ' },
+  { key: 'selfworth', label: 'ОСОБИСТЕ' },
+  { key: 'time', label: "ЧАС" },
+  { key: 'relationships', label: 'ВІДНОСИНИ' },
+  { key: 'fear', label: 'СТРАХИ' },
+  { key: 'delegation', label: 'ДЕЛЕГУВАННЯ' },
+  { key: 'growth', label: 'ЗРОСТАННЯ' },
+];
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
 
@@ -36,13 +51,20 @@ function StepIndicator({ current }: { current: number }) {
         const done = i < current;
         const active = i === current;
         return (
-          <View key={i} style={[stepStyles.bar, { backgroundColor: done || active ? C.primary : C.surface3 }]} />
+          <View
+            key={i}
+            style={[
+              stepStyles.bar,
+              {
+                backgroundColor: done || active ? C.primary : C.surface3,
+              },
+            ]}
+          />
         );
       })}
     </View>
   );
 }
-
 
 const stepStyles = StyleSheet.create({
   row: {
@@ -55,43 +77,6 @@ const stepStyles = StyleSheet.create({
     flex: 1,
     height: 4,
     borderRadius: 2,
-  },
-  item: {
-    flex: 1,
-    alignItems: 'center',
-    position: 'relative',
-  },
-  dot: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
-  dotInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#fff',
-  },
-  dotCheck: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  label: {
-    fontFamily: FontFamily.sans,
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  line: {
-    position: 'absolute',
-    top: 14,
-    left: '50%',
-    right: '-50%',
-    height: 1,
-    zIndex: -1,
   },
 });
 
@@ -166,7 +151,7 @@ const inputStyles = StyleSheet.create({
   optional: {
     fontFamily: FontFamily.sans,
     fontSize: 11,
-      },
+  },
   input: {
     borderRadius: Radius.sm,
     borderWidth: 1.5,
@@ -177,56 +162,67 @@ const inputStyles = StyleSheet.create({
   },
 });
 
-// ─── Score Row (impact 1-10) ──────────────────────────────────────────────────
+// ─── Impact Slider (1-10) ────────────────────────────────────────────────────
 
-function ImpactScore({
+function ImpactSlider({
   value,
   onChange,
 }: {
-  value: number | null;
+  value: number;
   onChange: (n: number) => void;
 }) {
   const C = useTheme();
+  const TRACK_WIDTH = 280;
+  const THUMB_SIZE = 28;
+  const MIN = 1;
+  const MAX = 10;
+
+  const handleTrackPress = (e: any) => {
+    const x = e.nativeEvent.locationX;
+    const ratio = Math.max(0, Math.min(1, x / TRACK_WIDTH));
+    const val = Math.round(MIN + ratio * (MAX - MIN));
+    onChange(val);
+    Haptics.selectionAsync();
+  };
+
+  const fillRatio = (value - MIN) / (MAX - MIN);
+
   return (
-    <View style={scoreStyles.wrap}>
-      <Text style={[scoreStyles.title, { color: C.textSecondary }]}>
+    <View style={sliderStyles.wrap}>
+      <Text style={[sliderStyles.title, { color: C.textSecondary }]}>
         Вплив на ваш бізнес / життя
       </Text>
-      <View style={scoreStyles.row}>
-        {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {
-          const active = value === n;
-          return (
-            <Pressable
-              key={n}
-              onPress={() => onChange(n)}
-              style={[
-                scoreStyles.btn,
-                {
-                  backgroundColor: active ? C.primary : C.surface3,
-                },
-              ]}
-            >
-              <Text
-                style={[
-                  scoreStyles.btnText,
-                  { color: active ? C.surface1 : C.textSecondary },
-                ]}
-              >
-                {n}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-      <View style={scoreStyles.hints}>
-        <Text style={[scoreStyles.hint, { color: C.textTertiary }]}>1 — слабкий</Text>
-        <Text style={[scoreStyles.hint, { color: C.textTertiary }]}>10 — дуже сильний</Text>
+      <Text style={[sliderStyles.valueDisplay, { color: C.primary }]}>
+        {value}/10
+      </Text>
+      <Pressable onPress={handleTrackPress} style={sliderStyles.trackWrap}>
+        <View style={[sliderStyles.track, { backgroundColor: C.surface3, width: TRACK_WIDTH }]}>
+          <View
+            style={[
+              sliderStyles.trackFill,
+              { backgroundColor: C.primary, width: fillRatio * TRACK_WIDTH },
+            ]}
+          />
+          <View
+            style={[
+              sliderStyles.thumb,
+              {
+                backgroundColor: C.primary,
+                left: fillRatio * (TRACK_WIDTH - THUMB_SIZE),
+              },
+            ]}
+          />
+        </View>
+      </Pressable>
+      <View style={sliderStyles.hints}>
+        <Text style={[sliderStyles.hint, { color: C.textTertiary }]}>1 — слабкий</Text>
+        <Text style={[sliderStyles.hint, { color: C.textTertiary }]}>10 — дуже сильний</Text>
       </View>
     </View>
   );
 }
 
-const scoreStyles = StyleSheet.create({
+const sliderStyles = StyleSheet.create({
   wrap: { marginBottom: 5 },
   title: {
     fontFamily: FontFamily.sans,
@@ -234,23 +230,40 @@ const scoreStyles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 3,
   },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  btn: {
-    width: 34,
-    height: 34,
-    borderRadius: Radius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
+  valueDisplay: {
+    fontFamily: FontFamily.sansBold,
+    fontSize: 32,
+    textAlign: 'center',
+    marginBottom: 16,
   },
-  btnText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 13,
-    fontWeight: '700',
+  trackWrap: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  track: {
+    height: 6,
+    borderRadius: 3,
+    position: 'relative',
+    overflow: 'visible',
+  },
+  trackFill: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    height: 6,
+    borderRadius: 3,
+  },
+  thumb: {
+    position: 'absolute',
+    top: -11,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
   },
   hints: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 2,
+    marginTop: 8,
   },
   hint: {
     fontFamily: FontFamily.sans,
@@ -269,6 +282,7 @@ export default function CreateBeliefScreen() {
 
   // Step 1
   const [beliefText, setBeliefText] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<BeliefCategory | null>(null);
   // Step 2
   const [conviction, setConviction] = useState('');
   // Step 3
@@ -276,7 +290,8 @@ export default function CreateBeliefScreen() {
   const [newBelief, setNewBelief] = useState('');
   const [experiment, setExperiment] = useState('');
   const [identity, setIdentity] = useState('');
-  const [score, setScore] = useState<number | null>(null);
+  const [score, setScore] = useState<number>(5);
+  const [isFocusWeek, setIsFocusWeek] = useState(false);
 
   const [saving, setSaving] = useState(false);
 
@@ -329,20 +344,6 @@ export default function CreateBeliefScreen() {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* Header */}
-        <View style={[styles.header, { borderBottomColor: C.border }]}>
-          <Pressable
-            style={({ pressed }) => [pressed && { opacity: 0.6 }]}
-            onPress={() => (step === 0 ? router.back() : prevStep())}
-          >
-            <Icon name={step === 0 ? 'X' : 'ChevronLeft'} size={22} color={C.textSecondary} />
-          </Pressable>
-          <Text style={[styles.headerTitle, { color: C.text }]}>
-            Нова установка
-          </Text>
-          <View style={{ width: 32 }} />
-        </View>
-
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -357,11 +358,11 @@ export default function CreateBeliefScreen() {
               { transform: [{ translateX: slideAnim }] },
             ]}
           >
-            {/* Step 0: belief */}
+            {/* Step 0: belief + category */}
             {step === 0 && (
               <View>
                 <Text style={[styles.stepTitle, { color: C.text }]}>
-                  Яка установка вас обмежує?
+                  Що вас зупиняє?
                 </Text>
                 <Text style={[styles.stepHint, { color: C.textSecondary }]}>
                   Починайте з «Я не можу...», «Мені важко...», «Завжди так...»
@@ -372,77 +373,53 @@ export default function CreateBeliefScreen() {
                   placeholder="Я не можу підвищити ціни..."
                   value={beliefText}
                   onChangeText={setBeliefText}
-                  minHeight={120}
+                  minHeight={160}
                 />
 
-                <View style={[styles.tipCard, { backgroundColor: C.surface3 }]}>
-                  <Text style={[styles.tipText, { color: C.textSecondary }]}>
-                    Підказка: згадайте ситуацію, де ви кажете собі «я не можу», «це не для мене» або «завжди так виходить».
-                  </Text>
+                <Text style={[styles.categoryLabel, { color: C.textSecondary }]}>
+                  Категорія
+                </Text>
+                <View style={styles.pillsRow}>
+                  {PILL_CATEGORIES.map((cat) => {
+                    const isSelected = selectedCategory === cat.key;
+                    return (
+                      <Pressable
+                        key={cat.key}
+                        onPress={() => {
+                          setSelectedCategory(isSelected ? null : cat.key);
+                          Haptics.selectionAsync();
+                        }}
+                        style={[
+                          styles.pill,
+                          {
+                            backgroundColor: isSelected ? C.primary : C.surface2,
+                          },
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.pillText,
+                            { color: isSelected ? '#060810' : C.textSecondary },
+                          ]}
+                        >
+                          {cat.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
                 </View>
               </View>
             )}
 
-            {/* Step 1: conviction */}
+            {/* Step 1: conviction + details */}
             {step === 1 && (
               <View>
                 <Text style={[styles.stepTitle, { color: C.text }]}>
-                  Яке переконання за цим стоїть?
+                  Нова установка
                 </Text>
                 <Text style={[styles.stepHint, { color: C.textSecondary }]}>
                   Чому ви в це вірите? Звідки це переконання?
                 </Text>
-
-                <View style={[styles.beliefPreview, { backgroundColor: C.surface3, borderColor: C.border }]}>
-                  <Text style={[styles.beliefPreviewLabel, { color: C.textTertiary }]}>
-                    Ваша установка
-                  </Text>
-                  <Text style={[styles.beliefPreviewText, { color: C.text }]}>
-                    «{beliefText}»
-                  </Text>
-                </View>
-
-                <StyledInput
-                  label="Переконання"
-                  placeholder="Якщо підніму ціни — клієнти підуть..."
-                  value={conviction}
-                  onChangeText={setConviction}
-                  minHeight={100}
-                />
-              </View>
-            )}
-
-            {/* Step 2: optional details */}
-            {step === 2 && (
-              <View>
-                <Text style={[styles.stepTitle, { color: C.text }]}>
-                  Деталі для глибшої роботи
-                </Text>
-                <Text style={[styles.stepHint, { color: C.textSecondary }]}>
-                  Ці поля допоможуть у проходженні 6 етапів. Можна пропустити або заповнити пізніше.
-                </Text>
-
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.aiBtn,
-                    { borderColor: C.primary, backgroundColor: C.primary + '12' },
-                    pressed && { opacity: 0.75 },
-                  ]}
-                  onPress={() =>
-                    router.push({
-                      pathname: '/ai-coach',
-                      params: {
-                        contextType: 'belief_create',
-                        belief: beliefText,
-                        conviction,
-                      },
-                    })
-                  }
-                >
-                  <Text style={[styles.aiBtnText, { color: C.primary }]}>
-                    AI допоможе заповнити
-                  </Text>
-                </Pressable>
 
                 <StyledInput
                   label="Звідки це переконання?"
@@ -468,57 +445,112 @@ export default function CreateBeliefScreen() {
                   optional
                   minHeight={70}
                 />
-                <StyledInput
-                  label="Нова ідентичність"
-                  placeholder="Я підприємець, який цінує свою роботу..."
-                  value={identity}
-                  onChangeText={setIdentity}
-                  optional
-                  minHeight={70}
-                />
+              </View>
+            )}
 
-                <ImpactScore value={score} onChange={setScore} />
+            {/* Step 2: impact + focus toggle */}
+            {step === 2 && (
+              <View>
+                <Text style={[styles.stepTitle, { color: C.text }]}>
+                  Останній крок
+                </Text>
+                <Text style={[styles.stepHint, { color: C.textSecondary }]}>
+                  Оцініть вплив і налаштуйте фокус.
+                </Text>
+
+                <ImpactSlider value={score} onChange={setScore} />
+
+                <View style={[styles.toggleRow, { backgroundColor: C.surface2 }]}>
+                  <View style={styles.toggleTextWrap}>
+                    <Text style={[styles.toggleTitle, { color: C.text }]}>
+                      Зробити фокусом тижня
+                    </Text>
+                    <Text style={[styles.toggleHint, { color: C.textSecondary }]}>
+                      Ця установка буде в центрі уваги цього тижня
+                    </Text>
+                  </View>
+                  <Switch
+                    value={isFocusWeek}
+                    onValueChange={setIsFocusWeek}
+                    trackColor={{ false: C.surface3, true: C.primary + '60' }}
+                    thumbColor={isFocusWeek ? C.primary : C.textSecondary}
+                  />
+                </View>
+
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.aiBtn,
+                    { borderColor: C.primary, backgroundColor: C.primary + '12' },
+                    pressed && { opacity: 0.75 },
+                  ]}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/ai-coach',
+                      params: {
+                        contextType: 'belief_create',
+                        belief: beliefText,
+                        conviction,
+                      },
+                    })
+                  }
+                >
+                  <Text style={[styles.aiBtnText, { color: C.primary }]}>
+                    AI допоможе заповнити
+                  </Text>
+                </Pressable>
               </View>
             )}
           </Animated.View>
 
-          <View style={{ height: 12 }} />
-        </ScrollView>
+          {/* Navigation buttons — inline in content */}
+          <View style={styles.navRow}>
+            {step > 0 && (
+              <Pressable
+                style={[styles.backBtn, { borderColor: C.border }]}
+                onPress={prevStep}
+              >
+                <Icon name="ArrowLeft" size={20} color={C.textSecondary} />
+              </Pressable>
+            )}
 
-        {/* Bottom buttons */}
-        <View style={[styles.footer, { backgroundColor: C.surface1, borderTopColor: C.border }]}>
-          {step < 2 ? (
-            <Pressable
-              style={({ pressed }) => [
-                styles.nextBtn,
-                { backgroundColor: C.primary },
-                !((step === 0 && step1Valid) || (step === 1 && step2Valid)) && { opacity: 0.4 },
-                pressed && { transform: [{ scale: 0.97 }] },
-              ]}
-              onPress={nextStep}
-              disabled={!(step === 0 ? step1Valid : step2Valid)}
-            >
-              <Text style={styles.nextBtnText}>Далі →</Text>
-            </Pressable>
-          ) : (
-            <Pressable
-              style={({ pressed }) => [
-                styles.nextBtn,
-                { backgroundColor: C.primary },
-                (!step3Valid || saving) && { opacity: 0.4 },
-                pressed && { transform: [{ scale: 0.97 }] },
-              ]}
-              onPress={handleSave}
-              disabled={!step3Valid || saving}
-            >
-              {saving ? (
-                <ActivityIndicator color={C.surface1} size="small" />
+            <View style={{ flex: 1 }}>
+              {step < 2 ? (
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.nextBtn,
+                    { backgroundColor: C.primary },
+                    !((step === 0 && step1Valid) || (step === 1 && step2Valid)) && { opacity: 0.4 },
+                    pressed && { transform: [{ scale: 0.97 }] },
+                  ]}
+                  onPress={nextStep}
+                  disabled={!(step === 0 ? step1Valid : step2Valid)}
+                >
+                  <Text style={styles.nextBtnText}>Далі</Text>
+                  <Icon name="ArrowRight" size={18} color="#060810" />
+                </Pressable>
               ) : (
-                <Text style={styles.nextBtnText}>Зберегти</Text>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.nextBtn,
+                    { backgroundColor: C.primary },
+                    (!step3Valid || saving) && { opacity: 0.4 },
+                    pressed && { transform: [{ scale: 0.97 }] },
+                  ]}
+                  onPress={handleSave}
+                  disabled={!step3Valid || saving}
+                >
+                  {saving ? (
+                    <ActivityIndicator color={C.surface1} size="small" />
+                  ) : (
+                    <Text style={styles.nextBtnText}>Почати трансформацію</Text>
+                  )}
+                </Pressable>
               )}
-            </Pressable>
-          )}
-        </View>
+            </View>
+          </View>
+
+          <View style={{ height: 32 }} />
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -529,58 +561,49 @@ export default function CreateBeliefScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
 
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 5,
-    paddingVertical: 4,
-    borderBottomWidth: 1,
-  },
-  headerBack: {
-    fontFamily: FontFamily.sans,
-    fontSize: 20,
-    fontWeight: '400',
-    width: 32,
-    textAlign: 'center',
-  },
-  headerTitle: {
-    fontFamily: FontFamily.serif,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-
   stepIndicatorWrap: {
-    paddingTop: 5,
+    paddingTop: Spacing.lg,
+    paddingHorizontal: Spacing.screen,
   },
 
   content: {
-    paddingHorizontal: 5,
+    paddingHorizontal: Spacing.screen,
   },
 
   stepTitle: {
-    fontFamily: FontFamily.serif,
-    fontSize: 22,
-    fontWeight: '700',
+    fontFamily: FontFamily.sansBold,
+    fontSize: 24,
     lineHeight: 30,
-    marginBottom: 2,
+    letterSpacing: -0.24,
+    marginBottom: Spacing.sm,
   },
   stepHint: {
     fontFamily: FontFamily.sans,
     fontSize: 14,
     lineHeight: 20,
-    marginBottom: 5,
+    marginBottom: Spacing.lg,
   },
 
-  tipCard: {
-    borderRadius: Radius.sm,
-    padding: 4,
-    marginTop: 2,
-  },
-  tipText: {
-    fontFamily: FontFamily.sans,
+  categoryLabel: {
+    fontFamily: FontFamily.sansSemiBold,
     fontSize: 13,
-    lineHeight: 19,
+    marginTop: Spacing.base,
+    marginBottom: Spacing.sm,
+  },
+  pillsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  pill: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: Radius.full,
+  },
+  pillText: {
+    fontFamily: FontFamily.sansSemiBold,
+    fontSize: 12,
+    letterSpacing: 0.5,
   },
 
   beliefPreview: {
@@ -598,10 +621,31 @@ const styles = StyleSheet.create({
     marginBottom: 1,
   },
   beliefPreviewText: {
-    fontFamily: FontFamily.serif,
+    fontFamily: FontFamily.sansBold,
     fontSize: 15,
-    fontWeight: '600',
-        lineHeight: 22,
+    lineHeight: 22,
+  },
+
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: Radius.lg,
+    padding: Spacing.base,
+    marginBottom: Spacing.lg,
+  },
+  toggleTextWrap: {
+    flex: 1,
+    marginRight: Spacing.md,
+  },
+  toggleTitle: {
+    fontFamily: FontFamily.sansSemiBold,
+    fontSize: 15,
+    marginBottom: 2,
+  },
+  toggleHint: {
+    fontFamily: FontFamily.sans,
+    fontSize: 12,
+    lineHeight: 17,
   },
 
   aiBtn: {
@@ -619,21 +663,32 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  footer: {
-    paddingHorizontal: 5,
-    paddingVertical: 4,
-    borderTopWidth: 1,
+  navRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.screen,
+    marginTop: Spacing.xl,
+  },
+  backBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: Radius.md,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   nextBtn: {
+    flexDirection: 'row',
     paddingVertical: 15,
     borderRadius: Radius.md,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
   },
   nextBtnText: {
-    fontFamily: FontFamily.sans,
+    fontFamily: FontFamily.sansBold,
     fontSize: 16,
-    fontWeight: '700',
     color: '#060810',
   },
 });

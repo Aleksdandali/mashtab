@@ -135,8 +135,6 @@ function RitualCard({
 function BeliefHomeCard({ belief }: { belief: UserBelief }) {
   const C = useTheme();
   const completed = getCompletedStages(belief);
-  const category = getBeliefCategory(belief);
-  const cat = category ? CATEGORY_MAP[category] : null;
   const title = getBeliefTitle(belief);
   const conviction = (belief as any).score ?? 5;
   const convictionPct = Math.round((conviction / 10) * 100);
@@ -151,7 +149,6 @@ function BeliefHomeCard({ belief }: { belief: UserBelief }) {
       ]}
     >
       <View style={S.beliefTop}>
-        {/* Ring */}
         <View style={S.beliefRingWrap}>
           <RingSvg progress={completed} size={64} />
           <View style={S.beliefRingCenter}>
@@ -159,15 +156,13 @@ function BeliefHomeCard({ belief }: { belief: UserBelief }) {
           </View>
         </View>
 
-        {/* Quote */}
-        <View style={{ flex: 1, paddingTop: 6 }}>
+        <View style={{ flex: 1, paddingTop: 8 }}>
           <Text style={[S.beliefQuote, { color: C.text }]} numberOfLines={3}>
             "{title}"
           </Text>
         </View>
       </View>
 
-      {/* Conviction progress bar */}
       <View style={S.beliefBar}>
         <View style={S.beliefBarLabels}>
           <Text style={[S.beliefBarLabel, { color: C.textSecondary }]}>−100</Text>
@@ -185,18 +180,11 @@ function BeliefHomeCard({ belief }: { belief: UserBelief }) {
           />
         </View>
       </View>
-
-      {cat && (
-        <View style={S.beliefCatRow}>
-          <Icon name={cat.icon} size={11} color={C.primary} />
-          <Text style={[S.beliefCatText, { color: C.primary }]}>{cat.nameUk.toUpperCase()}</Text>
-        </View>
-      )}
     </Pressable>
   );
 }
 
-// ─── Task row ─────────────────────────────────────────────────────────────────
+// ─── Task row (checkbox) ─────────────────────────────────────────────────────
 
 function TaskRow({ task, onToggle }: { task: Task; onToggle: (id: string) => void }) {
   const C = useTheme();
@@ -214,93 +202,25 @@ function TaskRow({ task, onToggle }: { task: Task; onToggle: (id: string) => voi
   };
 
   return (
-    <Pressable
-      onPress={handlePress}
-      style={({ pressed }) => [
-        S.taskRow,
-        { backgroundColor: C.surface2 },
-        pressed && { opacity: 0.75 },
-      ]}
-    >
-      <Animated.View
-        style={[S.checkbox, { backgroundColor: checkBg, borderColor: task.is_completed ? C.primary : C.borderMedium }]}
-      >
-        {task.is_completed && <Icon name="Check" size={11} color="#060810" strokeWidth={2.5} />}
-      </Animated.View>
-      <View style={{ flex: 1 }}>
+    <Pressable onPress={handlePress} style={({ pressed }) => [pressed && { opacity: 0.75 }]}>
+      <View style={S.moneyTaskRow}>
+        <Animated.View
+          style={[S.checkbox, { backgroundColor: checkBg, borderColor: task.is_completed ? C.primary : C.borderMedium }]}
+        >
+          {task.is_completed && <Icon name="Check" size={11} color="#060810" strokeWidth={2.5} />}
+        </Animated.View>
         <Text
           style={[
-            S.taskText,
+            S.moneyTaskText,
             { color: task.is_completed ? C.textTertiary : C.text },
-            task.is_completed && { textDecorationLine: 'line-through' },
+            task.is_completed && { textDecorationLine: 'line-through', opacity: 0.55 },
           ]}
           numberOfLines={2}
         >
-          {task.is_focus && <Text style={{ color: C.primary }}>★ </Text>}
           {task.title}
         </Text>
-        {!!task.user_belief_id && (
-          <View style={S.taskBeliefBadge}>
-            <Icon name="Brain" size={10} color={C.primary} />
-            <Text style={[S.taskBeliefText, { color: C.primary }]}>Пов'язана установка</Text>
-          </View>
-        )}
       </View>
     </Pressable>
-  );
-}
-
-// ─── Quick stats ──────────────────────────────────────────────────────────────
-
-function QuickStats({
-  beliefsProgress,
-  streak,
-  focusDone,
-  focusTotal,
-}: {
-  beliefsProgress: number;
-  streak: number;
-  focusDone: number;
-  focusTotal: number;
-}) {
-  const C = useTheme();
-  const stats = [
-    { label: 'Установки', value: `${beliefsProgress}%`, icon: 'Brain' as const },
-    { label: 'Ритуалів', value: `${streak}`, icon: 'Flame' as const },
-    { label: 'Фокус', value: `${focusDone}/${focusTotal}`, icon: 'Target' as const },
-  ];
-  return (
-    <View style={[S.statsRow, { backgroundColor: C.surface2, borderRadius: Radius.lg }]}>
-      {stats.map((s, i) => (
-        <View
-          key={s.label}
-          style={[S.statItem, i < 2 && { borderRightWidth: StyleSheet.hairlineWidth, borderRightColor: C.border }]}
-        >
-          <Icon name={s.icon} size={16} color={C.primary} />
-          <Text style={[S.statValue, { color: C.text }]}>{s.value}</Text>
-          <Text style={[S.statLabel, { color: C.textTertiary }]}>{s.label}</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-// ─── FAB ──────────────────────────────────────────────────────────────────────
-
-function FABButton() {
-  const C = useTheme();
-  const scale = useRef(new Animated.Value(1)).current;
-  return (
-    <Animated.View style={[S.fabWrap, { transform: [{ scale }] }]}>
-      <Pressable
-        onPress={() => router.push('/ai-coach' as any)}
-        onPressIn={() => Animated.spring(scale, { toValue: 0.9, useNativeDriver: true, speed: 50, bounciness: 0 }).start()}
-        onPressOut={() => Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 6 }).start()}
-        style={[S.fab, { backgroundColor: C.primary }]}
-      >
-        <Icon name="MessageCircle" size={24} color="#060810" />
-      </Pressable>
-    </Animated.View>
   );
 }
 
@@ -319,9 +239,6 @@ export default function HomeScreen() {
   const displayDate = formatDisplayDate();
   const dayName = formatDayName();
 
-  const today = new Date();
-  const isWeeklyDay = profile ? today.getDay() === profile.weekly_checkin_day : today.getDay() === 0;
-
   useFocusEffect(
     useCallback(() => {
       fetchProfile();
@@ -333,15 +250,13 @@ export default function HomeScreen() {
   );
 
   const activeFocus = focusTasks();
-  const focusDone = activeFocus.filter((t) => t.is_completed).length;
-  const focusTotal = activeFocus.length;
-  const allRegular = regularTasks();
-  const visibleBeliefs = beliefs.slice(0, 2);
+  const allTasks = [...activeFocus, ...regularTasks()];
+  const completedThisWeek = allTasks.filter((t) => t.is_completed).length;
+  const firstFocusTask = activeFocus[0] ?? regularTasks()[0] ?? null;
+  const visibleBelief = beliefs[0] ?? null;
 
-  const beliefsProgress =
-    beliefs.length > 0
-      ? Math.round((beliefs.reduce((sum, b) => sum + getCompletedStages(b), 0) / (beliefs.length * 6)) * 100)
-      : 0;
+  const focusCategory = visibleBelief ? getBeliefCategory(visibleBelief) : null;
+  const focusCatLabel = focusCategory ? CATEGORY_MAP[focusCategory]?.nameUk ?? '' : '';
 
   return (
     <View style={[S.root, { backgroundColor: C.bg }]}>
@@ -350,43 +265,20 @@ export default function HomeScreen() {
 
           {/* ── Header ── */}
           <View style={S.header}>
-            <View style={{ flex: 1 }}>
-              <Text style={[S.greeting, { color: C.text }]}>{greeting}</Text>
-              <View style={S.dateRow}>
-                <Text style={[S.dateText, { color: C.textSecondary }]}>
-                  {dayName}, {displayDate}
-                </Text>
-                {beliefs.length > 0 && (
-                  <View style={[S.focusChip, { backgroundColor: C.primaryMuted }]}>
-                    <Text style={[S.focusChipText, { color: C.primary }]}>Фокус тижня</Text>
-                  </View>
-                )}
-              </View>
-            </View>
-            <Pressable
-              onPress={() => router.push('/(tabs)/profile' as any)}
-              style={[S.avatar, { backgroundColor: C.primaryMuted }]}
-            >
-              <Text style={[S.avatarText, { color: C.primary }]}>
-                {profile?.name ? profile.name.charAt(0).toUpperCase() : '?'}
+            <Text style={[S.greeting, { color: C.text }]}>{greeting}</Text>
+            <View style={S.dateRow}>
+              <Text style={[S.dateText, { color: C.textSecondary }]}>
+                {dayName}, {displayDate}
               </Text>
-            </Pressable>
+              {focusCatLabel !== '' && (
+                <View style={[S.focusChip, { backgroundColor: C.primaryMuted }]}>
+                  <Text style={[S.focusChipText, { color: C.primary }]}>
+                    Фокус тижня: {focusCatLabel}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
-
-          {/* ── Weekly check-in (Sunday) ── */}
-          {isWeeklyDay && (
-            <Pressable
-              onPress={() => router.push('/ritual/weekly' as any)}
-              style={({ pressed }) => [S.weeklyCard, { backgroundColor: C.surface2 }, pressed && { opacity: 0.85 }]}
-            >
-              <Icon name="BarChart2" size={20} color={C.primary} />
-              <View style={{ flex: 1 }}>
-                <Text style={[S.weeklyTitle, { color: C.text }]}>Тижневий підсумок</Text>
-                <Text style={[S.weeklySub, { color: C.textTertiary }]}>Підбийте підсумки тижня</Text>
-              </View>
-              <Icon name="ChevronRight" size={18} color={C.textTertiary} />
-            </Pressable>
-          )}
 
           {/* ── Ritual card ── */}
           {(period === 'morning' || period === 'evening') && (
@@ -397,58 +289,27 @@ export default function HomeScreen() {
             />
           )}
 
-          {/* ── Active beliefs ── */}
-          {visibleBeliefs.length > 0 && (
+          {/* ── Belief in work ── */}
+          {visibleBelief && (
             <View style={S.section}>
               <SectionLabel text="Установка в роботі" />
-              {visibleBeliefs.map((b) => (
-                <BeliefHomeCard key={b.id} belief={b} />
-              ))}
+              <BeliefHomeCard belief={visibleBelief} />
             </View>
           )}
 
-          {/* ── Focus tasks ── */}
-          {activeFocus.length > 0 && (
+          {/* ── Money today ── */}
+          {firstFocusTask && (
             <View style={S.section}>
-              <SectionLabel text="Фокус на сьогодні" />
-              <View style={S.tasksList}>
-                {activeFocus.map((task) => (
-                  <TaskRow key={task.id} task={task} onToggle={toggleTask} />
-                ))}
+              <SectionLabel text="Гроші сьогодні" />
+              <View style={[S.moneyCard, { backgroundColor: C.surface2 }]}>
+                <TaskRow task={firstFocusTask} onToggle={toggleTask} />
+                <View style={S.moneyWeekRow}>
+                  <Text style={[S.moneyWeekLabel, { color: C.textSecondary }]}>Цього тижня:</Text>
+                  <Text style={[S.moneyWeekValue, { color: C.primary }]}>{completedThisWeek}/7</Text>
+                </View>
               </View>
             </View>
           )}
-
-          {/* ── Regular tasks ── */}
-          {allRegular.length > 0 && (
-            <View style={S.section}>
-              <SectionLabel text="Задачі" />
-              <View style={S.tasksList}>
-                {allRegular.slice(0, 4).map((task) => (
-                  <TaskRow key={task.id} task={task} onToggle={toggleTask} />
-                ))}
-                {allRegular.length > 4 && (
-                  <Pressable
-                    onPress={() => router.push('/(tabs)/plans' as any)}
-                    style={S.showMore}
-                  >
-                    <Text style={[S.showMoreText, { color: C.primary }]}>
-                      Ще {allRegular.length - 4} задач
-                    </Text>
-                    <Icon name="ChevronRight" size={16} color={C.primary} />
-                  </Pressable>
-                )}
-              </View>
-            </View>
-          )}
-
-          {/* ── Stats ── */}
-          <QuickStats
-            beliefsProgress={beliefsProgress}
-            streak={streak}
-            focusDone={focusDone}
-            focusTotal={Math.max(focusTotal, 1)}
-          />
 
           {/* ── Coach chip ── */}
           <Pressable
@@ -456,7 +317,7 @@ export default function HomeScreen() {
             style={({ pressed }) => [
               S.coachChip,
               { borderColor: C.border },
-              pressed && { borderColor: 'rgba(200,230,74,0.3)' },
+              pressed && { borderColor: 'rgba(200,255,0,0.3)' },
             ]}
           >
             <Text style={[S.coachChipText, { color: C.textSecondary }]}>Запитати коуча</Text>
@@ -466,8 +327,6 @@ export default function HomeScreen() {
           <View style={{ height: 80 }} />
         </ScrollView>
       </SafeAreaView>
-
-      <FABButton />
     </View>
   );
 }
@@ -476,81 +335,60 @@ export default function HomeScreen() {
 
 const S = StyleSheet.create({
   root: { flex: 1 },
-  scroll: { paddingHorizontal: Spacing.screen, paddingTop: Spacing.base, gap: 16, paddingBottom: 32 },
+  scroll: { paddingHorizontal: Spacing.screen, paddingTop: Spacing.base, paddingBottom: 32 },
 
   // Header
-  header: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', paddingTop: 8, marginBottom: 4 },
-  greeting: { fontFamily: FontFamily.serifBold, fontSize: 28, lineHeight: 34, letterSpacing: -0.3 },
-  dateRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
+  header: { paddingTop: 8, marginBottom: 32 },
+  greeting: { fontFamily: FontFamily.sansBold, fontSize: 28, lineHeight: 34, letterSpacing: -0.3, marginBottom: 8 },
+  dateRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   dateText: { fontFamily: FontFamily.sans, fontSize: 14 },
-  focusChip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  focusChipText: { fontFamily: FontFamily.sansMedium, fontSize: 12 },
-  avatar: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontFamily: FontFamily.sansBold, fontSize: 16 },
-
-  // Weekly card
-  weeklyCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: Radius.lg, padding: 16 },
-  weeklyTitle: { fontFamily: FontFamily.sansSemiBold, fontSize: 14 },
-  weeklySub: { fontFamily: FontFamily.sans, fontSize: 12, marginTop: 2 },
+  focusChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  focusChipText: { fontFamily: FontFamily.sansMedium, fontSize: 13 },
 
   // Ritual card
-  ritualCard: { borderRadius: Radius.lg, overflow: 'hidden', gap: 16, padding: 20 },
-  ritualInner: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  ritualCard: { borderRadius: 16, overflow: 'hidden', padding: 24, marginBottom: 24 },
+  ritualInner: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 },
   ritualTextCol: { flex: 1 },
-  ritualTitle: { fontFamily: FontFamily.serif, fontSize: 20, fontWeight: '600', lineHeight: 26 },
-  ritualSubtitle: { fontFamily: FontFamily.sans, fontSize: 13, marginTop: 2 },
-  streakBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 8 },
-  streakText: { fontFamily: FontFamily.sansMedium, fontSize: 13 },
+  ritualTitle: { fontFamily: FontFamily.sansBold, fontSize: 20, lineHeight: 26, marginBottom: 4 },
+  ritualSubtitle: { fontFamily: FontFamily.sans, fontSize: 14 },
+  streakBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  streakText: { fontFamily: FontFamily.sansMedium, fontSize: 14 },
   ritualDoneText: { fontFamily: FontFamily.sansMedium, fontSize: 14 },
   ritualBtn: {
-    borderRadius: 12, paddingVertical: 12, paddingHorizontal: 16,
+    borderRadius: 12, paddingVertical: 14, paddingHorizontal: 16,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   ritualBtnText: { fontFamily: FontFamily.sansSemiBold, fontSize: 15, color: '#060810' },
-  ritualBtnSub: { fontFamily: FontFamily.sans, fontSize: 13 },
+  ritualBtnSub: { fontFamily: FontFamily.sans, fontSize: 14 },
 
   // Section
-  section: { gap: 10 },
-  sectionLabel: { fontFamily: FontFamily.sansSemiBold, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1.2, marginLeft: 2 },
+  section: { marginBottom: 24 },
+  sectionLabel: { fontFamily: FontFamily.sansSemiBold, fontSize: 14, textTransform: 'uppercase', letterSpacing: 1.6, marginBottom: 16 },
 
   // Belief card
-  beliefCard: { borderRadius: Radius.lg, padding: 20, gap: 12 },
-  beliefTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 14 },
+  beliefCard: { borderRadius: 16, padding: 24 },
+  beliefTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 16, marginBottom: 16 },
   beliefRingWrap: { position: 'relative', width: 64, height: 64, flexShrink: 0 },
   beliefRingCenter: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
-  beliefRingText: { fontFamily: FontFamily.sansMedium, fontSize: 11 },
-  beliefQuote: { fontFamily: FontFamily.serifItalic, fontSize: 17, lineHeight: 24 },
-  beliefBar: { gap: 6 },
-  beliefBarLabels: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  beliefBarLabel: { fontFamily: FontFamily.sansMedium, fontSize: 11 },
+  beliefRingText: { fontFamily: FontFamily.sansMedium, fontSize: 12 },
+  beliefQuote: { fontFamily: FontFamily.sansMedium, fontSize: 18, lineHeight: 24 },
+  beliefBar: { gap: 8 },
+  beliefBarLabels: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  beliefBarLabel: { fontFamily: FontFamily.sansMedium, fontSize: 12 },
   beliefBarCenter: { fontFamily: FontFamily.sansSemiBold, fontSize: 12 },
-  beliefBarTrack: { height: 5, borderRadius: 3, overflow: 'hidden' },
+  beliefBarTrack: { height: 6, borderRadius: 3, overflow: 'hidden' },
   beliefBarFill: { height: '100%', borderRadius: 3 },
-  beliefCatRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  beliefCatText: { fontFamily: FontFamily.sansSemiBold, fontSize: 11, letterSpacing: 0.8 },
 
-  // Tasks
-  tasksList: { gap: 6 },
-  taskRow: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: Radius.lg, padding: 16 },
-  checkbox: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  taskText: { fontFamily: FontFamily.sansMedium, fontSize: 14, lineHeight: 20 },
-  taskBeliefBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 },
-  taskBeliefText: { fontFamily: FontFamily.sansMedium, fontSize: 11 },
-
-  showMore: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, padding: 12 },
-  showMoreText: { fontFamily: FontFamily.sansMedium, fontSize: 13 },
-
-  // Stats
-  statsRow: { flexDirection: 'row', overflow: 'hidden' },
-  statItem: { flex: 1, alignItems: 'center', paddingVertical: 16, gap: 3 },
-  statValue: { fontFamily: FontFamily.serifBold, fontSize: 20, lineHeight: 24 },
-  statLabel: { fontFamily: FontFamily.sansMedium, fontSize: 11 },
+  // Money today
+  moneyCard: { borderRadius: 16, padding: 24 },
+  moneyTaskRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 16 },
+  moneyTaskText: { fontFamily: FontFamily.sansMedium, fontSize: 15, lineHeight: 22, flex: 1 },
+  checkbox: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 },
+  moneyWeekRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  moneyWeekLabel: { fontFamily: FontFamily.sans, fontSize: 14 },
+  moneyWeekValue: { fontFamily: FontFamily.sansSemiBold, fontSize: 14 },
 
   // Coach chip
-  coachChip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 16, paddingHorizontal: 20, borderWidth: 1, borderRadius: Radius.lg },
+  coachChip: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 16, paddingHorizontal: 20, borderWidth: 1, borderRadius: 12 },
   coachChipText: { fontFamily: FontFamily.sans, fontSize: 15 },
-
-  // FAB
-  fabWrap: { position: 'absolute', bottom: 90, right: Spacing.screen, zIndex: 20 },
-  fab: { width: 54, height: 54, borderRadius: 27, alignItems: 'center', justifyContent: 'center' },
 });

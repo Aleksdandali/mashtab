@@ -50,12 +50,12 @@ function ProgressDots({ step }: { step: number }) {
 }
 
 const dotsStyles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: 6, alignItems: 'center' },
+  row: { flexDirection: 'row', gap: 6, alignItems: 'center', justifyContent: 'center' },
   dot: { width: 8, height: 8, borderRadius: 4 },
-  dotActive: { width: 20 },
+  dotActive: { width: 32 },
 });
 
-// ─── Belief Card (mini, for selection) ────────────────────────────────────────
+// ─── Belief Card (vertical list item) ────────────────────────────────────────
 
 function BeliefSelectCard({
   ub,
@@ -67,10 +67,6 @@ function BeliefSelectCard({
   onSelect: () => void;
 }) {
   const C = useTheme();
-  const catKey = getBeliefCategory(ub);
-  const cat = catKey ? CATEGORY_MAP[catKey] : null;
-  const color = catKey ? (STAGE_COLORS as Record<string, string>)[catKey] ?? C.primary : C.primary;
-  const completed = getCompletedStages(ub);
   const title = getBeliefTitle(ub);
 
   return (
@@ -81,7 +77,7 @@ function BeliefSelectCard({
         selected
           ? { backgroundColor: C.primary }
           : { backgroundColor: C.surface2 },
-        pressed && { opacity: 0.85 },
+        pressed && !selected && { backgroundColor: C.surface3 },
       ]}
     >
       <Text
@@ -89,7 +85,7 @@ function BeliefSelectCard({
           beliefCardStyles.title,
           { color: selected ? '#060810' : C.text },
         ]}
-        numberOfLines={2}
+        numberOfLines={3}
       >
         {title}
       </Text>
@@ -102,21 +98,17 @@ const beliefCardStyles = StyleSheet.create({
     borderRadius: Radius.md,
     paddingHorizontal: 20,
     paddingVertical: 16,
+    width: '100%',
   },
-  top: {},
-  catIcon: {},
   title: {
-    fontFamily: FontFamily.serifItalic,
-        fontSize: 15,
+    fontFamily: FontFamily.sansMedium,
+    fontSize: 15,
     lineHeight: 21,
+    fontStyle: 'italic',
   },
-  stage: {},
-  stageText: {},
-  check: {},
-  checkText: {},
 });
 
-// ─── Task Focus Toggle Row ────────────────────────────────────────────────────
+// ─── Focus Task Row (simplified: checkbox + text) ────────────────────────────
 
 function FocusTaskRow({
   task,
@@ -137,29 +129,24 @@ function FocusTaskRow({
       onPress={disabled ? undefined : onToggle}
       style={[
         taskRowStyles.row,
-        { borderBottomColor: C.border },
+        { backgroundColor: C.surface2 },
         disabled && { opacity: 0.4 },
       ]}
     >
       <View
         style={[
-          taskRowStyles.star,
+          taskRowStyles.checkbox,
           {
-            backgroundColor: isFocused ? C.primary : C.surface3,
-            borderColor: isFocused ? C.primary : C.border,
+            backgroundColor: isFocused ? C.primary : 'transparent',
+            borderColor: isFocused ? C.primary : C.textTertiary,
           },
         ]}
       >
-        <Icon name="Zap" size={14} color={isFocused ? '#060810' : C.textTertiary} />
+        {isFocused && <Icon name="Check" size={14} color="#060810" />}
       </View>
       <Text style={[taskRowStyles.title, { color: C.text }]} numberOfLines={2}>
         {task.title}
       </Text>
-      {isFocused && (
-        <View style={[taskRowStyles.focusBadge, { backgroundColor: C.primary + '20' }]}>
-          <Text style={[taskRowStyles.focusBadgeText, { color: C.primary }]}>Фокус</Text>
-        </View>
-      )}
     </Pressable>
   );
 }
@@ -169,21 +156,25 @@ const taskRowStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    paddingVertical: 14,
+    paddingHorizontal: Spacing.base,
+    borderRadius: Radius.lg,
   },
-  star: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
     borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
-  starText: { fontSize: 14, fontWeight: '700' },
-  title: { flex: 1, fontFamily: FontFamily.sansMedium, fontSize: 14, lineHeight: 19 },
-  focusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: Radius.full },
-  focusBadgeText: { fontFamily: FontFamily.sansSemiBold, fontSize: 10 },
+  title: {
+    flex: 1,
+    fontFamily: FontFamily.sansMedium,
+    fontSize: 14,
+    lineHeight: 19,
+  },
 });
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
@@ -217,7 +208,6 @@ export default function MorningRitualScreen() {
     }, [fetchBeliefs, fetchTasks]),
   );
 
-  // Pre-select currently focused tasks
   useEffect(() => {
     const currentFocus = new Set(tasks.filter((t) => t.is_focus).map((t) => t.id));
     setFocusIds(currentFocus);
@@ -268,14 +258,12 @@ export default function MorningRitualScreen() {
   const handleFinish = async () => {
     setSaving(true);
     try {
-      // Update focus flags on tasks
       const today = todayISO();
       const updates = tasks.map((t) =>
         updateTask(t.id, { is_focus: focusIds.has(t.id) }),
       );
       await Promise.all(updates);
 
-      // Save journal entry
       await saveEntry('morning', {
         intention: intention.trim(),
         gratitude: gratitude.map((g) => g.trim()),
@@ -295,52 +283,33 @@ export default function MorningRitualScreen() {
   const canProceed = () => {
     if (step === 0) return intention.trim().length > 0;
     if (step === 1) return gratitude.some((g) => g.trim().length > 0);
-    return true; // steps 2 and 3 are optional
+    return true;
   };
-
-  const stepMeta = [
-    { icon: 'Target' as const, title: 'Намір на сьогодні' },
-    { icon: 'Sparkles' as const, title: 'Вдячність' },
-    { icon: 'Brain' as const, title: 'Установка дня' },
-    { icon: 'CheckCircle2' as const, title: 'Фокус-задачі' },
-  ];
-
-  const current = stepMeta[step];
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: C.surface1 }]}>
-      {/* Header */}
-      <View style={[styles.header, { borderBottomColor: C.border }]}>
-        <Pressable onPress={() => router.back()} style={styles.closeBtn}>
-          <Icon name="X" size={20} color={C.textSecondary} />
-        </Pressable>
-        <View style={styles.headerCenter}>
-          <Icon name={current.icon} size={18} color={C.primary} />
-          <Text style={[styles.headerTitle, { color: C.text }]}>Ранковий ритуал</Text>
-        </View>
-        <View style={styles.closeBtn} />
-      </View>
-
-      {/* Date + progress */}
-      <View style={styles.meta}>
-        <Text style={[styles.dateText, { color: C.textTertiary }]}>
-          {formatDisplayDate(new Date())}
-        </Text>
-        <ProgressDots step={step} />
-      </View>
-
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        {/* Step content */}
-        <Animated.View
-          style={[
-            styles.stepWrap,
-            { opacity: fadeAnim, transform: [{ translateX: slideAnim }] },
-          ]}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollContent}
         >
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={styles.scrollContent}
+          {/* Centered dots */}
+          <View style={styles.dotsWrap}>
+            <ProgressDots step={step} />
+          </View>
+
+          {/* Centered title */}
+          <Text style={[styles.mainTitle, { color: C.text }]}>
+            Ранковий ритуал
+          </Text>
+
+          {/* Step content */}
+          <Animated.View
+            style={[
+              styles.stepWrap,
+              { opacity: fadeAnim, transform: [{ translateX: slideAnim }] },
+            ]}
           >
             {/* ─── Step 0: Intention ─── */}
             {step === 0 && (
@@ -397,7 +366,7 @@ export default function MorningRitualScreen() {
               </View>
             )}
 
-            {/* ─── Step 2: Belief of day ─── */}
+            {/* ─── Step 2: Belief of day (vertical list) ─── */}
             {step === 2 && (
               <View style={styles.stepContent}>
                 <Text style={[styles.stepTitle, { color: C.text }]}>
@@ -413,11 +382,7 @@ export default function MorningRitualScreen() {
                     </Text>
                   </View>
                 ) : (
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.beliefScroll}
-                  >
+                  <View style={styles.beliefList}>
                     {beliefs.map((ub) => (
                       <BeliefSelectCard
                         key={ub.id}
@@ -428,12 +393,12 @@ export default function MorningRitualScreen() {
                         }
                       />
                     ))}
-                  </ScrollView>
+                  </View>
                 )}
               </View>
             )}
 
-            {/* ─── Step 3: Focus tasks ─── */}
+            {/* ─── Step 3: Focus tasks (checkbox + input rows) ─── */}
             {step === 3 && (
               <View style={styles.stepContent}>
                 <Text style={[styles.stepTitle, { color: C.text }]}>
@@ -443,11 +408,13 @@ export default function MorningRitualScreen() {
                   Це ваші «must-do» на сьогодні. Решта — бонус.
                 </Text>
 
-                <View style={[styles.taskList, { backgroundColor: C.surface2 }]}>
+                <View style={styles.taskList}>
                   {tasks.length === 0 ? (
-                    <Text style={[styles.noTasksText, { color: C.textTertiary }]}>
-                      Задач немає. Додайте першу нижче.
-                    </Text>
+                    <View style={[styles.noTasks, { backgroundColor: C.surface2 }]}>
+                      <Text style={[styles.noTasksText, { color: C.textTertiary }]}>
+                        Задач немає. Додайте першу нижче.
+                      </Text>
+                    </View>
                   ) : (
                     tasks.map((t) => (
                       <FocusTaskRow
@@ -462,7 +429,8 @@ export default function MorningRitualScreen() {
                 </View>
 
                 {/* Inline add task */}
-                <View style={[styles.inlineAdd, { borderColor: C.border, backgroundColor: C.surface2 }]}>
+                <View style={[styles.inlineAdd, { backgroundColor: C.surface2 }]}>
+                  <View style={[styles.addCheckbox, { borderColor: C.textTertiary }]} />
                   <TextInput
                     style={[styles.inlineInput, { color: C.text }]}
                     placeholder="＋ Нова задача на сьогодні..."
@@ -472,14 +440,6 @@ export default function MorningRitualScreen() {
                     onSubmitEditing={handleAddInlineTask}
                     returnKeyType="done"
                   />
-                  {newTaskInput.trim().length > 0 && (
-                    <Pressable
-                      onPress={handleAddInlineTask}
-                      style={[styles.inlineAddBtn, { backgroundColor: C.primary }]}
-                    >
-                      <Text style={[styles.inlineAddBtnText, { color: C.surface1 }]}>+</Text>
-                    </Pressable>
-                  )}
                 </View>
 
                 {focusIds.size > 0 && (
@@ -491,50 +451,56 @@ export default function MorningRitualScreen() {
                 )}
               </View>
             )}
-          </ScrollView>
-        </Animated.View>
+          </Animated.View>
 
-        {/* Footer */}
-        <View style={[styles.footer, { borderTopColor: C.border, backgroundColor: C.surface1 }]}>
-          <Pressable
-            style={[styles.backBtn, { borderColor: C.border }, step === 0 && { opacity: 0 }]}
-            onPress={handleBack}
-            disabled={step === 0}
-          >
-            <Text style={[styles.backBtnText, { color: C.textSecondary }]}>← Назад</Text>
-          </Pressable>
+          {/* Navigation — inline in content */}
+          <View style={styles.navRow}>
+            {step > 0 ? (
+              <Pressable
+                style={[styles.backBtn, { borderColor: C.border }]}
+                onPress={handleBack}
+              >
+                <Text style={[styles.backBtnText, { color: C.textSecondary }]}>Назад</Text>
+              </Pressable>
+            ) : (
+              <View />
+            )}
 
-          {step < TOTAL_STEPS - 1 ? (
-            <Pressable
-              style={({ pressed }) => [
-                styles.nextBtn,
-                { backgroundColor: C.primary },
-                !canProceed() && { opacity: 0.45 },
-                pressed && { transform: [{ scale: 0.97 }] },
-              ]}
-              onPress={handleNext}
-            >
-              <Text style={[styles.nextBtnText, { color: C.surface1 }]}>Далі →</Text>
-            </Pressable>
-          ) : (
-            <Pressable
-              style={({ pressed }) => [
-                styles.nextBtn,
-                { backgroundColor: C.primary },
-                saving && { opacity: 0.6 },
-                pressed && { transform: [{ scale: 0.97 }] },
-              ]}
-              onPress={handleFinish}
-              disabled={saving}
-            >
-              {saving ? (
-                <ActivityIndicator color={C.surface1} size="small" />
-              ) : (
-                <Text style={[styles.nextBtnText, { color: C.surface1 }]}>Готово. Дій.</Text>
-              )}
-            </Pressable>
-          )}
-        </View>
+            {step < TOTAL_STEPS - 1 ? (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.nextBtn,
+                  { backgroundColor: C.primary },
+                  !canProceed() && { opacity: 0.45 },
+                  pressed && { transform: [{ scale: 0.97 }] },
+                ]}
+                onPress={handleNext}
+              >
+                <Text style={[styles.nextBtnText, { color: C.surface1 }]}>Далі</Text>
+                <Icon name="ArrowRight" size={16} color={C.surface1} />
+              </Pressable>
+            ) : (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.nextBtn,
+                  { backgroundColor: C.primary },
+                  saving && { opacity: 0.6 },
+                  pressed && { transform: [{ scale: 0.97 }] },
+                ]}
+                onPress={handleFinish}
+                disabled={saving}
+              >
+                {saving ? (
+                  <ActivityIndicator color={C.surface1} size="small" />
+                ) : (
+                  <Text style={[styles.nextBtnText, { color: C.surface1 }]}>Готово. Дій.</Text>
+                )}
+              </Pressable>
+            )}
+          </View>
+
+          <View style={{ height: 32 }} />
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -545,39 +511,28 @@ export default function MorningRitualScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
 
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  closeBtn: { width: 36, alignItems: 'center' },
-  closeText: { fontFamily: FontFamily.sans, fontSize: 20 },
-  headerCenter: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  headerEmoji: { fontSize: 18 },
-  headerTitle: {
-    fontFamily: FontFamily.serifBold,
-    fontSize: 18,
-    letterSpacing: -0.2,
-  },
-
-  meta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.sm,
-  },
-  dateText: { fontFamily: FontFamily.sansMedium, fontSize: 12 },
-
-  stepWrap: { flex: 1 },
   scrollContent: { paddingBottom: Spacing.xxl },
 
-  stepContent: { paddingHorizontal: Spacing.base, paddingTop: Spacing.lg },
+  dotsWrap: {
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.md,
+    alignItems: 'center',
+  },
+
+  mainTitle: {
+    fontFamily: FontFamily.sansExtraBold,
+    fontSize: 24,
+    lineHeight: 30,
+    letterSpacing: -0.24,
+    textAlign: 'center',
+    marginBottom: Spacing.lg,
+  },
+
+  stepWrap: {},
+
+  stepContent: { paddingHorizontal: Spacing.base, paddingTop: Spacing.md },
   stepTitle: {
-    fontFamily: FontFamily.serifBold,
+    fontFamily: FontFamily.sansBold,
     fontSize: 22,
     lineHeight: 30,
     letterSpacing: -0.2,
@@ -620,7 +575,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
-  beliefScroll: { paddingBottom: Spacing.sm },
+  beliefList: {
+    gap: Spacing.sm,
+  },
 
   noBeliefs: {
     borderRadius: Radius.lg,
@@ -635,10 +592,13 @@ const styles = StyleSheet.create({
   },
 
   taskList: {
-    borderRadius: Radius.lg,
-    padding: Spacing.base,
+    gap: Spacing.sm,
     marginBottom: Spacing.md,
-    minHeight: 60,
+  },
+  noTasks: {
+    borderRadius: Radius.lg,
+    padding: Spacing.xl,
+    alignItems: 'center',
   },
   noTasksText: {
     fontFamily: FontFamily.sansMedium,
@@ -650,26 +610,24 @@ const styles = StyleSheet.create({
   inlineAdd: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: Radius.md,
-    borderWidth: 1,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
+    borderRadius: Radius.lg,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: 14,
     marginBottom: Spacing.md,
-    gap: Spacing.sm,
+    gap: Spacing.md,
+  },
+  addCheckbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    flexShrink: 0,
   },
   inlineInput: {
     flex: 1,
     fontFamily: FontFamily.sansMedium,
     fontSize: 14,
   },
-  inlineAddBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  inlineAddBtnText: { fontSize: 18, fontWeight: '300' },
 
   focusCounter: {
     borderRadius: Radius.full,
@@ -679,26 +637,29 @@ const styles = StyleSheet.create({
   },
   focusCounterText: { fontFamily: FontFamily.sansSemiBold, fontSize: 12 },
 
-  footer: {
+  navRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: Spacing.md,
-    padding: Spacing.base,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: Spacing.base,
+    marginTop: Spacing.xl,
   },
   backBtn: {
     paddingVertical: 12,
-    paddingHorizontal: Spacing.base,
-    borderRadius: Radius.sm,
-    borderWidth: 1,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: Radius.md,
+    borderWidth: 1.5,
   },
   backBtnText: { fontFamily: FontFamily.sansSemiBold, fontSize: 14 },
   nextBtn: {
-    flex: 1,
+    flexDirection: 'row',
     paddingVertical: 14,
+    paddingHorizontal: Spacing.xl,
     borderRadius: Radius.md,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 6,
   },
   nextBtnText: { fontFamily: FontFamily.sansBold, fontSize: 15 },
 });

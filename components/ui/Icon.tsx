@@ -12,6 +12,7 @@ import {
   Home, Lightbulb, LucideProps, X, Settings, Globe, Sun, SunMoon, Bell,
   Calendar, CircleDot, Minus, MoreHorizontal, Edit2, Trash2, ArrowUpCircle,
   CircleCheck, TrendingDown, Wallet, HandHelping, ShieldAlert, Send, Mail,
+  MessageSquare,
 } from 'lucide-react-native';
 
 const ICON_MAP = {
@@ -83,6 +84,7 @@ const ICON_MAP = {
   CircleCheck,
   Send,
   Mail,
+  MessageSquare,
 } as const;
 
 export type IconName = keyof typeof ICON_MAP;

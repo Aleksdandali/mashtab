@@ -19,7 +19,7 @@ import { useAI } from '@/hooks/useAI';
 import { useBeliefs, getBeliefTitle } from '@/hooks/useBeliefs';
 import { STAGES } from '@/constants/stages';
 import { FontFamily } from '@/constants/typography';
-import { Spacing, Radius, Shadow } from '@/constants/spacing';
+import { Spacing, Radius } from '@/constants/spacing';
 import { AIContextType } from '@/types';
 import type { AIContext } from '@/lib/ai';
 
@@ -120,10 +120,9 @@ const typingStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 14,
-    borderRadius: 18,
-    borderBottomLeftRadius: 4,
+    borderRadius: Radius.lg,
     alignSelf: 'flex-start',
     marginLeft: Spacing.base,
     marginBottom: Spacing.sm,
@@ -136,49 +135,30 @@ const typingStyles = StyleSheet.create({
 function ChatBubble({
   role,
   content,
-  timestamp,
 }: {
   role: 'user' | 'assistant';
   content: string;
-  timestamp: string;
 }) {
   const C = useTheme();
   const isUser = role === 'user';
 
-  const time = new Date(timestamp).toLocaleTimeString('uk-UA', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-
   return (
-    <View style={[bubbleStyles.wrap, isUser ? bubbleStyles.wrapUser : bubbleStyles.wrapAssistant]}>
-      {/* Avatar for assistant */}
-      {!isUser && (
-        <View style={[bubbleStyles.avatar, { backgroundColor: C.primary + '20' }]}>
-          <Icon name="MessageCircle" size={16} color={C.primary} />
-        </View>
-      )}
-
-      <View style={bubbleStyles.col}>
-        <View
-          style={[
-            bubbleStyles.bubble,
-            isUser
-              ? [bubbleStyles.bubbleUser, { backgroundColor: C.primaryMuted }]
-              : [bubbleStyles.bubbleAssistant, { backgroundColor: C.surface2 }],
-          ]}
-        >
-          <Text
-            style={[
-              bubbleStyles.text,
-              { color: C.text },
-            ]}
-          >
-            {content}
-          </Text>
-        </View>
-        <Text style={[bubbleStyles.time, { color: C.textTertiary }]}>
-          {time}
+    <View
+      style={[
+        bubbleStyles.wrap,
+        isUser ? bubbleStyles.wrapUser : bubbleStyles.wrapAssistant,
+      ]}
+    >
+      <View
+        style={[
+          bubbleStyles.bubble,
+          isUser
+            ? { backgroundColor: C.primaryMuted }
+            : { backgroundColor: C.surface2 },
+        ]}
+      >
+        <Text style={[bubbleStyles.text, { color: C.text }]}>
+          {content}
         </Text>
       </View>
     </View>
@@ -187,45 +167,21 @@ function ChatBubble({
 
 const bubbleStyles = StyleSheet.create({
   wrap: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
     marginBottom: Spacing.md,
     paddingHorizontal: Spacing.base,
   },
-  wrapUser: { justifyContent: 'flex-end' },
-  wrapAssistant: { justifyContent: 'flex-start', gap: Spacing.sm },
-  avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-  },
-  avatarText: { fontSize: 16 },
-  col: { maxWidth: '75%', gap: 3 },
+  wrapUser: { alignItems: 'flex-end' },
+  wrapAssistant: { alignItems: 'flex-start' },
   bubble: {
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-  },
-  bubbleUser: {
-    borderRadius: 18,
-    borderBottomRightRadius: 4,
-  },
-  bubbleAssistant: {
-    borderRadius: 18,
-    borderBottomLeftRadius: 4,
+    maxWidth: '80%',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: Radius.lg,
   },
   text: {
     fontFamily: FontFamily.sansMedium,
     fontSize: 15,
     lineHeight: 22,
-  },
-  time: {
-    fontFamily: FontFamily.sans,
-    fontSize: 11,
-    alignSelf: 'flex-end',
-    paddingHorizontal: 4,
   },
 });
 
@@ -296,16 +252,21 @@ export default function AICoachScreen() {
   const beliefId = params.beliefId ?? null;
   const stageKey = params.stageKey ?? null;
 
-  // Find linked belief for context
   const linkedBelief = beliefId ? beliefs.find((b) => b.id === beliefId) : null;
   const beliefTitle = linkedBelief ? getBeliefTitle(linkedBelief) : undefined;
 
-  // Find stage question
   const stageObj = stageKey ? STAGES.find((s) => s.key === stageKey) : null;
   const stageQuestion = stageObj?.questionUk;
 
   const contextLabel = CONTEXT_LABELS[contextType];
   const contextColor = CONTEXT_COLORS[contextType] ?? C.primary;
+
+  // Build display label for context badge
+  const badgeText = contextLabel
+    ? beliefTitle
+      ? `${contextLabel}: ${beliefTitle}`
+      : contextLabel
+    : null;
 
   // ─── Init ────────────────────────────────────────────────────────────────
 
@@ -322,7 +283,6 @@ export default function AICoachScreen() {
     }
   }, []);
 
-  // Auto-scroll to bottom when messages change
   useEffect(() => {
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
@@ -361,18 +321,17 @@ export default function AICoachScreen() {
           <Icon name="ChevronLeft" size={24} color={C.textSecondary} />
         </Pressable>
 
-        <View style={styles.headerCenter}>
-          <Text style={[styles.headerTitle, { color: C.text }]}>AI Coach</Text>
-          {contextLabel && (
+        <Text style={[styles.headerTitle, { color: C.text }]}>AI Coach</Text>
+
+        <View style={styles.headerRight}>
+          {badgeText && (
             <View style={[styles.contextBadge, { backgroundColor: C.surface2 }]}>
-              <Text style={[styles.contextBadgeText, { color: C.textSecondary }]}>
-                {contextLabel}
+              <Text style={[styles.contextBadgeText, { color: C.textSecondary }]} numberOfLines={1}>
+                {badgeText}
               </Text>
             </View>
           )}
         </View>
-
-        <View style={styles.backBtn} />
       </View>
 
       <KeyboardAvoidingView
@@ -393,7 +352,6 @@ export default function AICoachScreen() {
               key={i}
               role={msg.role}
               content={msg.content}
-              timestamp={msg.timestamp}
             />
           ))}
 
@@ -410,10 +368,13 @@ export default function AICoachScreen() {
         {limitReached ? (
           <LimitBanner message={limitReason ?? 'Ліміт вичерпано.'} />
         ) : (
-          <View style={[styles.inputArea, { backgroundColor: C.surface1, borderTopColor: C.border }]}>
+          <View style={[styles.inputArea, { backgroundColor: C.surface1 }]}>
             <View style={[styles.inputRow, { backgroundColor: C.surface2 }]}>
               <TextInput
-                style={[styles.textInput, { color: C.text, height: Math.min(inputHeight, MAX_INPUT_HEIGHT) }]}
+                style={[
+                  styles.textInput,
+                  { color: C.text, height: Math.min(inputHeight, MAX_INPUT_HEIGHT) },
+                ]}
                 placeholder="Напишіть питання..."
                 placeholderTextColor={C.textTertiary}
                 multiline
@@ -438,7 +399,12 @@ export default function AICoachScreen() {
                 {loading ? (
                   <ActivityIndicator color={C.surface1} size="small" />
                 ) : (
-                  <Icon name="Send" size={16} color={inputText.trim() ? '#060810' : C.textTertiary} strokeWidth={1.5} />
+                  <Icon
+                    name="Send"
+                    size={16}
+                    color={inputText.trim() ? '#060810' : C.textTertiary}
+                    strokeWidth={1.5}
+                  />
                 )}
               </Pressable>
             </View>
@@ -457,29 +423,29 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  backBtn: { width: 36, alignItems: 'center' },
-  backText: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 22,
+  backBtn: {
+    width: 36,
+    alignItems: 'center',
+    marginRight: Spacing.sm,
   },
-  headerCenter: { alignItems: 'center', gap: 4 },
-  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  statusDot: { width: 7, height: 7, borderRadius: 4 },
   headerTitle: {
-    fontFamily: FontFamily.serif,
+    fontFamily: FontFamily.sansBold,
     fontSize: 20,
-    fontWeight: '600',
     lineHeight: 26,
+  },
+  headerRight: {
+    flex: 1,
+    alignItems: 'flex-end',
   },
   contextBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: Radius.sm,
+    maxWidth: 180,
   },
   contextBadgeText: {
     fontFamily: FontFamily.sansMedium,
@@ -507,7 +473,6 @@ const styles = StyleSheet.create({
   inputArea: {
     padding: Spacing.base,
     paddingBottom: Spacing.lg,
-    borderTopWidth: StyleSheet.hairlineWidth,
   },
   inputRow: {
     flexDirection: 'row',
@@ -515,7 +480,7 @@ const styles = StyleSheet.create({
     gap: 12,
     borderRadius: Radius.lg,
     paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingVertical: 12,
   },
   textInput: {
     flex: 1,
@@ -530,9 +495,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
-  },
-  sendIcon: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 20,
   },
 });

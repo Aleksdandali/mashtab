@@ -154,7 +154,6 @@ export default function FutureSelfScreen() {
             };
           });
       } else {
-        // Fallback if user skipped diagnostic
         top3 = [
           { rank: 1, beliefUk: 'Я не можу встановлювати високі ціни', category: 'pricing' },
           { rank: 2, beliefUk: 'Якщо хочеш зробити добре — зроби сам', category: 'delegation' },
@@ -180,11 +179,10 @@ export default function FutureSelfScreen() {
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
+        {/* Header — centered */}
         <Animated.View
           style={[styles.header, { opacity: headerOpacity, transform: [{ translateY: headerY }] }]}
         >
-          <Text style={styles.eyebrow}>ВАШЕ МАЙБУТНЄ · 3 МІСЯЦІ</Text>
           <Text style={styles.title}>
             Уявіть себе{'\n'}через 3 місяці
           </Text>
@@ -200,29 +198,17 @@ export default function FutureSelfScreen() {
           ))}
         </View>
 
-        {/* Bottom insight */}
-        <Animated.View
-          style={[
-            styles.insightRow,
-            { opacity: headerOpacity },
-          ]}
-        >
-          <Text style={styles.insightText}>
-            Це не мотиваційна риторика. Це результат системної роботи з методологією МАСШТАБ.
-          </Text>
-        </Animated.View>
+        {/* CTA — inline in content flow */}
+        <View style={styles.ctaWrap}>
+          <Button
+            label="Почати трансформацію"
+            onPress={() => router.push('/onboarding/paywall')}
+            variant="primary"
+            size="lg"
+            style={styles.btn}
+          />
+        </View>
       </ScrollView>
-
-      {/* CTA */}
-      <View style={styles.footer}>
-        <Button
-          label="Почати трансформацію"
-          onPress={() => router.push('/onboarding/paywall')}
-          variant="primary"
-          size="lg"
-          style={styles.btn}
-        />
-      </View>
     </SafeAreaView>
   );
 }
@@ -236,32 +222,30 @@ const styles = StyleSheet.create({
   },
   scroll: {
     paddingHorizontal: Spacing.screen,
-    paddingBottom: Spacing.xl,
+    paddingBottom: Spacing.xxl,
     gap: Spacing.xl,
   },
 
-  // Header
+  // Header — centered
   header: {
     paddingTop: Spacing.xl,
     gap: Spacing.sm,
-  },
-  eyebrow: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 10,
-    letterSpacing: 2,
-    color: C.primary,
+    alignItems: 'center',
   },
   title: {
-    fontFamily: FontFamily.serifBold,
+    fontFamily: FontFamily.sansExtraBold,
     fontSize: 32,
     lineHeight: 40,
+    letterSpacing: -0.64,
     color: C.text,
+    textAlign: 'center',
   },
   subtitle: {
     fontFamily: FontFamily.sans,
-    fontSize: 15,
-    lineHeight: 23,
+    fontSize: 17,
+    lineHeight: 25,
     color: C.textSecondary,
+    textAlign: 'center',
   },
 
   // Cards
@@ -273,12 +257,6 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
     gap: 16,
   },
-  cardGlow: {},
-  cardHeader: {},
-  iconCircle: {},
-  cardIcon: {},
-  categoryTag: {},
-  categoryTagText: {},
 
   sectionBlock: { gap: 8 },
   wasLabel: {
@@ -286,11 +264,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 1.5,
   },
-  withoutLabel: {},
   beliefText: {
-    fontFamily: FontFamily.serifItalic,
-        fontSize: 16,
+    fontFamily: FontFamily.sansMedium,
+    fontSize: 16,
     lineHeight: 23,
+    fontStyle: 'italic',
   },
 
   arrowRow: {
@@ -303,8 +281,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  arrowLine: {},
-  arrowIcon: {},
 
   outcomeLabel: {
     fontFamily: FontFamily.sansSemiBold,
@@ -313,35 +289,17 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   outcomeText: {
-    fontFamily: FontFamily.serif,
+    fontFamily: FontFamily.sansBold,
     fontSize: 17,
     lineHeight: 24,
   },
 
-  // Insight
-  insightRow: {
-    backgroundColor: C.surface2,
-    borderRadius: Radius.md,
-    padding: Spacing.base,
-    borderWidth: 1,
-    borderColor: C.border,
+  // CTA — inline
+  ctaWrap: {
+    marginTop: Spacing.xxl,
   },
-  insightText: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 14,
-    lineHeight: 21,
-    color: C.textSecondary,
-    textAlign: 'center',
+  btn: {
+    width: '100%',
+    paddingVertical: 20,
   },
-
-  // Footer
-  footer: {
-    paddingHorizontal: Spacing.screen,
-    paddingBottom: Spacing.xl,
-    paddingTop: Spacing.base,
-    borderTopWidth: 1,
-    borderTopColor: C.border,
-    backgroundColor: C.bg,
-  },
-  btn: { width: '100%' },
 });

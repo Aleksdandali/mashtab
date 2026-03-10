@@ -28,7 +28,7 @@ import { STAGES, STAGE_COLORS, StageKey, Stage } from '@/constants/stages';
 import { Icon } from '@/components/ui/Icon';
 import { CATEGORY_MAP } from '@/constants/categories';
 import { FontFamily } from '@/constants/typography';
-import { Spacing, Radius, Shadow } from '@/constants/spacing';
+import { Spacing, Radius } from '@/constants/spacing';
 import { UserBelief } from '@/types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -126,8 +126,6 @@ const scoreStyles = StyleSheet.create({
 interface StageRowProps {
   stage: Stage;
   status: 'completed' | 'current' | 'locked';
-  stageContent: string | null;
-  color: string;
   reflection: string;
   onChangeReflection: (text: string) => void;
   saving: boolean;
@@ -140,8 +138,6 @@ interface StageRowProps {
 function StageRow({
   stage,
   status,
-  stageContent,
-  color,
   reflection,
   onChangeReflection,
   saving,
@@ -151,31 +147,16 @@ function StageRow({
   showTaskBtn,
 }: StageRowProps) {
   const C = useTheme();
-  const glowAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (status !== 'current') return;
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(glowAnim, { toValue: 1, duration: 2200, useNativeDriver: false }),
-        Animated.timing(glowAnim, { toValue: 0, duration: 2200, useNativeDriver: false }),
-      ]),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [status, glowAnim]);
-
-  const glowOpacity = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.18] });
 
   if (status === 'completed') {
     return (
-      <View style={[stageStyles.stageRow, { backgroundColor: C.surface2 }]}>
+      <View style={[stageStyles.row, stageStyles.rowCompleted, { backgroundColor: C.surface2 }]}>
         <View style={[stageStyles.circle, { backgroundColor: C.primary }]}>
           <Icon name="Check" size={14} strokeWidth={2.5} color="#060810" />
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={[stageStyles.stageName, { color: C.text }]}>{stage.nameUk}</Text>
-          <Text style={[stageStyles.stageDesc, { color: C.textSecondary }]}>{stage.descriptionUk}</Text>
+        <View style={stageStyles.rowContent}>
+          <Text style={[stageStyles.rowTitle, { color: C.text }]}>{stage.nameUk}</Text>
+          <Text style={[stageStyles.rowDesc, { color: C.textSecondary }]}>{stage.descriptionUk}</Text>
         </View>
       </View>
     );
@@ -183,58 +164,31 @@ function StageRow({
 
   if (status === 'locked') {
     return (
-      <View style={[stageStyles.stageRow, { backgroundColor: C.surface2, opacity: 0.5 }]}>
+      <View style={[stageStyles.row, stageStyles.rowLocked, { backgroundColor: C.surface2, opacity: 0.5 }]}>
         <View style={[stageStyles.circle, { backgroundColor: C.surface3 }]}>
           <Icon name="Lock" size={14} color={C.textSecondary} strokeWidth={1.5} />
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={[stageStyles.stageName, { color: C.text }]}>{stage.nameUk}</Text>
-          <Text style={[stageStyles.stageDesc, { color: C.textSecondary }]}>{stage.descriptionUk}</Text>
+        <View style={stageStyles.rowContent}>
+          <Text style={[stageStyles.rowTitle, { color: C.text }]}>{stage.nameUk}</Text>
+          <Text style={[stageStyles.rowDesc, { color: C.textSecondary }]}>{stage.descriptionUk}</Text>
         </View>
       </View>
     );
   }
 
-  // Current — expanded
   return (
-    <View style={[stageStyles.currentCard, { backgroundColor: C.surface2, borderColor: 'rgba(200,230,74,0.5)' }]}>
-      {/* Glow */}
-      <Animated.View
-        style={[
-          StyleSheet.absoluteFillObject,
-          { borderRadius: Radius.lg, backgroundColor: color, opacity: glowOpacity },
-        ]}
-        pointerEvents="none"
-      />
-
-      {/* Stage header */}
+    <View style={[stageStyles.currentCard, { backgroundColor: C.surface2, borderColor: 'rgba(200,255,0,0.5)' }]}>
       <View style={stageStyles.currentHeader}>
         <View style={[stageStyles.circle, { backgroundColor: C.primary }]}>
           <Text style={stageStyles.circleNum}>{stage.index}</Text>
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={[stageStyles.currentName, { color: C.text }]}>
-            {stage.nameUk}
-          </Text>
-          <Text style={[stageStyles.currentDesc, { color: C.textSecondary }]}>
-            {stage.descriptionUk}
-          </Text>
+        <View style={stageStyles.rowContent}>
+          <Text style={[stageStyles.currentName, { color: C.text }]}>{stage.nameUk}</Text>
+          <Text style={[stageStyles.currentDesc, { color: C.textSecondary }]}>{stage.descriptionUk}</Text>
         </View>
       </View>
 
-      {/* Stage content from belief */}
-      {!!stageContent && (
-        <View style={[stageStyles.contentBlock, { backgroundColor: C.surface3 }]}>
-          <Text style={[stageStyles.contentLabel, { color: C.textTertiary }]}>
-            Контекст
-          </Text>
-          <Text style={[stageStyles.contentText, { color: C.textSecondary }]}>
-            {stageContent}
-          </Text>
-        </View>
-      )}
-
-      {/* Question */}
+      {/* Question — italic */}
       <View style={stageStyles.questionWrap}>
         <Text style={[stageStyles.questionText, { color: C.textSecondary }]}>
           {stage.questionUk}
@@ -245,10 +199,7 @@ function StageRow({
       <TextInput
         style={[
           stageStyles.textarea,
-          {
-            backgroundColor: C.surface3,
-            color: C.text,
-          },
+          { backgroundColor: C.surface3, color: C.text },
         ]}
         placeholder="Напишіть вашу відповідь..."
         placeholderTextColor={C.textTertiary}
@@ -269,7 +220,7 @@ function StageRow({
           ]}
           onPress={onCoach}
         >
-          <Icon name="MessageCircle" size={18} color={C.textSecondary} strokeWidth={1.5} />
+          <Icon name="MessageSquare" size={18} color={C.textSecondary} strokeWidth={1.5} />
           <Text style={[stageStyles.coachBtnText, { color: C.textSecondary }]}>Запитати коуча</Text>
         </Pressable>
 
@@ -286,24 +237,26 @@ function StageRow({
           {saving ? (
             <ActivityIndicator color="#060810" size="small" />
           ) : (
-            <Text style={stageStyles.continueBtnText}>Продовжити шлях</Text>
+            <>
+              <Text style={stageStyles.continueBtnText}>Продовжити шлях</Text>
+              <Icon name="ArrowRight" size={18} strokeWidth={1.5} color="#060810" />
+            </>
           )}
         </Pressable>
       </View>
 
-      {/* Stage 5 special: create task button */}
       {showTaskBtn && (
         <Pressable
           style={({ pressed }) => [
             stageStyles.taskBtn,
-            { borderColor: color, backgroundColor: color + '14' },
+            { borderColor: C.primary, backgroundColor: C.primaryMuted },
             pressed && { opacity: 0.75 },
           ]}
           onPress={onCreateTask}
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Icon name="Plus" size={14} color={color} />
-            <Text style={[stageStyles.taskBtnText, { color: color }]}>Створити задачу</Text>
+            <Icon name="Plus" size={14} color={C.primary} />
+            <Text style={[stageStyles.taskBtnText, { color: C.primary }]}>Створити задачу</Text>
           </View>
         </Pressable>
       )}
@@ -312,14 +265,32 @@ function StageRow({
 }
 
 const stageStyles = StyleSheet.create({
-  // Shared row (completed / locked)
-  stageRow: {
+  row: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 12,
     borderRadius: Radius.lg,
-    padding: 16,
-    marginBottom: 8,
+    marginBottom: 12,
+  },
+  rowCompleted: {
+    padding: 20,
+  },
+  rowLocked: {
+    padding: 20,
+  },
+  rowContent: {
+    flex: 1,
+  },
+  rowTitle: {
+    fontFamily: FontFamily.sansMedium,
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 2,
+  },
+  rowDesc: {
+    fontFamily: FontFamily.sans,
+    fontSize: 13,
+    lineHeight: 18,
   },
   circle: {
     width: 24,
@@ -335,35 +306,11 @@ const stageStyles = StyleSheet.create({
     fontSize: 12,
     color: '#060810',
   },
-  stageName: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 2,
-  },
-  stageDesc: {
-    fontFamily: FontFamily.sans,
-    fontSize: 13,
-    lineHeight: 18,
-  },
 
-  // Locked — same as stageRow but with opacity applied inline
-  lockedName: { fontFamily: FontFamily.sansMedium, fontSize: 14 },
-  lockIcon: {},
-  completedName: { fontFamily: FontFamily.sansSemiBold, fontSize: 14 },
-  checkBadge: {},
-  checkText: {},
-  completedRow: {},
-  lockedRow: {},
-  iconBadge: {},
-  icon: {},
-
-  // Current — expanded
   currentCard: {
     borderRadius: Radius.lg,
-    padding: 20,
-    marginBottom: 8,
-    overflow: 'hidden',
+    padding: 24,
+    marginBottom: 12,
     borderWidth: 1,
   },
   currentHeader: {
@@ -372,10 +319,8 @@ const stageStyles = StyleSheet.create({
     gap: 12,
     marginBottom: 16,
   },
-  iconBadgeLarge: {},
-  iconLarge: {},
   currentName: {
-    fontFamily: FontFamily.sansSemiBold,
+    fontFamily: FontFamily.sansMedium,
     fontSize: 15,
     lineHeight: 21,
     marginBottom: 2,
@@ -385,30 +330,14 @@ const stageStyles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
   },
-  currentBadge: {},
-  currentBadgeText: {},
-  contentBlock: {
-    borderRadius: Radius.md,
-    padding: 12,
-    marginBottom: 12,
+  questionWrap: {
+    marginBottom: 16,
   },
-  contentLabel: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 10,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginBottom: 4,
-  },
-  contentText: {
-    fontFamily: FontFamily.sans,
-    fontSize: 13,
-    lineHeight: 19,
-      },
-  questionWrap: { marginBottom: 12 },
   questionText: {
     fontFamily: FontFamily.sans,
     fontSize: 13,
     lineHeight: 20,
+    fontStyle: 'italic',
   },
   textarea: {
     borderRadius: Radius.md,
@@ -418,11 +347,11 @@ const stageStyles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 21,
     minHeight: 100,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   btnRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 12,
     alignItems: 'center',
   },
   coachBtn: {
@@ -430,7 +359,7 @@ const stageStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 8,
     paddingVertical: 12,
     borderRadius: Radius.md,
     borderWidth: 1,
@@ -444,7 +373,7 @@ const stageStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 8,
     paddingVertical: 12,
     borderRadius: Radius.md,
     minHeight: 46,
@@ -455,7 +384,7 @@ const stageStyles = StyleSheet.create({
     fontSize: 14,
   },
   taskBtn: {
-    marginTop: 8,
+    marginTop: 12,
     paddingVertical: 14,
     borderRadius: Radius.md,
     borderWidth: 1.5,
@@ -573,9 +502,8 @@ const butterflyStyles = StyleSheet.create({
   sparklesWrap: { width: 80, height: 80, alignItems: 'center', justifyContent: 'center' },
   stats: { width: '100%', alignItems: 'center' },
   title: {
-    fontFamily: FontFamily.serif,
+    fontFamily: FontFamily.sansBold,
     fontSize: 24,
-    fontWeight: '700',
     textAlign: 'center',
     marginBottom: 5,
   },
@@ -594,20 +522,17 @@ const butterflyStyles = StyleSheet.create({
   },
   scoreItem: { alignItems: 'center' },
   scoreLabel: {
-    fontFamily: FontFamily.sans,
+    fontFamily: FontFamily.sansMedium,
     fontSize: 12,
-    fontWeight: '500',
     marginBottom: 4,
   },
   scoreNum: {
-    fontFamily: FontFamily.serif,
+    fontFamily: FontFamily.sansBold,
     fontSize: 32,
-    fontWeight: '700',
   },
   arrow: {
-    fontFamily: FontFamily.sans,
+    fontFamily: FontFamily.sansBold,
     fontSize: 24,
-    fontWeight: '700',
   },
   diffText: {
     fontFamily: FontFamily.sans,
@@ -622,18 +547,16 @@ const butterflyStyles = StyleSheet.create({
     marginBottom: 5,
   },
   identityLabel: {
-    fontFamily: FontFamily.sans,
+    fontFamily: FontFamily.sansBold,
     fontSize: 11,
-    fontWeight: '700',
     letterSpacing: 0.6,
     textTransform: 'uppercase',
     marginBottom: 2,
   },
   identityText: {
-    fontFamily: FontFamily.serif,
+    fontFamily: FontFamily.sansSemiBold,
     fontSize: 17,
-    fontWeight: '600',
-        lineHeight: 24,
+    lineHeight: 24,
   },
   doneBtn: {
     paddingVertical: 14,
@@ -641,9 +564,8 @@ const butterflyStyles = StyleSheet.create({
     borderRadius: Radius.md,
   },
   doneBtnText: {
-    fontFamily: FontFamily.sans,
+    fontFamily: FontFamily.sansBold,
     fontSize: 16,
-    fontWeight: '700',
     color: '#fff',
   },
 });
@@ -710,9 +632,8 @@ const modalStyles = StyleSheet.create({
     gap: 4,
   },
   title: {
-    fontFamily: FontFamily.serif,
+    fontFamily: FontFamily.sansBold,
     fontSize: 22,
-    fontWeight: '700',
   },
   body: {
     fontFamily: FontFamily.sans,
@@ -726,9 +647,8 @@ const modalStyles = StyleSheet.create({
     marginTop: 2,
   },
   submitText: {
-    fontFamily: FontFamily.sans,
+    fontFamily: FontFamily.sansBold,
     fontSize: 15,
-    fontWeight: '700',
     color: '#fff',
   },
 });
@@ -745,16 +665,13 @@ export default function BeliefDetailScreen() {
   const [loadingBelief, setLoadingBelief] = useState(false);
   const [reflection, setReflection] = useState('');
   const [saving, setSaving] = useState(false);
-  // Stage 5: show create-task button after advancing
   const [showTaskBtn, setShowTaskBtn] = useState(false);
   const [taskReflection, setTaskReflection] = useState('');
-  // Stage 6: score modal + butterfly
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [scoreSaving, setScoreSaving] = useState(false);
   const [scoreAfterSelected, setScoreAfterSelected] = useState<number | null>(null);
   const [showButterfly, setShowButterfly] = useState(false);
 
-  // Keep ub in sync with store
   useEffect(() => {
     const found = beliefs.find((b) => b.id === id);
     if (found) setUb(found);
@@ -845,7 +762,6 @@ export default function BeliefDetailScreen() {
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: C.surface1 }]}>
-      {/* Butterfly overlay */}
       <ButterflyOverlay
         visible={showButterfly}
         scoreBefore={ub.score}
@@ -854,7 +770,6 @@ export default function BeliefDetailScreen() {
         onDone={handleButterflyDone}
       />
 
-      {/* Score modal for stage 6 */}
       <ScoreModal
         visible={showScoreModal}
         color={STAGE_COLORS.identity}
@@ -878,13 +793,13 @@ export default function BeliefDetailScreen() {
             <Icon name="ChevronLeft" size={22} color={C.textSecondary} />
           </Pressable>
 
-          {/* Header */}
+          {/* Header: Ring + category + title */}
           <View style={styles.header}>
             <View style={styles.headerRow}>
               <View style={styles.headerRing}>
                 <RingProgress
                   progress={completed}
-                  color={catColor}
+                  color={C.primary}
                   size={68}
                   strokeWidth={4}
                   animated
@@ -893,7 +808,7 @@ export default function BeliefDetailScreen() {
                   <Text style={[styles.headerRingText, { color: C.textSecondary }]}>{completed}/6</Text>
                 </View>
               </View>
-              <View style={{ flex: 1, paddingTop: 6 }}>
+              <View style={styles.headerMeta}>
                 {cat && (
                   <Text style={[styles.catLabel, { color: C.primary }]}>
                     {cat.nameUk.toUpperCase()}
@@ -906,15 +821,10 @@ export default function BeliefDetailScreen() {
             </View>
           </View>
 
-          {/* Divider */}
-          <View style={[styles.divider, { backgroundColor: C.border }]} />
-
           {/* Stages */}
           <View style={styles.stages}>
             {STAGES.map((stage) => {
               const status = getStageStatus(stage, ub);
-              const stageContent = getStageContent(ub, stage.key);
-              const stageColor = STAGE_COLORS[stage.key];
               const isCurrent = status === 'current';
 
               return (
@@ -922,8 +832,6 @@ export default function BeliefDetailScreen() {
                   key={stage.key}
                   stage={stage}
                   status={status}
-                  stageContent={stageContent}
-                  color={stageColor}
                   reflection={isCurrent ? reflection : ''}
                   onChangeReflection={setReflection}
                   saving={saving}
@@ -957,32 +865,40 @@ const styles = StyleSheet.create({
 
   backBtn: { marginBottom: 16, alignSelf: 'flex-start' },
 
-  header: { marginBottom: 20 },
+  header: { marginBottom: 32 },
   headerRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
   headerRing: { position: 'relative', width: 68, height: 68, flexShrink: 0 },
-  headerRingCenter: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
-  headerRingText: { fontFamily: FontFamily.sansMedium, fontSize: 12 },
+  headerRingCenter: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerRingText: {
+    fontFamily: FontFamily.sansMedium,
+    fontSize: 12,
+  },
+  headerMeta: {
+    flex: 1,
+    paddingTop: 8,
+  },
 
   catLabel: {
     fontFamily: FontFamily.sansSemiBold,
     fontSize: 11,
     letterSpacing: 1.5,
-    marginBottom: 4,
+    textTransform: 'uppercase',
+    marginBottom: 8,
   },
-  catBadge: {},
-  catIcon: {},
-  catName: {},
-
   beliefTitle: {
-    fontFamily: FontFamily.serifItalic,
-        fontSize: 18,
-    lineHeight: 26,
+    fontFamily: FontFamily.sansMedium,
+    fontSize: 20,
+    lineHeight: 28,
+    fontStyle: 'italic',
   },
-  conviction: {},
-  progressPill: {},
-  progressText: {},
-
-  divider: { height: StyleSheet.hairlineWidth, marginBottom: 16 },
 
   stages: { gap: 0 },
 });
