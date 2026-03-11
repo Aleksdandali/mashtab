@@ -1,515 +1,307 @@
-import { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
-  SafeAreaView,
   Pressable,
+  StyleSheet,
+  SafeAreaView,
   ActivityIndicator,
 } from 'react-native';
-import Svg, { Circle, Line, Polygon, Text as SvgText } from 'react-native-svg';
+import Svg, { Polygon, Line, Circle as SvgCircle, Text as SvgText } from 'react-native-svg';
 import { useFocusEffect } from 'expo-router';
-import { Icon } from '@/components/ui/Icon';
-import { useTheme } from '@/hooks/useTheme';
+import * as Haptics from 'expo-haptics';
 import { useWheel, ScoreMap } from '@/hooks/useWheel';
 import { SPHERES, SphereKey } from '@/constants/spheres';
-import { FontFamily } from '@/constants/typography';
-import { Spacing, Radius, Shadow } from '@/constants/spacing';
 
-// ─── Wheel geometry ───────────────────────────────────────────────────────────
+// ─── Radar geometry ───────────────────────────────────────────────────────────
 
-const WHEEL_SIZE = 280;
-const CENTER = WHEEL_SIZE / 2;
-const MAX_RADIUS = 104;
-const LEVELS = [2, 4, 6, 8, 10];
-const N = SPHERES.length; // 8
+const SIZE = 280;
+const CX = SIZE / 2;
+const CY = SIZE / 2;
+const R_MAX = SIZE / 2 - 32;
+const N = SPHERES.length;
+const GRID_LEVELS = [2, 4, 6, 8, 10];
 
-/** Angle in radians for sphere index i (top = -π/2) */
-function angle(i: number): number {
-  return (2 * Math.PI * i) / N - Math.PI / 2;
+function angle(i: number) {
+  return (Math.PI * 2 * i) / N - Math.PI / 2;
 }
 
-/** Point on the wheel for a given sphere and score */
-function point(i: number, score: number) {
-  const r = (score / 10) * MAX_RADIUS;
-  const a = angle(i);
-  return { x: CENTER + r * Math.cos(a), y: CENTER + r * Math.sin(a) };
+function pt(i: number, v: number) {
+  return {
+    x: CX + (v / 10) * R_MAX * Math.cos(angle(i)),
+    y: CY + (v / 10) * R_MAX * Math.sin(angle(i)),
+  };
 }
 
-/** Icon position (outside ring) */
-function iconPos(i: number) {
-  const r = MAX_RADIUS + 22;
-  const a = angle(i);
-  return { x: CENTER + r * Math.cos(a), y: CENTER + r * Math.sin(a) };
-}
+// ─── Radar Chart ─────────────────────────────────────────────────────────────
 
-// ─── WheelChart ──────────────────────────────────────────────────────────────
-
-function WheelChart({ scores, previousScores, avgScore, colors }: {
-  scores: ScoreMap;
-  previousScores: ScoreMap | null;
-  avgScore: number;
-  colors: ReturnType<typeof useTheme>;
-}) {
-  const polygonPoints = SPHERES
-    .map((s, i) => {
-      const p = point(i, scores[s.key]);
-      return `${p.x},${p.y}`;
-    })
-    .join(' ');
-
-  const prevPolygonPoints = previousScores
-    ? SPHERES.map((s, i) => {
-        const p = point(i, previousScores[s.key]);
-        return `${p.x},${p.y}`;
-      }).join(' ')
-    : null;
+function RadarChart({ scores }: { scores: ScoreMap }) {
+  const dataPoints = SPHERES.map((s, i) => pt(i, scores[s.key] || 0));
+  const avgRaw = Object.values(scores).reduce((a, b) => a + b, 0) / N;
+  const avg = avgRaw.toFixed(1);
 
   return (
-    <View style={wheelStyles.container}>
-      <Svg width={WHEEL_SIZE} height={WHEEL_SIZE}>
-        {/* Concentric rings */}
-        {LEVELS.map((level) => (
-          <Circle
-            key={level}
-            cx={CENTER}
-            cy={CENTER}
-            r={(level / 10) * MAX_RADIUS}
-            fill="none"
-            stroke={colors.border}
-            strokeWidth={level === 10 ? 1.5 : 1}
-          />
-        ))}
-
-        {/* Axis lines */}
-        {SPHERES.map((_, i) => {
-          const outer = point(i, 10);
-          return (
-            <Line
-              key={i}
-              x1={CENTER}
-              y1={CENTER}
-              x2={outer.x}
-              y2={outer.y}
-              stroke={colors.border}
-              strokeWidth={1}
-            />
-          );
-        })}
-
-        {/* Previous scores polygon (subtle) */}
-        {prevPolygonPoints && (
-          <Polygon
-            points={prevPolygonPoints}
-            fill={colors.primary + '10'}
-            stroke={colors.primary + '30'}
-            strokeWidth={1.5}
-            strokeDasharray="4 3"
-          />
-        )}
-
-        {/* Current scores polygon */}
+    <Svg width={SIZE} height={SIZE} viewBox={`0 0 ${SIZE} ${SIZE}`}>
+      {/* Grid polygons */}
+      {GRID_LEVELS.map((lv) => (
         <Polygon
-          points={polygonPoints}
-          fill={colors.primary + '28'}
-          stroke={colors.primary}
-          strokeWidth={2}
+          key={lv}
+          points={Array.from({ length: N }, (_, i) => { const p = pt(i, lv); return `${p.x},${p.y}`; }).join(' ')}
+          fill="none"
+          stroke="rgba(255,255,255,0.06)"
+          strokeWidth="1"
         />
+      ))}
 
-        {/* Score dots */}
-        {SPHERES.map((s, i) => {
-          const p = point(i, scores[s.key]);
-          return (
-            <Circle
-              key={s.key}
-              cx={p.x}
-              cy={p.y}
-              r={4}
-              fill={s.color}
-              stroke={colors.surface1}
-              strokeWidth={1.5}
-            />
-          );
-        })}
+      {/* Radial lines */}
+      {Array.from({ length: N }, (_, i) => {
+        const end = pt(i, 10);
+        return (
+          <Line
+            key={i}
+            x1={CX} y1={CY}
+            x2={end.x} y2={end.y}
+            stroke="rgba(255,255,255,0.04)"
+            strokeWidth="1"
+          />
+        );
+      })}
 
-        {/* Sphere icons */}
-        {SPHERES.map((s, i) => {
-          const pos = iconPos(i);
-          return (
-            <SvgText
-              key={s.key}
-              x={pos.x}
-              y={pos.y + 5}
-              textAnchor="middle"
-              fontSize={16}
-            >
-              {s.icon}
-            </SvgText>
-          );
-        })}
+      {/* Data fill */}
+      <Polygon
+        points={dataPoints.map((p) => `${p.x},${p.y}`).join(' ')}
+        fill="rgba(200,255,0,0.12)"
+        stroke="#C8FF00"
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+      />
 
-        {/* Average score in center */}
-        <SvgText
-          x={CENTER}
-          y={CENTER - 6}
-          textAnchor="middle"
-          fill={colors.text}
-          fontSize={22}
-          fontFamily={FontFamily.serifBold}
-          fontWeight="700"
-        >
-          {avgScore.toFixed(1)}
-        </SvgText>
-        <SvgText
-          x={CENTER}
-          y={CENTER + 12}
-          textAnchor="middle"
-          fill={colors.textTertiary}
-          fontSize={10}
-          fontFamily={FontFamily.sans}
-        >
-          серед. бал
-        </SvgText>
-      </Svg>
+      {/* Data dots */}
+      {dataPoints.map((p, i) => (
+        <SvgCircle
+          key={i}
+          cx={p.x} cy={p.y} r="4"
+          fill={SPHERES[i].color}
+          stroke="#060810"
+          strokeWidth="2"
+        />
+      ))}
+
+      {/* Center avg */}
+      <SvgText
+        x={CX} y={CY - 6}
+        textAnchor="middle"
+        fill="#C8FF00"
+        fontSize="30"
+        fontWeight="800"
+      >
+        {avg}
+      </SvgText>
+      <SvgText
+        x={CX} y={CY + 16}
+        textAnchor="middle"
+        fill="rgba(255,255,255,0.3)"
+        fontSize="10"
+      >
+        серед. бал
+      </SvgText>
+    </Svg>
+  );
+}
+
+// ─── Score Bar (10 dots) ──────────────────────────────────────────────────────
+
+function ScoreBar({ score, color }: { score: number; color: string }) {
+  return (
+    <View style={SB.row}>
+      {Array.from({ length: 10 }, (_, i) => (
+        <View
+          key={i}
+          style={[SB.dot, { backgroundColor: i < score ? color : 'rgba(255,255,255,0.08)' }]}
+        />
+      ))}
     </View>
   );
 }
 
-const wheelStyles = StyleSheet.create({
-  container: {
-    alignSelf: 'center',
-    marginVertical: Spacing.base,
-  },
+const SB = StyleSheet.create({
+  row: { flexDirection: 'row', gap: 3, flex: 1 },
+  dot: { flex: 1, height: 8, borderRadius: 4 },
 });
 
-// ─── Score Row (slider) ───────────────────────────────────────────────────────
+// ─── Score Picker (for edit mode) ────────────────────────────────────────────
 
-function ScoreRow({
-  sphere,
-  score,
-  previousScore,
-  onPress,
-  colors,
+function ScorePicker({
+  value,
+  color,
+  onChange,
 }: {
-  sphere: typeof SPHERES[0];
-  score: number;
-  previousScore: number | null;
-  onPress: (v: number) => void;
-  colors: ReturnType<typeof useTheme>;
+  value: number;
+  color: string;
+  onChange: (v: number) => void;
 }) {
-  const delta = previousScore !== null ? score - previousScore : null;
-
   return (
-    <View style={rowStyles.row}>
-      {/* Icon + name */}
-      <View style={rowStyles.labelRow}>
-        <Icon name={sphere.icon} size={16} color={sphere.color} />
-        <Text style={[rowStyles.name, { color: colors.textSecondary }]} numberOfLines={1}>
-          {sphere.nameUk}
-        </Text>
-        {delta !== null && delta !== 0 && (
-          <Text style={[rowStyles.delta, { color: delta > 0 ? '#7CB392' : '#C47B8A' }]}>
-            {delta > 0 ? `+${delta}` : `${delta}`}
-          </Text>
-        )}
-      </View>
-
-      {/* 10-segment buttons */}
-      <View style={rowStyles.segments}>
-        {Array.from({ length: 10 }, (_, i) => {
-          const val = i + 1;
-          const active = val <= score;
-          return (
-            <Pressable
-              key={val}
-              onPress={() => onPress(val)}
-              style={({ pressed }) => [
-                rowStyles.segment,
-                {
-                  backgroundColor: active ? sphere.color : colors.surface3,
-                  opacity: pressed ? 0.7 : 1,
-                  borderRadius: val === 1 ? Radius.sm : val === 10 ? Radius.sm : 3,
-                },
-              ]}
-            />
-          );
-        })}
-        <Text style={[rowStyles.scoreLabel, { color: colors.text }]}>{score}</Text>
-      </View>
+    <View style={SP.row}>
+      {Array.from({ length: 10 }, (_, i) => {
+        const n = i + 1;
+        const active = n <= value;
+        return (
+          <Pressable
+            key={n}
+            onPress={() => onChange(n)}
+            style={[SP.dot, { backgroundColor: active ? color : 'rgba(255,255,255,0.08)' }]}
+          />
+        );
+      })}
     </View>
   );
 }
 
-const rowStyles = StyleSheet.create({
-  row: {
-    gap: Spacing.sm,
-    marginBottom: Spacing.md,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  icon: { fontSize: 16, width: 24 },
-  name: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 13,
-    flex: 1,
-  },
-  delta: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 12,
-  },
-  segments: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 3,
-  },
-  segment: {
-    flex: 1,
-    height: 8,
-  },
-  scoreLabel: {
-    fontFamily: FontFamily.sansBold,
-    fontSize: 13,
-    width: 20,
-    textAlign: 'right',
-  },
-});
-
-// ─── Coming Soon Card ─────────────────────────────────────────────────────────
-
-function ComingSoonCard({ icon, title, subtitle, colors }: {
-  icon: import('@/components/ui/Icon').IconName;
-  title: string;
-  subtitle: string;
-  colors: ReturnType<typeof useTheme>;
-}) {
-  return (
-    <View
-      style={[
-        comingStyles.card,
-        {
-          borderColor: colors.borderMedium,
-          backgroundColor: colors.surface2,
-        },
-      ]}
-    >
-      <Icon name={icon} size={22} color={colors.textTertiary} />
-      <View style={{ flex: 1 }}>
-        <Text style={[comingStyles.cardTitle, { color: colors.text }]}>{title}</Text>
-        <Text style={[comingStyles.cardSubtitle, { color: colors.textTertiary }]}>{subtitle}</Text>
-      </View>
-      <View style={[comingStyles.badge, { backgroundColor: colors.surface3 }]}>
-        <Text style={[comingStyles.badgeText, { color: colors.textTertiary }]}>Скоро</Text>
-      </View>
-    </View>
-  );
-}
-
-const comingStyles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    padding: Spacing.base,
-    borderRadius: Radius.lg,
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
-    marginBottom: Spacing.sm,
-  },
-  cardIcon: { fontSize: 24 },
-  cardTitle: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 15,
-    marginBottom: 2,
-  },
-  cardSubtitle: {
-    fontFamily: FontFamily.sans,
-    fontSize: 12,
-    lineHeight: 17,
-  },
-  badge: {
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: Radius.full,
-  },
-  badgeText: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 11,
-  },
+const SP = StyleSheet.create({
+  row: { flexDirection: 'row', gap: 3, flex: 1 },
+  dot: { flex: 1, height: 8, borderRadius: 4 },
 });
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function HabitsScreen() {
-  const C = useTheme();
-  const { scores, previousScores, previousDate, latestDate, loading, saving, fetchLatestScores, setScore, saveScores } = useWheel();
+  const { scores, latestDate, loading, saving, fetchLatestScores, setScore, saveScores } = useWheel();
+  const [editing, setEditing] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       fetchLatestScores();
-    }, []),
+    }, [fetchLatestScores]),
   );
 
-  const avgScore =
-    SPHERES.reduce((sum, s) => sum + scores[s.key], 0) / SPHERES.length;
+  const now = new Date();
+  const MONTHS = ['січня','лютого','березня','квітня','травня','червня','липня','серпня','вересня','жовтня','листопада','грудня'];
+  const measureDate = latestDate
+    ? new Date(latestDate).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' })
+    : `${now.getDate()} ${MONTHS[now.getMonth()]}`;
 
-  const formatDate = (iso: string) => {
-    const d = new Date(iso);
-    return d.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' });
+  const handleSave = async () => {
+    await saveScores();
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setEditing(false);
+  };
+
+  const handleScoreChange = (sphere: SphereKey, v: number) => {
+    setScore(sphere, v);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: C.surface1 }]}>
-      <ScrollView
-        contentContainerStyle={styles.scroll}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* ─── Header ─── */}
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: C.text }]}>Баланс життя</Text>
-          {latestDate && (
-            <Text style={[styles.dateBadge, { color: C.textTertiary }]}>
-              Замір: {formatDate(latestDate)}
-            </Text>
-          )}
-        </View>
+    <SafeAreaView style={S.container}>
+      <ScrollView style={S.scroll} contentContainerStyle={S.scrollContent}>
+        <Text style={S.title}>Баланс життя</Text>
+        <Text style={S.dateLabel}>Замір: {measureDate}</Text>
 
-        {/* ─── Wheel ─── */}
         {loading ? (
-          <ActivityIndicator color={C.primary} style={{ marginVertical: Spacing.xxl }} />
+          <ActivityIndicator color="#C8FF00" style={{ marginTop: 60 }} />
         ) : (
-          <WheelChart
-            scores={scores}
-            previousScores={previousScores}
-            avgScore={avgScore}
-            colors={C}
-          />
+          <>
+            <View style={S.chartWrap}>
+              <RadarChart scores={scores} />
+            </View>
+
+            <View style={S.scoresCard}>
+              <View style={S.scoresHeader}>
+                <Text style={S.scoresHeaderLabel}>ОЦІНКИ ПО СФЕРАХ</Text>
+                {editing ? (
+                  <Pressable
+                    style={[S.editBtn, S.editBtnActive]}
+                    onPress={handleSave}
+                    disabled={saving}
+                  >
+                    {saving ? (
+                      <ActivityIndicator color="#060810" size="small" />
+                    ) : (
+                      <Text style={S.editBtnActiveText}>Готово</Text>
+                    )}
+                  </Pressable>
+                ) : (
+                  <Pressable style={S.editBtn} onPress={() => setEditing(true)}>
+                    <Text style={S.editBtnText}>Змінити</Text>
+                  </Pressable>
+                )}
+              </View>
+
+              {SPHERES.map((sphere) => (
+                <View key={sphere.key} style={S.sphereRow}>
+                  <View style={S.sphereInfo}>
+                    <Text style={[S.sphereDot, { color: sphere.color }]}>●</Text>
+                    <Text style={S.sphereName}>{sphere.nameUk}</Text>
+                    <Text style={S.sphereScore}>{scores[sphere.key]}</Text>
+                  </View>
+                  {editing ? (
+                    <ScorePicker
+                      value={scores[sphere.key]}
+                      color={sphere.color}
+                      onChange={(v) => handleScoreChange(sphere.key, v)}
+                    />
+                  ) : (
+                    <ScoreBar score={scores[sphere.key]} color={sphere.color} />
+                  )}
+                </View>
+              ))}
+            </View>
+          </>
         )}
-
-        {/* Previous measurement note */}
-        {previousDate && (
-          <Text style={[styles.prevNote, { color: C.textTertiary }]}>
-            Пунктир — попередній замір ({formatDate(previousDate)})
-          </Text>
-        )}
-
-        {/* ─── Sphere sliders ─── */}
-        <View style={[styles.card, { backgroundColor: C.surface2, ...Shadow.sm }]}>
-          <Text style={[styles.sectionTitle, { color: C.text }]}>Оцінки по сферах</Text>
-          {SPHERES.map((sphere) => (
-            <ScoreRow
-              key={sphere.key}
-              sphere={sphere}
-              score={scores[sphere.key]}
-              previousScore={previousScores ? previousScores[sphere.key] : null}
-              onPress={(val) => setScore(sphere.key as SphereKey, val)}
-              colors={C}
-            />
-          ))}
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.saveBtn,
-              { backgroundColor: C.primary, opacity: saving ? 0.7 : pressed ? 0.88 : 1 },
-            ]}
-            onPress={saveScores}
-            disabled={saving}
-          >
-            {saving ? (
-              <ActivityIndicator color={C.surface1} size="small" />
-            ) : (
-              <Text style={[styles.saveBtnText, { color: C.surface1 }]}>
-                Зберегти оцінку
-              </Text>
-            )}
-          </Pressable>
-        </View>
-
-        {/* ─── Coming soon ─── */}
-        <View style={styles.comingSection}>
-          <Text style={[styles.comingSectionTitle, { color: C.textSecondary }]}>
-            Незабаром у МАСШТАБ
-          </Text>
-          <ComingSoonCard
-            icon="Activity"
-            title="Трекер звичок"
-            subtitle="Щоденні звички зі стриком та статистикою"
-            colors={C}
-          />
-          <ComingSoonCard
-            icon="BookOpen"
-            title="Книжкова полиця"
-            subtitle="Інсайти з книг, пов'язані з установками"
-            colors={C}
-          />
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
+const S = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#060810' },
+  scroll: { flex: 1 },
+  scrollContent: { padding: 20, paddingBottom: 100 },
 
-const styles = StyleSheet.create({
-  root: { flex: 1 },
-  scroll: {
-    paddingHorizontal: Spacing.screen,
-    paddingBottom: Spacing.xxxl,
-  },
-  header: {
-    paddingTop: Spacing.xl,
-    marginBottom: Spacing.sm,
-    gap: Spacing.xs,
-  },
   title: {
-    fontFamily: FontFamily.serifBold,
-    fontSize: 28,
-    lineHeight: 34,
+    fontFamily: 'Inter_800ExtraBold',
+    fontSize: 32, letterSpacing: -0.5, color: '#F9FAFF',
   },
-  dateBadge: {
-    fontFamily: FontFamily.sansMedium,
-    fontSize: 13,
+  dateLabel: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 14, color: '#A3AEC4', marginTop: 6,
   },
-  prevNote: {
-    fontFamily: FontFamily.sans,
-    fontSize: 12,
-    textAlign: 'center',
-    marginBottom: Spacing.base,
+
+  chartWrap: {
+    alignItems: 'center', marginTop: 16, marginBottom: 24,
   },
-  card: {
-    borderRadius: Radius.lg,
-    padding: Spacing.base,
-    marginBottom: Spacing.base,
+
+  scoresCard: {
+    backgroundColor: '#0B0F18',
+    borderRadius: 20, padding: 22,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.06)',
   },
-  sectionTitle: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 14,
-    marginBottom: Spacing.base,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
+  scoresHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    marginBottom: 20,
   },
-  saveBtn: {
-    marginTop: Spacing.md,
-    paddingVertical: 14,
-    borderRadius: Radius.md,
-    alignItems: 'center',
+  scoresHeaderLabel: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 12, letterSpacing: 2.5, textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.4)',
   },
-  saveBtnText: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 15,
+  editBtn: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 8, paddingVertical: 6, paddingHorizontal: 14,
+    minWidth: 70, alignItems: 'center',
   },
-  comingSection: {
-    marginTop: Spacing.sm,
-    gap: Spacing.xs,
+  editBtnActive: { backgroundColor: '#C8FF00' },
+  editBtnText: { fontFamily: 'Inter_600SemiBold', fontSize: 12, color: 'rgba(255,255,255,0.7)' },
+  editBtnActiveText: { fontFamily: 'Inter_600SemiBold', fontSize: 12, color: '#060810' },
+
+  sphereRow: { marginBottom: 18 },
+  sphereInfo: {
+    flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8,
   },
-  comingSectionTitle: {
-    fontFamily: FontFamily.sansSemiBold,
-    fontSize: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    marginBottom: Spacing.sm,
+  sphereDot: { fontSize: 12 },
+  sphereName: { fontFamily: 'Inter_500Medium', fontSize: 14, color: '#F9FAFF', flex: 1 },
+  sphereScore: {
+    fontFamily: 'Inter_700Bold', fontSize: 14, color: 'rgba(255,255,255,0.5)',
   },
 });
